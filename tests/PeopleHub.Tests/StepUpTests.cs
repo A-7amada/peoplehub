@@ -1,0 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Services;
+using PeopleHub.Domain.Entities;
+namespace PeopleHub.Tests;
+public class StepUpTests
+{
+ class User(int id,string email):ICurrentUser{public string Email=>email;public int? EmployeeId=>1;public int UserId=>id;public bool IsAuthenticated=>true;public bool IsInRole(string r)=>true;public bool Can(string p)=>true;}
+ class Time:TimeProvider{public DateTimeOffset Now=new(2026,11,24,18,0,0,TimeSpan.Zero);public override DateTimeOffset GetUtcNow()=>Now;}
+ static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
+ static SessionService S(AppDbContext d,AppUser user,Time t){var u=new User(user.Id,user.Email);var c=new AppClock(t);return new(d,u,c,new AuditService(d,u,c));}
+ [Fact]public async Task ElevationIsFiveMinutesAndBoundToOneUnrevokedSession(){await using var d=await Db();var user=await d.Set<AppUser>().SingleAsync(x=>x.Email=="hr@peoplehub.local");var t=new Time();var s=S(d,user,t);var token=await s.StartAsync(user.Id,"Demo","127.0.0.1");var other=await s.StartAsync(user.Id,"Other","127.0.0.2");Assert.False(await s.ElevatedAsync(token));Assert.False(await s.ElevateAsync(token,"Wrong",null));Assert.True(await s.ElevateAsync(token,"Admin123!",null));Assert.True(await s.ElevatedAsync(token));Assert.False(await s.ElevatedAsync(other));t.Now=t.Now.AddMinutes(5);Assert.False(await s.ElevatedAsync(token));Assert.True(await s.ElevateAsync(token,"Admin123!",null));await s.RevokeCurrentAsync(token);Assert.False(await s.ElevatedAsync(token));Assert.False(await s.ElevateAsync(token,"Admin123!",null));}
+ [Fact]public async Task PasswordFailuresUseExistingLockoutAndNeverElevate(){await using var d=await Db();var user=await d.Set<AppUser>().SingleAsync(x=>x.Email=="hr@peoplehub.local");var t=new Time();var s=S(d,user,t);var token=await s.StartAsync(user.Id,"Demo","ip");for(int i=0;i<5;i++)Assert.False(await s.ElevateAsync(token,"Wrong",null));Assert.False(await s.ElevateAsync(token,"Admin123!",null));Assert.False(await s.ElevatedAsync(token));Assert.NotNull(user.LockedUntil);}
+ [Fact]public async Task EnabledAuthenticatorIsRequiredForElevation(){await using var d=await Db();var user=await d.Set<AppUser>().SingleAsync(x=>x.Email=="hr@peoplehub.local");user.TotpEnabled=true;user.TotpSecret=PeopleHub.Domain.Security.Totp.NewSecret();await d.SaveAsync();var t=new Time();var s=S(d,user,t);var token=await s.StartAsync(user.Id,"Demo","ip");Assert.False(await s.ElevateAsync(token,"Admin123!",null));Assert.False(await s.ElevatedAsync(token));}
+}

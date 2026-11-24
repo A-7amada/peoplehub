@@ -204,6 +204,7 @@ public class PerformanceResponse
 
 public class LoginSession
 {
+ public DateTime? ElevatedUntil {get;set;}
  public int Id {get;set;}
  public int UserId {get;set;}
  public string TokenHash {get;set;}="";

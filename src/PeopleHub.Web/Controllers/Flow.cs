@@ -74,17 +74,19 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
     [HttpPost] public Task<IActionResult> Adjust(int id, int lineId, decimal bonus, decimal other, string? note) => Do(() => svc.AdjustLineAsync(lineId, bonus, other, note), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> Review(int id) => Do(() => svc.ReviewAsync(id), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> FinanceApprove(int id) => Do(() => svc.FinanceApproveAsync(id), "msg.saved", () => Same(id));
-    [HttpPost] public Task<IActionResult> Finalize(int id) => Do(() => svc.FinalizeAsync(id), "msg.saved", () => Same(id));
+    [RequireStepUp,HttpPost] public Task<IActionResult> Finalize(int id) => Do(() => svc.FinalizeAsync(id), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> Paid(int id) => Do(() => svc.MarkPaidAsync(id), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> SendBack(int id, string? reason) => Do(() => svc.SendBackAsync(id, reason), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> Reopen(int id, string? reason) => Do(() => svc.ReopenAsync(id, reason), "msg.saved", () => Same(id));
 
+    [RequireStepUp]
     public async Task<IActionResult> BankFile(int id)
     {
         try { var csv = await svc.BankFileAsync(id); return File(System.Text.Encoding.UTF8.GetBytes("\uFEFF" + csv), "text/csv", $"bank-transfer-{id}.csv"); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Same(id); }
     }
 
+    [RequireStepUp]
     public async Task<IActionResult> Snapshot(int id)
     {
         try {return File(System.Text.Encoding.UTF8.GetBytes(await svc.SnapshotFileAsync(id)),"application/json",$"payroll-snapshot-{id}.json");}

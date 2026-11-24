@@ -71,7 +71,7 @@
 | SEC-007 | Retention/deletion/access policies | P0 | Open: owner policy decisions required |
 | SEC-008 | Malware scan, signatures/private attachments | P0 | Partial: private scoped storage, size/extension and file signature checks; malware scanner remains unconnected |
 | SEC-009 | Encrypted backup and controlled restore | P0 | Open: encryption/key custody/restore drill |
-| SEC-010 | Step-up auth for sensitive admin actions | P0 | Open |
+| SEC-010 | Step-up auth for sensitive admin actions | P0 | Partial: five-minute current-session password + enabled TOTP challenge on settings/user/role writes, database export and payroll finalization/bank/full snapshot exports; action is not replayed. Broader sensitive-action coverage remains under review |
 | ARC-001 | Modular monolith domain boundaries and policies | P1 | Existing layers; deeper policy extraction open |
 | ARC-002 | PostgreSQL/SQL Server | P0 | PostgreSQL existing |
 | ARC-003 | Explicit business transactions | P0 | Partial: payroll, attendance, device ingestion, final approvals, leave request/adjustment and employee save atomic; remaining service paths under review |
@@ -177,3 +177,5 @@ Grade framework follow-up: grade match and 100% weight required on apply; applic
 Benefits record follow-up: seven focused tests cover owner/grant privacy, dependent ownership/plan permission, eligibility evidence, overlap/date/cancellation guards and append-only records. Local MVC plan/enrolment and EN/AR inspected. Per-person cost shares are planning only, never automatic financial obligations. No owner eligibility formula or production grant was assumed.
 
 Employee relations follow-up: five focused tests pass for separate-grant boundaries, audit-content minimization, independent approval, pending/closed transitions and source/event immutability. Local MVC fictional grievance/investigation and EN/AR inspected. Internal records only, never an accusation, legal finding, delivered notice or automatic sanction.
+
+Session step-up follow-up: three focused tests cover password lockout, mandatory enabled authenticator, five-minute expiry, per-session binding and revocation. Local MVC verifies a role-creation POST is blocked and not replayed after verification. EN/AR challenge pixels inspected. No new permissions are granted; other sensitive workflows remain under review.

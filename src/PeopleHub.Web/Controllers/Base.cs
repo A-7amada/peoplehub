@@ -85,6 +85,14 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
         ViewBag.Token = token; ViewBag.Valid = await accounts.TokenValidAsync(token ?? ""); return View();
     }
 
+    [Authorize,HttpGet]public async Task<IActionResult> StepUp(string? returnUrl){ViewBag.ReturnUrl=Url.IsLocalUrl(returnUrl)?returnUrl:"/";ViewBag.Totp=(await accounts.CurrentAsync())?.TotpEnabled==true;return View();}
+    [Authorize,HttpPost,Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
+    public async Task<IActionResult> StepUp(string password,string? code,string? returnUrl)
+    {
+      if(await sessions.ElevateAsync(User.FindFirst("sid")?.Value,password,code)){TempData["ok"]=loc.IsAr?"تم التحقق. أعد تنفيذ الإجراء بنفسك، لم يتم إرساله تلقائياً.":"Verified. Repeat the intended action yourself, nothing was submitted automatically.";return LocalRedirect(Url.IsLocalUrl(returnUrl)&&!returnUrl!.StartsWith("/Account/StepUp",StringComparison.OrdinalIgnoreCase)?returnUrl!:"/");}
+      ViewBag.Error=loc.IsAr?"تعذر التحقق من بياناتك.":"Could not verify your credentials.";ViewBag.ReturnUrl=Url.IsLocalUrl(returnUrl)?returnUrl:"/";ViewBag.Totp=(await accounts.CurrentAsync())?.TotpEnabled==true;return View();
+    }
+
     [Authorize] public async Task<IActionResult> Security(string? setup) { ViewBag.User = await accounts.CurrentAsync(); ViewBag.Setup = setup == "1";ViewBag.Sessions=await sessions.MineAsync();ViewBag.CurrentSessionHash=SessionService.Hash(User.FindFirst("sid")?.Value??""); return View(); }
     [Authorize,HttpPost]public async Task<IActionResult> RevokeSession(int id){try{await sessions.RevokeAsync(id);TempData["ok"]=loc["msg.saved"];}catch(DomainException ex){TempData["err"]=loc[ex.Message];}return RedirectToAction(nameof(Security));}
     [Authorize, HttpPost] public async Task<IActionResult> ChangePassword(string current, string next) { try { await accounts.ChangePasswordAsync(current, next); TempData["ok"] = loc["msg.saved"]; } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; } return RedirectToAction(nameof(Security)); }

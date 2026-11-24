@@ -15,4 +15,15 @@ public class SessionService(IRepository repo,ICurrentUser me,AppClock clock,Audi
  public async Task<List<LoginSession>> MineAsync(){return await repo.ToListAsync(repo.Query<LoginSession>().Where(x=>x.UserId==me.UserId&&x.RevokedAt==null&&x.ExpiresAt>clock.UtcNow).OrderByDescending(x=>x.StartedAt));}
  public async Task RevokeAsync(int id){var s=await repo.FirstOrDefaultAsync(repo.Query<LoginSession>().Where(x=>x.Id==id&&x.UserId==me.UserId))??throw new DomainException("err.forbidden");if(s.RevokedAt==null){s.RevokedAt=clock.UtcNow;audit.Log("RevokeSession","LoginSession",id,"Revoked by owner");await repo.SaveAsync();}}
  public async Task RevokeCurrentAsync(string? token){if(string.IsNullOrEmpty(token))return;var hash=Hash(token);var s=await repo.FirstOrDefaultAsync(repo.Query<LoginSession>().Where(x=>x.UserId==me.UserId&&x.TokenHash==hash));if(s!=null)await RevokeAsync(s.Id);}
+ public async Task<bool> ElevatedAsync(string? token){if(string.IsNullOrEmpty(token))return false;var hash=Hash(token);return await repo.AnyAsync(repo.Query<LoginSession>().Where(x=>x.UserId==me.UserId&&x.TokenHash==hash&&x.RevokedAt==null&&x.ExpiresAt>clock.UtcNow&&x.ElevatedUntil>clock.UtcNow));}
+ public async Task<bool> ElevateAsync(string? token,string password,string? code)
+ {bool success=false;await repo.AtomicAsync(async()=>
+ {
+  if(string.IsNullOrEmpty(token))return;
+  var user=await new AuthService(repo,clock).LoginAsync(me.Email,password);if(user==null||user.Id!=me.UserId)return;
+  if(user.TotpEnabled&&(user.TotpSecret==null||!PeopleHub.Domain.Security.Totp.Verify(user.TotpSecret,code??"",clock.UtcNow))){audit.Log("StepUpFailed","AppUser",user.Id,"Authenticator check failed");await repo.SaveAsync();return;}
+  var hash=Hash(token);var session=await repo.FirstOrDefaultAsync(repo.Query<LoginSession>().Where(x=>x.UserId==me.UserId&&x.TokenHash==hash&&x.RevokedAt==null&&x.ExpiresAt>clock.UtcNow));if(session==null)return;
+  session.ElevatedUntil=clock.UtcNow.AddMinutes(5);audit.Log("StepUp","LoginSession",session.Id,"Fresh password and enabled authenticator checked; five-minute session-bound elevation");await repo.SaveAsync();success=true;
+ });return success;
+ }
 }

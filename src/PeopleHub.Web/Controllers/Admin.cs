@@ -16,6 +16,7 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     }
 
     [RequirePerm(Perm.AdmSettings), HttpPost]
+    [RequireStepUp]
     public Task<IActionResult> SaveSettings(IFormCollection f) =>
         Do(() => settings.SaveAsync(SettingsService.Defaults.Keys.Where(k => f.ContainsKey(k) || k == "email.notify" || k == "zk.simulate").ToDictionary(k => k, k => k == "email.notify" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : k == "zk.simulate" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : f[k].ToString().Trim())), "msg.saved", () => RedirectToAction(nameof(Settings)));
 
@@ -32,6 +33,7 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     public IActionResult Operations() => View(ops);
 
     [RequirePerm(Perm.AdmSettings), HttpPost]
+    [RequireStepUp]
     public async Task<IActionResult> ExportDatabase()
     {
         Response.Headers.CacheControl = "no-store";
@@ -47,12 +49,15 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     }
 
     [RequirePerm(Perm.AdmRoles), HttpPost]
+    [RequireStepUp]
     public Task<IActionResult> SavePermissions(string[]? grant) => Do(() => admin.SavePermissionsAsync(grant ?? []), "msg.saved", () => RedirectToAction(nameof(Roles)));
 
     [RequirePerm(Perm.AdmRoles), HttpPost]
+    [RequireStepUp]
     public Task<IActionResult> AddRole(string code, string name, string? nameAr) => Do(() => admin.AddRoleAsync(code, name, nameAr), "msg.saved", () => RedirectToAction(nameof(Roles)));
 
     [RequirePerm(Perm.AdmRoles), HttpPost]
+    [RequireStepUp]
     public Task<IActionResult> DeleteRole(string code) => Do(() => admin.DeleteRoleAsync(code), "msg.saved", () => RedirectToAction(nameof(Roles)));
 
     // ---- users
@@ -65,9 +70,11 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     }
 
     [RequirePerm(Perm.AdmUsers), HttpPost]
+    [RequireStepUp]
     public Task<IActionResult> SaveUser(int id, string[]? roles, bool active) => Do(() => admin.SetUserRolesAsync(id, roles, active), "msg.saved", () => RedirectToAction(nameof(Users)));
 
     [RequirePerm(Perm.AdmUsers), HttpPost]
+    [RequireStepUp]
     public Task<IActionResult> CreateUser(string email, string password, string[]? roles, int? employeeId) =>
         Do(() => admin.CreateUserAsync(email, password, roles, employeeId), "msg.saved", () => RedirectToAction(nameof(Users)));
 

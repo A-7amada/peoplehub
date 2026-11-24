@@ -2520,6 +2520,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("ElevatedUntil")
+                        .HasColumnType("timestamp without time zone");
+
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("timestamp without time zone");
 
