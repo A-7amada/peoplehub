@@ -34,7 +34,7 @@ public partial class PerfService
         bool identity=!self && me.Can(Perm.FeedbackIdentity), comments=!self && me.Can(Perm.FeedbackComments);
         var views=identity || comments ? f.Select(x=>new FeedbackView(identity?x.Reviewer?.FullName:null,identity?x.Reviewer?.FullNameAr:null,comments?x.Score:null,comments?x.Comment:null,x.SubmittedAt!=null)).ToList() : new List<FeedbackView>();
         var employees = await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active));
-        return new(views, employees, await repo.ToListAsync(repo.Query<CompetencyTemplate>()), await repo.ToListAsync(repo.Query<CompetencyItem>()), await repo.ToListAsync(repo.Query<TrainingCourse>()), await repo.ToListAsync(repo.Query<PerfBonus>().Where(b => b.AppraisalId == id)), avg);
+        return new(views, employees, await repo.ToListAsync(repo.Query<CompetencyTemplate>()), await repo.ToListAsync(repo.Query<CompetencyItem>()), await repo.ToListAsync(repo.Query<TrainingCourse>().Where(c=>c.ApprovalStatus=="Approved"||c.ApprovalStatus=="Legacy")), await repo.ToListAsync(repo.Query<PerfBonus>().Where(b => b.AppraisalId == id)), avg);
     }
 
     public async Task ConfigureFeedbackPrivacyAsync(int cycleId,int minimum)
@@ -97,14 +97,16 @@ public partial class PerfService
         audit.Log("Template", "Appraisal", id, $"template {templateId}"); await repo.SaveAsync();
     }
 
-    public async Task LinkCourseAsync(int id, int courseId)
+    public Task LinkCourseAsync(int id, int courseId)=>repo.AtomicAsync(async()=>
     {
         var v = await GetAsync(id); if (!(Hr || v.CanManage || v.A.Employee?.ManagerId == me.EmployeeId)) throw new DomainException("err.forbidden");
         var c = await repo.FirstOrDefaultAsync(repo.Query<TrainingCourse>().Where(c => c.Id == courseId)) ?? throw new DomainException("err.notFound");
+        if(c.ApprovalStatus is not("Approved" or "Legacy"))throw new DomainException("err.forbidden");
+        v.A.ResponseStamp=Guid.NewGuid().ToString("N");
         if (!await repo.AnyAsync(repo.Query<TrainingEnrollment>().Where(e => e.CourseId == courseId && e.EmployeeId == v.A.EmployeeId))) repo.Add(new TrainingEnrollment { CourseId = courseId, EmployeeId = v.A.EmployeeId });
         if (!await repo.AnyAsync(repo.Query<DevItem>().Where(d => d.AppraisalId == id && d.CourseId == courseId))) repo.Add(new DevItem { AppraisalId = id, CourseId = courseId, Action = c.Title, Due = c.Date });
         await notify.NotifyEmployeeAsync(v.A.EmployeeId, "notif.trainingLink", c.Title, "/Talent/Training"); await repo.SaveAsync();
-    }
+    });
 
     public async Task ProposeBonusAsync(int id, decimal amount, string reason)
     {
