@@ -151,3 +151,5 @@ Round 34: 211 tests pass, including historical-text redaction, list picker copie
 Temporary assignment follow-up: explicit return date snapshots current department/branch/title/manager/shift/salary; applies start then return in effective order after downtime, retains historical interval, and never infers a return duration. Financial allocation across payroll periods remains open.
 
 Round 35: 215 tests pass, including linked return restoration, cancellation atomicity, missed-start-and-return catch-up and invalid return validation. Both provider migrations generated, local SQLite upgrade and end-to-end temporary assignment staged, EN/AR form and linked return visually inspected. PostgreSQL parallel stress remains unverified.
+
+Custom-report privacy follow-up: the selectable-column leave dataset now masks private leave types without the separate evidence grant. Nine focused sensitive-field tests pass; other datasets and new modules remain independently scoped.
