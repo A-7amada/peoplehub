@@ -65,8 +65,11 @@ public static class Settlement
     public record Result(decimal ProratedSalary, decimal LeaveEncashment, decimal Gratuity, decimal Total, decimal YearsOfService);
     public static Result Calculate(decimal basic, DateTime hire, DateTime lastDay, decimal unusedLeaveDays, decimal gratuityDaysPerYear)
     {
+        if (lastDay.Date < hire.Date) throw new DomainException("err.dates");
+        if (basic < 0 || unusedLeaveDays < 0 || gratuityDaysPerYear < 0) throw new DomainException("err.settlementValues");
         var daily = basic / 30m;
-        var worked = Math.Min(lastDay.Day, 30);
+        var firstPaidDay = hire.Year == lastDay.Year && hire.Month == lastDay.Month ? Math.Min(hire.Day, 30) : 1;
+        var worked = Math.Max(0, Math.Min(lastDay.Day, 30) - firstPaidDay + 1);
         var years = Math.Round((decimal)(lastDay.Date - hire.Date).TotalDays / 365.25m, 2);
         var pro = Math.Round(daily * worked, 2);
         var leave = Math.Round(daily * Math.Max(0, unusedLeaveDays), 2);

@@ -260,6 +260,7 @@ public partial class Loc
             ("payrollState", "The payroll run is not in the right state for that step.", "دورة الرواتب ليست في الحالة المناسبة لهذه الخطوة."), ("payrollLocked", "The payroll run is locked.", "دورة الرواتب مقفلة."),
             ("payrollPaid", "A paid run cannot be reopened.", "لا يمكن إعادة فتح دورة تم صرفها."), ("runExists", "A payroll run already exists for that month.", "توجد دورة رواتب لهذا الشهر بالفعل.") })
             A("err." + k, en, ar);
+        A("err.settlementValues", "Settlement values must not be negative.", "قيم التسوية لا يمكن أن تكون سالبة.");
         return m;
     }
 }

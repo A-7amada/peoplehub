@@ -56,9 +56,12 @@ public class TalentController(Loc loc, TalentService svc, OrgService org, Employ
         ViewBag.Employees = await emps.ManagerCandidatesAsync();
         if (id != null)
         {
-            var e = await emps.GetAsync(id.Value); ViewBag.Emp = e;
+            var e = await emps.GetAsync(id.Value);
+            if (e == null) { TempData["err"] = L["err.notFound"]; return RedirectToAction(nameof(Settlement)); }
+            ViewBag.Emp = e;
             ViewBag.Last = (lastDay ?? clock.Today).Date; ViewBag.LeaveDays = leaveDays;
-            ViewBag.Result = PeopleHub.Domain.Entities.Settlement.Calculate(e.BasicSalary, e.HireDate, (lastDay ?? clock.Today).Date, leaveDays, decimal.TryParse(SettingsService.Get("eosb.days"), out var d) ? d : 15);
+            try { ViewBag.Result = PeopleHub.Domain.Entities.Settlement.Calculate(e.BasicSalary, e.HireDate, (lastDay ?? clock.Today).Date, leaveDays, decimal.TryParse(SettingsService.Get("eosb.days"), out var d) ? d : 15); }
+            catch (DomainException ex) { TempData["err"] = L[ex.Message]; }
         }
         return View();
     }

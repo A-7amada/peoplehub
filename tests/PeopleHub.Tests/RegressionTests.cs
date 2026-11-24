@@ -36,3 +36,14 @@ public class RolePermissionRegressionTests {
   Assert.Equal(expected,Perm.Defaults.TryGetValue(role,out var p)&&p.Contains(permission));
  }
 }
+
+public class SettlementRegressionTests {
+ [Theory][InlineData(24,24,1000)][InlineData(15,24,10000)][InlineData(31,31,1000)]
+ public void NewHireOnlyPaidFromHireDay(int hireDay,int lastDay,decimal expected) {
+  var r=Settlement.Calculate(30000,new DateTime(2026,1,hireDay),new DateTime(2026,1,lastDay),0,15);
+  Assert.Equal(expected,r.ProratedSalary);
+ }
+ [Fact] public void LastDayBeforeHireRejected()=>Assert.Throws<DomainException>(()=>Settlement.Calculate(30000,new(2026,11,24),new(1900,1,1),0,15));
+ [Theory][InlineData(-1,0,15)][InlineData(30000,-1,15)][InlineData(30000,0,-1)]
+ public void NegativeSettlementValuesRejected(decimal basic,decimal leave,decimal gratuity)=>Assert.Throws<DomainException>(()=>Settlement.Calculate(basic,new(2020,1,1),new(2026,1,15),leave,gratuity));
+}
