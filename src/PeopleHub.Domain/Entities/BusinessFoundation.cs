@@ -142,3 +142,15 @@ public class EmployeeFieldValue
  public int FieldId {get;set;}
  public string Value {get;set;}="";
 }
+
+public class EmployeeDocument
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public string Title {get;set;}="";
+ public string AttachmentToken {get;set;}="";
+ public DateTime? ExpiresOn {get;set;}
+ public string UploadedBy {get;set;}="";
+ public DateTime At {get;set;}
+ public DateTime? LastAlertDate {get;set;}
+}

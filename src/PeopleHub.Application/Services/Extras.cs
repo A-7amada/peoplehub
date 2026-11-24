@@ -16,6 +16,8 @@ public class AttachmentService(IRepository repo, AccessScope scope, ICurrentUser
         var ext = Path.GetExtension(name).ToLowerInvariant();
         if (!Types.TryGetValue(ext, out var ct)) throw new DomainException("err.fileType");
         if (data.Length > MaxBytes) throw new DomainException("err.fileSize");
+        bool signature=ext switch {".pdf"=>data.AsSpan().StartsWith("%PDF-"u8),".png"=>data.AsSpan().StartsWith(new byte[]{137,80,78,71,13,10,26,10}),".jpg" or ".jpeg"=>data.Length>=3 && data[0]==255 && data[1]==216 && data[2]==255,_=>false};
+        if(!signature)throw new DomainException("err.fileType");
         var a = new Attachment { FileName = name, ContentType = ct, Data = data, OwnerEmployeeId = me.EmployeeId ?? 0, UploadedBy = me.Email, At = clock.UtcNow };
         repo.Add(a);
         return (a.Token, name);
@@ -24,6 +26,8 @@ public class AttachmentService(IRepository repo, AccessScope scope, ICurrentUser
     public async Task<Attachment> GetAsync(string token)
     {
         var a = await repo.FirstOrDefaultAsync(repo.Query<Attachment>().Where(x => x.Token == token)) ?? throw new DomainException("err.notFound");
+        var document=await repo.FirstOrDefaultAsync(repo.Query<EmployeeDocument>().Where(x=>x.AttachmentToken==token));
+        if(document!=null && document.EmployeeId!=me.EmployeeId && !me.Can(Perm.EmpManage))throw new DomainException("err.forbidden");
         if (a.OwnerEmployeeId != me.EmployeeId && !await scope.CanSeeAsync(a.OwnerEmployeeId)) throw new DomainException("err.forbidden");
         return a;
     }

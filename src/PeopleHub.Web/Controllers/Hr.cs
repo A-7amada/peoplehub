@@ -6,7 +6,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, LeaveService leave, AttendanceService att, AppClock clock, ICurrentUser me, EmploymentTimeline timeline, AccessScope access, EmployeeLifecycle lifecycle) : BaseController(loc)
+public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, LeaveService leave, AttendanceService att, AppClock clock, ICurrentUser me, EmploymentTimeline timeline, AccessScope access, EmployeeLifecycle lifecycle, EmployeeDocuments documents) : BaseController(loc)
 {
     private async Task Lists()
     {
@@ -30,6 +30,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
             await timeline.ApplyDueAsync();
             var p = await svc.ProfileAsync(eid);
             ViewBag.Scheduled=await timeline.ListAsync(eid,access);
+            if(tab=="documents") ViewBag.Documents=await documents.ListAsync(eid);
             if(tab=="lifecycle") ViewBag.Lifecycle=await lifecycle.GetAsync(eid);
             await Lists();
             ViewBag.Assignments=await svc.AssignmentsAsync(eid);
@@ -60,6 +61,8 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; if(!me.Can(Perm.EmpPay)){model.BasicSalary=0;model.Iban="";model.BankName="";} await Lists(); return View(model); }
     }
 
+    [HttpPost]public async Task<IActionResult> AddDocument(int employeeId,string title,DateTime? expiresOn,IFormFile? file)
+    {var data=await FileBytes(file);return await Do(()=>documents.AddAsync(employeeId,title,expiresOn,file?.FileName??"",data??[]),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="documents"}));}
     [HttpPost]public Task<IActionResult> AddDependent(int employeeId,string name,string relationship,DateTime? birthDate)=>Do(()=>lifecycle.AddDependentAsync(employeeId,name,relationship,birthDate),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
     [HttpPost]public Task<IActionResult> RemoveDependent(int id,int employeeId,string reason)=>Do(()=>lifecycle.RemoveDependentAsync(id,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
     [HttpPost]public Task<IActionResult> AddLifecycleTask(int employeeId,string process,string title,int? assignedEmployeeId,DateTime dueOn)=>Do(()=>lifecycle.AddTaskAsync(employeeId,process,title,assignedEmployeeId,dueOn),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));

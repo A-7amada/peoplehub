@@ -5,7 +5,7 @@
 | ID | Requirement | Priority | Evidence/status |
 |---|---|---|---|
 | EMP-001 | Employee onboarding and offboarding checklists | P1 | Implemented explicit task creation, assignee, due date, completion evidence and audit; no automatic employment/payroll effect |
-| EMP-002 | Document repository and expiry alerts | P1 | Open |
+| EMP-002 | Document repository and expiry alerts | P1 | Implemented private employee/HR documents with expiry and daily warning window; scheduler is single-instance and service-awake only |
 | EMP-003 | Dependents | P1 | Implemented private employee/HR records, reasoned removal; benefit eligibility separate |
 | EMP-004 | Effective-dated employee status transitions | P0 | Partial: future dated status schedule, cancellation and recorded effective date; broader transition policy and missed-run handling under review |
 | EMP-005 | Historical department, title, manager, shift and salary assignments | P0 | Partial: current history plus future assignment scheduling/cancellation; backdating and full historical payroll allocations remain open |
@@ -69,7 +69,7 @@
 | SEC-005 | Append-only audit history | P0 | Implemented repository guard; database-owner tampering not prevented |
 | SEC-006 | Failed-login lockout and suspicious detection | P0 | Implemented password lockout after five failures for 15 minutes plus audit; broader anomaly detection open |
 | SEC-007 | Retention/deletion/access policies | P0 | Open: owner policy decisions required |
-| SEC-008 | Malware scan, signatures/private attachments | P0 | Partial: private scoped storage and size/extension checks existing, scan open |
+| SEC-008 | Malware scan, signatures/private attachments | P0 | Partial: private scoped storage, size/extension and file signature checks; malware scanner remains unconnected |
 | SEC-009 | Encrypted backup and controlled restore | P0 | Open: encryption/key custody/restore drill |
 | SEC-010 | Step-up auth for sensitive admin actions | P0 | Open |
 | ARC-001 | Modular monolith domain boundaries and policies | P1 | Existing layers; deeper policy extraction open |
