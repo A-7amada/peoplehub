@@ -46,7 +46,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         var assignments=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==e.Id));
         var holidays = (await repo.ToListAsync(repo.Query<Holiday>())).Where(h=>HolidayCalendar.Applies(h,e,h.Date,assignments)).Select(h => h.Date);
         var req = LeaveRequest.Create(e, type, balance, start, end, reason, document, clock.Today, holidays);
-        req.Route = await flows.RouteForAsync("Leave", e, req.Days, !type.IsPaid);
+        await flows.RouteRequestAsync("Leave",req,e,req.Days,!type.IsPaid);
         var mine = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.EmployeeId == e.Id));
         if (mine.Any(req.Overlaps)) throw new DomainException("err.overlap");
         e.LeaveRequestStamp=Guid.NewGuid().ToString("N"); // concurrent requests for one employee contend on the employee revision

@@ -83,6 +83,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("WorkflowRevisionHash")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
@@ -373,6 +376,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<string>("WorkflowRevisionHash")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -1798,6 +1804,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<string>("WorkflowRevisionHash")
+                        .HasColumnType("text");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
@@ -2095,6 +2104,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<string>("WorkflowRevisionHash")
+                        .HasColumnType("text");
 
                     b.HasKey("Id");
 
@@ -2963,6 +2975,43 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.ToTable("WorkflowDefinition");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.WorkflowRevision", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("DefinitionJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Hash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("ObservedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "Hash")
+                        .IsUnique();
+
+                    b.ToTable("WorkflowRevision");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.WorkflowStep", b =>

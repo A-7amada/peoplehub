@@ -48,7 +48,7 @@
 | WFL-001 | SLA, reminders and escalation | P1 | Open |
 | WFL-002 | Parallel approvals and all/one/quorum rules | P1 | Open |
 | WFL-003 | Dynamic hierarchy/department approvers | P1 | Partial: direct manager/role existing |
-| WFL-004 | Explicit workflow versions | P1 | Partial: route snapshot existing |
+| WFL-004 | Explicit workflow versions | P1 | Implemented content-addressed immutable observed definitions linked to new requests plus resolved route snapshot; legacy version unknown, separate draft/publish lifecycle not implemented |
 | WFL-005 | Pending task reassignment | P1 | Open |
 | WFL-006 | Recall/substitute/unavailable approver | P1 | Partial: pending cancel/delegation existing |
 | WFL-007 | Required decision comments | P1 | Partial: rejection existing |
@@ -129,3 +129,5 @@ Leave calendar follow-up: 184 tests pass (181 regression plus 3 calendar tests).
 Rotation follow-up: 187 tests pass (184 regression plus 3 rotation tests). Explicit shift-ID pattern generates at most 93 dated rows atomically, rejects any overlap without replacement, records actor/reason and preserves individual editing. Calendar-day progression includes Friday/Saturday but does not redefine working days. Local MVC save and EN/AR forms inspected.
 
 Diagnostics follow-up: 190 tests pass (187 regression plus 3 counter tests). EN/AR dashboard and non-admin denial inspected. Health endpoints return minimal text, readiness checks database connectivity with timeout and no diagnostic secrets. Admin metrics are action-level aggregate counts/5xx/latency/in-flight, no raw path or query. State resets on process restart, no uptime or job-health guarantee.
+
+Workflow revision follow-up: 193 tests pass (190 regression plus 3 revision tests). New leave/overtime/correction/advance requests retain definition hash and resolved route; immutable JSON revisions reuse content hash. Editing configured steps affects later requests only. Existing requests remain version unknown, not backfilled. Both provider migrations generated, local SQLite upgrade and new leave MVC flow plus EN/AR revision register inspected. Concurrent first use of one definition may return database contention and require retry; PostgreSQL parallel stress remains unverified.

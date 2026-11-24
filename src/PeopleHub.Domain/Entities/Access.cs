@@ -183,3 +183,13 @@ public class Attachment
     public string UploadedBy { get; set; } = "";
     public DateTime At { get; set; } = DateTime.UtcNow;
 }
+
+/// <summary>Content-addressed immutable workflow definition observed when routing a request.</summary>
+public class WorkflowRevision
+{
+ public int Id {get;set;}
+ public string Kind {get;set;}="";
+ public string Hash {get;set;}="";
+ public string DefinitionJson {get;set;}="";
+ public DateTime ObservedAt {get;set;}
+}

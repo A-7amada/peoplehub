@@ -14,6 +14,7 @@ public abstract class Approvable
     public int EmployeeId { get; set; }
     public Employee? Employee { get; set; }
     public string Route { get; set; } = "";
+    public string? WorkflowRevisionHash {get;set;}
     public int StageIndex { get; set; }
     public RequestStatus Status { get; set; } = RequestStatus.Pending;
     public string? Comment { get; set; }

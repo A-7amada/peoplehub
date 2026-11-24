@@ -5,7 +5,7 @@ namespace PeopleHub.Application.Services;
 
 public record RequestRow(string Kind, int Id, Employee Employee, string TypeName, string TypeNameAr, string Detail,
     RequestStatus Status, string? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel, string? AttachmentToken, string? AttachmentName,
-    List<ApprovalAction> History);
+    List<ApprovalAction> History,string? WorkflowRevisionHash=null);
 
 public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows, DelegationService delegations)
 {
@@ -46,7 +46,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
         var actions = (await repo.ToListAsync(repo.Query<ApprovalAction>().OrderBy(x => x.At))).ToLookup(x => (x.Kind, x.RequestId));
         var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, i.A.Employee!, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
                 i.A.CreatedAt, i.A.Comment, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)), i.A.AttachmentToken, i.A.AttachmentName,
-                actions[(i.Kind, i.A.Id)].ToList()))
+                actions[(i.Kind, i.A.Id)].ToList(),i.A.WorkflowRevisionHash))
             .Where(r => status == null || r.Status == status)
             .Where(r => !inboxOnly || r.CanAct)
             .OrderByDescending(r => r.CreatedAt).ToList();
@@ -143,7 +143,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
         if (await repo.AnyAsync(repo.Query<AdvanceRequest>().Where(x => x.EmployeeId == e.Id && (x.Status == RequestStatus.Pending || (x.Status == RequestStatus.Approved && x.Paid < x.Amount)))))
             throw new DomainException("err.advanceOpen");
         var adv = AdvanceRequest.Create(e, amount, installments, startYear, startMonth, reason);
-        adv.Route = await flows.RouteForAsync("Advance", e, amount);
+        await flows.RouteRequestAsync("Advance",adv,e,amount);
         adv.Employee = e;
         repo.Add(adv);
         await notify.NotifyStageAsync(adv, $"{e.FullName}: {amount:N0}");

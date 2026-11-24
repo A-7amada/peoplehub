@@ -1,6 +1,9 @@
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Interfaces;
 using PeopleHub.Domain.Security;
+using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography;
 
 namespace PeopleHub.Application.Services;
 
@@ -23,6 +26,17 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
         var w = (await ListAsync()).FirstOrDefault(x => x.Kind == kind);
         return RoutePlanner.Build(w?.Steps ?? [], e, size, alwaysEscalate);
     }
+
+    public async Task RouteRequestAsync(string kind,Approvable request,Employee employee,decimal size,bool alwaysEscalate=false)
+    {
+        var definition=(await ListAsync()).FirstOrDefault(x=>x.Kind==kind);
+        var steps=definition?.Steps??[];
+        var json=JsonSerializer.Serialize(new{Kind=kind,RoutingSemantics="sequential-any-role-v1",Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold})});
+        var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
+        if(!await repo.AnyAsync(repo.Query<WorkflowRevision>().Where(x=>x.Kind==kind&&x.Hash==hash)))repo.Add(new WorkflowRevision{Kind=kind,Hash=hash,DefinitionJson=json,ObservedAt=DateTime.UtcNow});
+        request.Route=RoutePlanner.Build(steps,employee,size,alwaysEscalate);request.WorkflowRevisionHash=hash;
+    }
+    public Task<List<WorkflowRevision>> RevisionsAsync(){Require();return repo.ToListAsync(repo.Query<WorkflowRevision>().OrderByDescending(x=>x.ObservedAt).Take(100));}
 
     private void Require() { if (!me.Can(Perm.AdmFlows)) throw new DomainException("err.forbidden"); }
 

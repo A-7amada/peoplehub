@@ -76,7 +76,7 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     public async Task<IActionResult> Workflows()
     {
         ViewBag.Roles = await admin.RolesAsync();
-        return View(await flows.ListAsync());
+        ViewBag.Revisions=await flows.RevisionsAsync();return View(await flows.ListAsync());
     }
 
     [RequirePerm(Perm.AdmFlows), HttpPost]

@@ -211,7 +211,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     {
         var e = await MeAsync();
         var o = OvertimeRequest.Create(e, date, hours, reason, clock.Today);
-        o.Route = await flows.RouteForAsync("Overtime", e, hours);
+        await flows.RouteRequestAsync("Overtime",o,e,hours);
         if (await repo.AnyAsync(repo.Query<OvertimeRequest>().Where(x => x.EmployeeId == e.Id && x.Date == date.Date && (x.Status == RequestStatus.Pending || x.Status == RequestStatus.Approved))))
             throw new DomainException("err.overtimeExists");
         o.Employee = e;
@@ -227,7 +227,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         await RequireUnlockedAsync(e.Id,date);
         newOut=ShiftCalendar.OvernightOut(date,newIn,newOut,await ShiftOfAsync(e,date));
         var c = AttendanceCorrection.Create(e, date, rec?.CheckIn, rec?.CheckOut, newIn, newOut, reason, clock.Today);
-        c.Route = await flows.RouteForAsync("Correction", e, 0);
+        await flows.RouteRequestAsync("Correction",c,e,0);
         c.Employee = e; c.AttachmentToken = attToken; c.AttachmentName = attName;
         repo.Add(c);
         await notify.NotifyStageAsync(c, $"{e.FullName}: {date:yyyy-MM-dd}");
