@@ -207,17 +207,20 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         await repo.SaveAsync();
     }
 
-    public async Task SetComponentAsync(int employeeId, int componentId, decimal amount)
+    public Task SetComponentAsync(int employeeId, int componentId, decimal amount) => repo.AtomicAsync(async()=>
     {
         if (!me.Can(Perm.EmpPay)) throw new DomainException("err.forbidden");
-        if (amount < 0) throw new DomainException("err.salary");
+        if (amount < 0 || amount>100000000 || decimal.Round(amount,2)!=amount) throw new DomainException("err.salary");
+        var employee=await GetAsync(employeeId)??throw new DomainException("err.notFound");
+        if(!await repo.AnyAsync(repo.Query<SalaryComponent>().Where(x=>x.Id==componentId)))throw new DomainException("err.notFound");
+        employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         var row = await repo.FirstOrDefaultAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == employeeId && c.ComponentId == componentId));
         var before = row?.Amount ?? 0;
         if (row == null) repo.Add(new EmployeeSalaryComponent { EmployeeId = employeeId, ComponentId = componentId, Amount = amount });
         else row.Amount = amount;
         audit.Log("Update", "SalaryComponent", employeeId, $"component #{componentId}: {before} -> {amount}");
         await repo.SaveAsync();
-    }
+    });
 
     public Task<List<SalaryComponent>> ComponentsAsync() => repo.ToListAsync(repo.Query<SalaryComponent>().OrderBy(c => c.Type).ThenBy(c => c.Name));
 

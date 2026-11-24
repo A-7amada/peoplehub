@@ -6,7 +6,7 @@ This is an interim evidence log, not the final all-module acceptance report. The
 
 ## Current automated evidence
 
-After lifecycle privacy and financial session-guard review, 341 automated cases passed: 88 + 93 + 160 cases including advance validation and controller guard tests. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
+After lifecycle privacy and financial session-guard review, 347 automated cases passed: 88 + 93 + 166 cases including advance validation and controller guard tests. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
 
 Referenced-correction coverage: separate initially-unset permission, source/target period and state, positive cent amounts, independent non-subject decision, unique decision sequence, proposer-only unapplied withdrawal, review gate, exactly-once draft application, source immutability, deduction safety and preservation on recalculation. Local MVC proposal, separate Finance approval and explicit preparer apply passed; temporary local Finance grant removed. EN/AR viewport screenshots inspected after application.
 
@@ -34,3 +34,5 @@ Performance null-identity regression: an account without an employee link cannot
 Applied correction integrity review: four added cases cover bounded cent manual totals, inability to reduce below applied amounts, retained floors after recalculation, rollback if an applied employee would disappear, and HR-review rejection of missing totals. 11 correction tests total. EN/AR updated guidance inspected. No correction reversal or automatic retro calculation is claimed.
 
 Spreadsheet export review: 15 added serialization cases neutralize formula-prefixed/control-containing report cells and headers, retain CSV escaping and Arabic text, and preserve the exact-value bank interchange serializer separately. Cost-centre report uses the same spreadsheet helper. No report layout changed. This is serializer coverage, not bank adapter certification.
+
+Salary-component write review: six added cases cover missing employee/component rejection, bounded nonnegative cent amounts, explicit zero, permission denial, one-row update and employee revision touch inside a transaction. Existing payroll lines remain unchanged. No UI change or historical component allocation claimed.
