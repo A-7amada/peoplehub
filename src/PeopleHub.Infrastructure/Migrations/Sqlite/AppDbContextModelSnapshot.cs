@@ -3529,7 +3529,13 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<long>("End")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("Flexible")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("GraceMinutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("LatestStart")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("MaxLateMinutes")
@@ -3542,6 +3548,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<string>("NameAr")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("RequiredMinutes")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()

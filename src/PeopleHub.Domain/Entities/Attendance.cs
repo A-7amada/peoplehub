@@ -13,6 +13,9 @@ public class Shift
     public int GraceMinutes { get; set; } = 10;
     /// <summary>Arriving later than this many minutes counts as an absence.</summary>
     public int MaxLateMinutes { get; set; } = 120;
+    public bool Flexible {get;set;}
+    public TimeSpan? LatestStart {get;set;}
+    public int? RequiredMinutes {get;set;}
     public bool IsNight => End <= Start;
     public double ScheduledHours => (End > Start ? End - Start : End + TimeSpan.FromHours(24) - Start).TotalHours;
 }
@@ -41,6 +44,7 @@ public static class AttendanceCalculator
         var end = date.Date + shift.End;
         if (shift.IsNight) end = end.AddDays(1);
 
+        if(shift.Flexible){if(shift.LatestStart==null||shift.RequiredMinutes is not >0||shift.LatestStart<shift.Start||shift.LatestStart.Value.TotalMinutes+shift.RequiredMinutes>1440||shift.IsNight)throw new DomainException("err.required");var latest=date.Date+shift.LatestStart.Value;end=(checkIn.Value<start?start:checkIn.Value).AddMinutes(shift.RequiredMinutes.Value);start=latest;}
         var late = (int)Math.Max(0, Math.Floor((checkIn.Value - start).TotalMinutes));
         if (late <= shift.GraceMinutes) late = 0;
         if (late > shift.MaxLateMinutes) return new(late, 0, 0, 0, AttendanceStatus.Absent);

@@ -3688,8 +3688,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<long>("End")
                         .HasColumnType("bigint");
 
+                    b.Property<bool>("Flexible")
+                        .HasColumnType("boolean");
+
                     b.Property<int>("GraceMinutes")
                         .HasColumnType("integer");
+
+                    b.Property<long?>("LatestStart")
+                        .HasColumnType("bigint");
 
                     b.Property<int>("MaxLateMinutes")
                         .HasColumnType("integer");
@@ -3701,6 +3707,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<string>("NameAr")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<int?>("RequiredMinutes")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()

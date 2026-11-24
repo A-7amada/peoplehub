@@ -17,7 +17,7 @@
 | ATT-002 | Overnight shifts | P1 | Implemented cross-midnight device pairing, manual/correction checkout normalization and previous-night self checkout; post-shift delayed punches beyond end remain exceptions |
 | ATT-003 | Missing punch exceptions | P1 | Implemented scoped missing-in/out recorded-day inbox after shift end, unmatched raw evidence and explicit idempotent reprocessing; arbitrary unknown-device mapping remains separate |
 | ATT-004 | Raw punch ledger and idempotent processing | P0 | Implemented: append-only punches, normalized batch/retry dedupe and unique idempotency key; concurrent losing request may require retry |
-| ATT-005 | Flexible hours | P1 | Open |
+| ATT-005 | Flexible hours | P1 | Implemented explicitly configured daytime arrival window and required minutes on new shift definitions. Lateness from latest arrival, early departure/overtime from personal expected end, existing grace/absence threshold retained. Explicit dated assignment, no retroactive recomputation, break deductions, overnight flex or payroll formula change |
 | ATT-006 | Remote attendance/geofencing | P2 | Open |
 | ATT-007 | Approved attendance period locking | P1 | Implemented completed-month lock, reason, no reopening, mutation guards and retained late raw punches; broader financial-period coordination remains open |
 | ATT-008 | Reasoned manual corrections with original evidence | P0 | Implemented: approved correction retains before/after, reason and original raw punches |
@@ -185,3 +185,5 @@ Bank reconciliation follow-up: four tests cover separate grant, locked-run/exact
 Approval reminder follow-up: five tests cover disabled defaults, elapsed stage timing, daily dedupe, new-stage clock, reassignment/inactive/subject restrictions, delegation, decisions stopping reminders and immutable markers. Policy saved through local MVC with session step-up; EN/AR workflow settings inspected. Does not email, approve, escalate or change request routes.
 
 Salary structure follow-up: five tests cover salary/manage permission boundaries, grade and pending-schedule guards, invalid/duplicate components, explicit application with historical payroll unchanged and immutable source/application evidence. Local MVC creation/application and EN/AR inspected. No automatic grade-based update, backdating, real payment, compliance claim or assumed compensation value.
+
+Flexible shift follow-up: nine domain/service tests cover arrival window edges, late/early arrival, personal expected end, overtime, invalid/overnight configurations, permission and no rewrite of earlier records. Local MVC definition and EN/AR shift calendar inspected. Dated assignment uses the existing explicit schedule.
