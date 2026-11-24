@@ -38,7 +38,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return RedirectToAction(nameof(Index)); }
     }
 
-    [Authorize(Roles = Roles.HR)]
+    [RequirePerm(Perm.EmpManage)]
     public async Task<IActionResult> Edit(int? id)
     {
         await Lists();
@@ -46,25 +46,25 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         return e == null ? NotFound() : View(e);
     }
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost]
     public async Task<IActionResult> Edit(Employee model, string? reason)
     {
         try { await svc.SaveAsync(model, reason); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Profile), new { id = model.Id == 0 ? (await svc.SearchAsync(new(model.Email, null, null, null))).FirstOrDefault()?.Id : model.Id }); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; await Lists(); return View(model); }
     }
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost]
     public Task<IActionResult> Status(int id, EmployeeStatus to, string? reason) => Do(() => svc.ChangeStatusAsync(id, to, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost]
     public Task<IActionResult> AddContract(int id, ContractType type, DateTime start, DateTime? end, string? notes) =>
         Do(() => svc.AddContractAsync(id, type, start, end, notes), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "contracts" }));
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost]
     public Task<IActionResult> RenewContract(int id, int contractId, DateTime newEnd) =>
         Do(() => svc.RenewContractAsync(contractId, newEnd), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "contracts" }));
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost]
     public Task<IActionResult> AddEvent(int id, CareerEventType type, string? details) =>
         Do(() => svc.AddCareerEventAsync(id, type, details), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));
 
@@ -76,7 +76,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     public Task<IActionResult> MyContact(string? phone, string? address) =>
         Do(() => svc.UpdateMyContactAsync(phone, address), "msg.saved", () => RedirectToAction(nameof(Profile), new { tab = "overview" }));
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost]
     public Task<IActionResult> AdjustBalance(int id, int typeId, int entitled, string? reason) =>
         Do(() => leave.AdjustBalanceAsync(id, typeId, clock.Today.Year, entitled, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "leave" }));
 }
@@ -85,14 +85,14 @@ public class OrganizationController(Loc loc, OrgService org, EmployeeService emp
 {
     public async Task<IActionResult> Index() { ViewBag.Managers = await emps.ManagerCandidatesAsync(); return View(await org.GetAsync()); }
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.OrgManage), HttpPost]
     public Task<IActionResult> AddDepartment(string name, string? nameAr, int? parentId, int? managerId, string? costCenter, int target) =>
         Do(() => org.AddDepartmentAsync(name, nameAr, parentId, managerId, costCenter, target), "msg.saved", () => RedirectToAction(nameof(Index)));
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.OrgManage), HttpPost]
     public Task<IActionResult> ToggleDepartment(int id) => Do(() => org.ToggleDepartmentAsync(id), "msg.saved", () => RedirectToAction(nameof(Index)));
 
-    [Authorize(Roles = Roles.HR), HttpPost]
+    [RequirePerm(Perm.OrgManage), HttpPost]
     public Task<IActionResult> AddTitle(string name, string? nameAr, int grade, decimal min, decimal max, string? description) =>
         Do(() => org.AddJobTitleAsync(name, nameAr, grade, min, max, description), "msg.saved", () => RedirectToAction(nameof(Index)));
 }

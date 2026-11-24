@@ -57,7 +57,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
         }
 
         var payTrend = new List<ChartItem>();
-        if (me.InAny($"{Roles.SystemAdmin},{Roles.HRManager},{Roles.PayrollOfficer},{Roles.FinanceManager},{Roles.TopManagement}"))
+        if (me.Can(Perm.ReportsFin))
         {
             var runs = (await repo.ToListAsync(repo.Query<PayrollRun>())).OrderBy(r => r.Year).ThenBy(r => r.Month).TakeLast(6).ToList();
             var lines = await repo.ToListAsync(repo.Query<PayrollLine>());
@@ -66,7 +66,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
             kpis.Add(new("dash.payroll", total.ToString("N0", CultureInfo.InvariantCulture), null, "rose"));
         }
 
-        var expiring = me.InAny(Roles.HR) ? await employees.ExpiringContractsAsync(60) : [];
+        var expiring = me.Can(Perm.EmpManage) ? await employees.ExpiringContractsAsync(60) : [];
         var hires = working.OrderByDescending(e => e.HireDate).Take(4).ToList();
         return new DashboardData(kpis, byDept, trend, payTrend, byStatus, expiring, pending, hires, company);
     }
@@ -94,7 +94,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                 return new("leave", ["Code", "Name", "Leave type", "Entitled", "Carried over", "Used", "Remaining"],
                     bals.OrderBy(b => b.EmployeeId).Select(b => { var e = emps.First(x => x.Id == b.EmployeeId); return new List<string> { e.Code, e.FullName, b.LeaveType?.Name ?? "", b.Entitled.ToString(), b.CarriedOver.ToString(), b.Used.ToString(), b.Remaining.ToString() }; }).ToList());
             case "payroll":
-                if (!me.InAny($"{Roles.SystemAdmin},{Roles.HRManager},{Roles.PayrollOfficer},{Roles.FinanceManager},{Roles.TopManagement}")) throw new DomainException("err.forbidden");
+                if (!me.Can(Perm.ReportsFin)) throw new DomainException("err.forbidden");
                 var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Year == year && r.Month == month));
                 var lines = run == null ? [] : await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == run.Id));
                 var byDept = lines.GroupBy(l => l.Employee!.Department?.Name ?? "").OrderBy(g => g.Key);

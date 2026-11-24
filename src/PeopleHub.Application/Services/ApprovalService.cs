@@ -4,10 +4,10 @@ using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Application.Services;
 
 public record RequestRow(string Kind, int Id, Employee Employee, string TypeName, string TypeNameAr, string Detail,
-    RequestStatus Status, ApprovalStage? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel,
+    RequestStatus Status, string? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel,
     List<ApprovalAction> History);
 
-public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock)
+public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows)
 {
     public static readonly string[] Kinds = ["Leave", "Overtime", "Correction", "Advance"];
 
@@ -15,13 +15,9 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
     {
         if (a.Status != RequestStatus.Pending || a.CurrentStage is not { } stage) return false;
         if (a.EmployeeId == me.EmployeeId) return false; // nobody approves their own request
-        return stage switch
-        {
-            ApprovalStage.Manager => a.Employee?.ManagerId != null && a.Employee.ManagerId == me.EmployeeId || me.IsInRole(Roles.SystemAdmin),
-            ApprovalStage.HR => me.InAny(Roles.HR),
-            ApprovalStage.Finance => me.InAny($"{Roles.FinanceManager},{Roles.SystemAdmin}"),
-            _ => false
-        };
+        if (me.IsInRole(Roles.SystemAdmin)) return true;
+        if (stage == ApprovalStage.Manager) return a.Employee?.ManagerId != null && a.Employee.ManagerId == me.EmployeeId;
+        return stage.Split('|').Any(me.IsInRole);
     }
 
     public async Task<List<RequestRow>> ListAsync(string? kind, RequestStatus? status, bool inboxOnly)
@@ -42,7 +38,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
 
         var actions = (await repo.ToListAsync(repo.Query<ApprovalAction>().OrderBy(x => x.At))).ToLookup(x => (x.Kind, x.RequestId));
         var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, i.A.Employee!, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
-                i.A.CreatedAt, i.A.Comment, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.InAny(Roles.HR)),
+                i.A.CreatedAt, i.A.Comment, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)),
                 actions[(i.Kind, i.A.Id)].ToList()))
             .Where(r => status == null || r.Status == status)
             .Where(r => !inboxOnly || r.CanAct)
@@ -65,7 +61,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
     {
         var a = await LoadAsync(kind, id);
         if (!CanActOn(a)) throw new DomainException("err.forbidden");
-        var stage = a.CurrentStage!.Value;
+        var stage = a.CurrentStage!;
         var done = a.ApproveStage(clock.UtcNow);
         repo.Add(new ApprovalAction { Kind = kind, RequestId = id, Actor = me.Email, Action = $"Approved:{stage}", Comment = comment?.Trim(), At = clock.UtcNow });
         audit.Log("Approve", kind, id, $"stage {stage}{(done ? " (final)" : "")}");
@@ -93,7 +89,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
     public async Task CancelAsync(string kind, int id)
     {
         var a = await LoadAsync(kind, id);
-        if (a.EmployeeId != me.EmployeeId && !me.InAny(Roles.HR)) throw new DomainException("err.forbidden");
+        if (a.EmployeeId != me.EmployeeId && !me.Can(Perm.LeaveAdmin)) throw new DomainException("err.forbidden");
         a.CancelRequest(clock.UtcNow);
         repo.Add(new ApprovalAction { Kind = kind, RequestId = id, Actor = me.Email, Action = "Cancelled", At = clock.UtcNow });
         audit.Log("Cancel", kind, id, "pending request cancelled");
@@ -130,6 +126,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
         if (await repo.AnyAsync(repo.Query<AdvanceRequest>().Where(x => x.EmployeeId == e.Id && (x.Status == RequestStatus.Pending || (x.Status == RequestStatus.Approved && x.Paid < x.Amount)))))
             throw new DomainException("err.advanceOpen");
         var adv = AdvanceRequest.Create(e, amount, installments, startYear, startMonth, reason);
+        adv.Route = await flows.RouteForAsync("Advance", e, amount);
         adv.Employee = e;
         repo.Add(adv);
         await notify.NotifyStageAsync(adv, $"{e.FullName}: {amount:N0}");
@@ -138,7 +135,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
 
     public async Task SettleAdvanceAsync(int id)
     {
-        if (!me.InAny($"{Roles.SystemAdmin},{Roles.PayrollOfficer},{Roles.FinanceManager}")) throw new DomainException("err.forbidden");
+        if (!me.Can(Perm.AdvManage)) throw new DomainException("err.forbidden");
         var a = await repo.FirstOrDefaultAsync(repo.Query<AdvanceRequest>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
         var left = a.Remaining;
         a.Settle();

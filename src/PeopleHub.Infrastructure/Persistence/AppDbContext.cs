@@ -52,7 +52,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         b.Entity<PayrollRun>().HasIndex(x => new { x.Year, x.Month }).IsUnique();
         b.Entity<Branch>(); b.Entity<Department>(); b.Entity<JobTitle>(); b.Entity<Shift>(); b.Entity<Holiday>(); b.Entity<LeaveType>();
         b.Entity<SalaryComponent>(); b.Entity<Contract>(); b.Entity<StatusHistory>(); b.Entity<CareerEvent>();
-        b.Entity<ApprovalAction>(); b.Entity<Notification>(); b.Entity<AuditLog>();
+        b.Entity<ApprovalAction>(); b.Entity<Role>().HasIndex(x => x.Code).IsUnique(); b.Entity<RolePermission>();
+        b.Entity<WorkflowDefinition>().Ignore(x => x.Steps); b.Entity<WorkflowStep>().Ignore(x => x.Token); b.Entity<Notification>(); b.Entity<AuditLog>();
         b.Ignore<Approvable>();
     }
 }

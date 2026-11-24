@@ -1,5 +1,5 @@
 @model List<AdvanceRequest>
-@{ ViewData["Title"] = T["req.advances"]; var today = DateTime.Today; bool pay = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.PayrollOfficer) || User.IsInRole(Roles.FinanceManager); }
+@{ ViewData["Title"] = T["req.advances"]; var today = DateTime.Today; bool pay = Me.Can(Perm.AdvManage); }
 <div class="page-head"><div><h1>@T["req.advances"]</h1><div class="sub">@T["adv.sub"]</div></div></div>
 <div class="grid g-main">
 <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["req.employee"]</th><th class="right">@T["common.amount"]</th><th>@T["adv.installments"]</th><th>@T["adv.repaid"]</th><th>@T["common.status"]</th>@if (pay) { <th></th> }</tr></thead><tbody>

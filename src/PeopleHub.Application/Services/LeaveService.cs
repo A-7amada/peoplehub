@@ -3,7 +3,7 @@ using PeopleHub.Domain.Interfaces;
 
 namespace PeopleHub.Application.Services;
 
-public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock)
+public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows)
 {
     public Task<List<LeaveType>> TypesAsync() => repo.ToListAsync(repo.Query<LeaveType>().OrderBy(t => t.Id));
 
@@ -33,6 +33,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         var balance = (await BalancesAsync(e.Id, start.Year)).FirstOrDefault(b => b.LeaveTypeId == typeId);
         var holidays = (await repo.ToListAsync(repo.Query<Holiday>())).Select(h => h.Date);
         var req = LeaveRequest.Create(e, type, balance, start, end, reason, document, clock.Today, holidays);
+        req.Route = await flows.RouteForAsync("Leave", e, req.Days, !type.IsPaid);
         var mine = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.EmployeeId == e.Id));
         if (mine.Any(req.Overlaps)) throw new DomainException("err.overlap");
         req.Employee = e;
@@ -44,7 +45,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
     public async Task CancelApprovedAsync(int requestId)
     {
         var l = await repo.FirstOrDefaultAsync(repo.Query<LeaveRequest>().Where(x => x.Id == requestId)) ?? throw new DomainException("err.notFound");
-        if (l.EmployeeId != me.EmployeeId && !me.InAny(Roles.HR)) throw new DomainException("err.forbidden");
+        if (l.EmployeeId != me.EmployeeId && !me.Can(Perm.LeaveAdmin)) throw new DomainException("err.forbidden");
         var bal = await repo.FirstOrDefaultAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == l.EmployeeId && b.LeaveTypeId == l.LeaveTypeId && b.Year == l.StartDate.Year));
         l.CancelApproved(bal, clock.Today, clock.UtcNow);
         repo.Add(new ApprovalAction { Kind = "Leave", RequestId = l.Id, Actor = me.Email, Action = "Cancelled", At = clock.UtcNow });
@@ -54,7 +55,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
 
     public async Task AdjustBalanceAsync(int employeeId, int typeId, int year, int entitled, string? reason)
     {
-        if (!me.InAny(Roles.HR)) throw new DomainException("err.forbidden");
+        if (!me.Can(Perm.LeaveAdmin)) throw new DomainException("err.forbidden");
         if (string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
         if (entitled < 0 || entitled > 90) throw new DomainException("err.balance");
         var b = (await BalancesAsync(employeeId, year)).FirstOrDefault(x => x.LeaveTypeId == typeId) ?? throw new DomainException("err.notFound");

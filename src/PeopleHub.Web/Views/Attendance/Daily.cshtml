@@ -1,6 +1,6 @@
 @model List<DailyRow>
 @{ ViewData["Title"] = T["att.daily"]; DateTime date = ViewBag.Date; int? dept = ViewBag.Dept; var depts = (List<Department>)ViewBag.Depts;
-   bool officer = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager) || User.IsInRole(Roles.HRSpecialist) || User.IsInRole(Roles.AttendanceOfficer); }
+   bool officer = Me.Can(Perm.AttManage); }
 <div class="page-head"><div><h1>@T["att.daily"]</h1><div class="sub">@date.ToString("dddd, d MMMM yyyy", System.Globalization.CultureInfo.CurrentUICulture)</div></div>
  <div class="actions"><form class="inline-form" method="get"><input type="date" name="date" value="@date.ToString("yyyy-MM-dd")"><select name="dept"><option value="">@T["emp.allDepts"]</option>@foreach (var d in depts) { <option value="@d.Id" selected="@(dept == d.Id)">@T.Name(d.Name, d.NameAr)</option> }</select><button class="btn">@T["common.filter"]</button></form></div></div>
 <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["req.employee"]</th><th>@T["att.checkIn"]</th><th>@T["att.checkOut"]</th><th>@T["att.late"]</th><th>@T["att.overtime"]</th><th>@T["common.status"]</th>@if (officer) { <th></th> }</tr></thead><tbody>

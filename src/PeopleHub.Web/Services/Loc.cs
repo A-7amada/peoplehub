@@ -9,6 +9,10 @@ public partial class Loc
     public bool IsAr => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
     public string this[string key] => Map.TryGetValue(key, out var v) ? (IsAr ? v.ar : v.en) : key;
     public string Name(string en, string ar) => IsAr && !string.IsNullOrWhiteSpace(ar) ? ar : en;
+    public string RoleName(string code) =>
+        PeopleHub.Domain.Entities.PermissionCache.NameOf(code) is { } n ? (IsAr && !string.IsNullOrWhiteSpace(n.Ar) ? n.Ar : n.En) : this["role." + code];
+    /// <summary>Label of an approval step token: "Manager" or one or more role codes joined by |.</summary>
+    public string Stage(string token) => token == "Manager" ? this["stage.Manager"] : string.Join(" / ", token.Split('|').Select(RoleName));
     public string Date(DateTime d) => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     public string Money(decimal m) => IsAr ? $"{m:N0} ج.م" : $"EGP {m:N0}";
 

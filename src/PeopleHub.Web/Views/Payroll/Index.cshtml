@@ -1,5 +1,5 @@
 @model List<PayrollRun>
-@{ ViewData["Title"] = T["nav.payroll"]; DateTime now = ViewBag.Now; bool prep = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.PayrollOfficer); }
+@{ ViewData["Title"] = T["nav.payroll"]; DateTime now = ViewBag.Now; bool prep = Me.Can(Perm.PayPrepare); }
 <div class="page-head"><div><h1>@T["nav.payroll"]</h1><div class="sub">@T["pay.sub"]</div></div><div class="actions"><a class="btn" href="/Payroll/MySlips">@Ui.Icon("file", 16) @T["pay.mySlips"]</a></div></div>
 <div class="grid g-main">
 <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["pay.period"]</th><th>@T["common.status"]</th><th>@T["pay.workflow"]</th><th></th></tr></thead><tbody>

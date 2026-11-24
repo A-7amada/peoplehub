@@ -10,6 +10,7 @@ public interface ICurrentUser
     int UserId { get; }
     bool IsAuthenticated { get; }
     bool IsInRole(string role);
+    bool Can(string permission);
 }
 
 public static class CurrentUserExt
@@ -60,18 +61,20 @@ public class NotificationService(IRepository repo, ICurrentUser me, AppClock clo
         foreach (var u in users.Where(u => u.RoleArray.Any(wanted.Contains))) Add(u.Id, titleKey, details, link);
     }
 
+    public async Task NotifyPermAsync(string permission, string titleKey, string details, string? link = null)
+    {
+        var users = await repo.ToListAsync(repo.Query<AppUser>().Where(u => u.IsActive));
+        foreach (var u in users.Where(u => PermissionCache.Has(u.RoleArray, permission))) Add(u.Id, titleKey, details, link);
+    }
+
     /// <summary>Tells whoever must act on the request's current stage.</summary>
     public async Task NotifyStageAsync(Approvable a, string details)
     {
-        switch (a.CurrentStage)
-        {
-            case ApprovalStage.Manager when a.Employee?.ManagerId is { } m:
-                await NotifyEmployeeAsync(m, "notif.pendingApproval", details, "/Requests?scope=inbox"); break;
-            case ApprovalStage.HR:
-                await NotifyRolesAsync(Roles.HRManager + "," + Roles.HRSpecialist, "notif.pendingApproval", details, "/Requests?scope=inbox"); break;
-            case ApprovalStage.Finance:
-                await NotifyRolesAsync(Roles.FinanceManager, "notif.pendingApproval", details, "/Requests?scope=inbox"); break;
-        }
+        var stage = a.CurrentStage;
+        if (stage == null) return;
+        if (stage == ApprovalStage.Manager)
+        { if (a.Employee?.ManagerId is { } m) await NotifyEmployeeAsync(m, "notif.pendingApproval", details, "/Requests?scope=inbox"); }
+        else await NotifyRolesAsync(stage.Replace('|', ','), "notif.pendingApproval", details, "/Requests?scope=inbox");
     }
 
     private void Add(int userId, string key, string details, string? link) =>
@@ -100,12 +103,12 @@ public class AccessScope(IRepository repo, ICurrentUser me)
     {
         if (_loaded) return _ids;
         _loaded = true;
-        if (me.InAny(Roles.Company)) return _ids = null;
+        if (me.Can(Perm.ScopeCompany)) return _ids = null;
         var ids = new HashSet<int>();
         if (me.EmployeeId is { } self)
         {
             ids.Add(self);
-            if (me.IsInRole(Roles.DepartmentManager))
+            if (me.Can(Perm.ScopeTeam))
             {
                 var depts = await repo.ToListAsync(repo.Query<Department>());
                 var managed = depts.Where(d => d.ManagerId == self).Select(d => d.Id).ToHashSet();
@@ -125,5 +128,5 @@ public class AccessScope(IRepository repo, ICurrentUser me)
     }
 
     public bool CanSeeSalary(int employeeId) =>
-        me.InAny($"{Roles.SystemAdmin},{Roles.HRManager},{Roles.PayrollOfficer},{Roles.FinanceManager}") || me.EmployeeId == employeeId;
+        me.Can(Perm.EmpSalary) || me.EmployeeId == employeeId;
 }

@@ -25,7 +25,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
 
     public async Task<IActionResult> Daily(DateTime? date, int? dept)
     {
-        if (!me.InAny($"{Roles.Company},{Roles.DepartmentManager}")) return Forbidden();
+        if (!me.Can(Perm.AttTeam)) return Forbidden();
         var d = (date ?? clock.Today).Date;
         ViewBag.Date = d; ViewBag.Dept = dept; ViewBag.Depts = await org.DepartmentsAsync();
         return View(await svc.DailyAsync(d, dept));

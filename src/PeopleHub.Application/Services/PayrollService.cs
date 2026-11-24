@@ -7,19 +7,17 @@ namespace PeopleHub.Application.Services;
 
 public class PayrollService(IRepository repo, ICurrentUser me, AuditService audit, NotificationService notify, AttendanceService attendance, AppClock clock)
 {
-    private bool Is(string roles) => me.InAny(roles);
-    private void Require(string roles) { if (!Is(roles)) throw new DomainException("err.forbidden"); }
-    private const string Prep = $"{Roles.SystemAdmin},{Roles.PayrollOfficer}";
+    private void Require(string perm) { if (!me.Can(perm)) throw new DomainException("err.forbidden"); }
 
     public async Task<List<PayrollRun>> RunsAsync()
     {
-        Require($"{Roles.SystemAdmin},{Roles.HRManager},{Roles.PayrollOfficer},{Roles.FinanceManager},{Roles.TopManagement}");
+        Require(Perm.PayView);
         return await repo.ToListAsync(repo.Query<PayrollRun>().OrderByDescending(r => r.Year).ThenByDescending(r => r.Month));
     }
 
     public async Task<(PayrollRun Run, List<PayrollLine> Lines, List<ApprovalAction> History)> RunAsync(int id)
     {
-        Require($"{Roles.SystemAdmin},{Roles.HRManager},{Roles.PayrollOfficer},{Roles.FinanceManager},{Roles.TopManagement}");
+        Require(Perm.PayView);
         var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Id == id)) ?? throw new DomainException("err.notFound");
         var lines = await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == id).OrderBy(l => l.EmployeeId));
         var hist = await repo.ToListAsync(repo.Query<ApprovalAction>().Where(a => a.Kind == "Payroll" && a.RequestId == id).OrderBy(a => a.At));
@@ -28,7 +26,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
 
     public async Task<int> CreateAsync(int year, int month)
     {
-        Require(Prep);
+        Require(Perm.PayPrepare);
         if (month is < 1 or > 12 || year < 2000) throw new DomainException("err.dates");
         if (await repo.AnyAsync(repo.Query<PayrollRun>().Where(r => r.Year == year && r.Month == month))) throw new DomainException("err.runExists");
         var run = new PayrollRun { Year = year, Month = month, CreatedBy = me.Email, CreatedAt = clock.UtcNow };
@@ -64,7 +62,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
 
     public async Task RecalculateAsync(int runId)
     {
-        Require(Prep);
+        Require(Perm.PayPrepare);
         var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Id == runId)) ?? throw new DomainException("err.notFound");
         if (run.Status != PayrollStatus.Draft) throw new DomainException("err.payrollState");
         var old = await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == runId));
@@ -79,7 +77,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
 
     public async Task AdjustLineAsync(int lineId, decimal bonus, decimal otherDeduction, string? note)
     {
-        Require(Prep);
+        Require(Perm.PayPrepare);
         var l = await repo.FirstOrDefaultAsync(repo.Query<PayrollLine>().Where(x => x.Id == lineId)) ?? throw new DomainException("err.notFound");
         var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Id == l.RunId)) ?? throw new DomainException("err.notFound");
         if (run.IsLocked || run.Status != PayrollStatus.Draft) throw new DomainException("err.payrollLocked");
@@ -104,23 +102,23 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
 
     public async Task ReviewAsync(int id)
     {
-        Require($"{Roles.SystemAdmin},{Roles.HRManager}");
+        Require(Perm.PayHr);
         var r = await LoadRunAsync(id); r.Review(); Trail(r, "HRReviewed");
-        await notify.NotifyRolesAsync(Roles.FinanceManager, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
+        await notify.NotifyPermAsync(Perm.PayFinance, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
         await repo.SaveAsync();
     }
 
     public async Task FinanceApproveAsync(int id)
     {
-        Require($"{Roles.SystemAdmin},{Roles.FinanceManager}");
+        Require(Perm.PayFinance);
         var r = await LoadRunAsync(id); r.FinanceApprove(); Trail(r, "FinanceApproved");
-        await notify.NotifyRolesAsync(Roles.TopManagement, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
+        await notify.NotifyPermAsync(Perm.PayFinalize, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
         await repo.SaveAsync();
     }
 
     public async Task FinalizeAsync(int id)
     {
-        Require($"{Roles.SystemAdmin},{Roles.TopManagement}");
+        Require(Perm.PayFinalize);
         var r = await LoadRunAsync(id);
         r.Finalize();
         var lines = await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == id));
@@ -142,28 +140,28 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
 
     public async Task MarkPaidAsync(int id)
     {
-        Require(Prep);
+        Require(Perm.PayPrepare);
         var r = await LoadRunAsync(id); r.MarkPaid(clock.UtcNow); Trail(r, "Paid");
         await repo.SaveAsync();
     }
 
     public async Task SendBackAsync(int id, string? reason)
     {
-        Require($"{Roles.SystemAdmin},{Roles.HRManager},{Roles.FinanceManager}");
+        Require(Perm.PaySendBack);
         var r = await LoadRunAsync(id); r.SendBack(reason); Trail(r, "SentBack", reason);
         await repo.SaveAsync();
     }
 
     public async Task ReopenAsync(int id, string? reason)
     {
-        Require(Roles.SystemAdmin);
+        Require(Perm.PayReopen);
         var r = await LoadRunAsync(id); r.Reopen(reason); Trail(r, "Reopened", reason);
         await repo.SaveAsync();
     }
 
     public async Task<string> BankFileAsync(int id)
     {
-        Require($"{Roles.SystemAdmin},{Roles.PayrollOfficer},{Roles.FinanceManager}");
+        Require(Perm.PayExport);
         var (run, lines, _) = await RunAsync(id);
         if (!run.IsLocked) throw new DomainException("err.payrollState");
         var sb = new StringBuilder("Code,Name,Bank,IBAN,Net,Currency\n");
@@ -189,7 +187,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         var l = await repo.FirstOrDefaultAsync(repo.Query<PayrollLine>().Where(x => x.Id == lineId)) ?? throw new DomainException("err.notFound");
         var r = await LoadRunAsync(l.RunId);
         var own = l.EmployeeId == me.EmployeeId;
-        if (!own && !Is($"{Roles.SystemAdmin},{Roles.PayrollOfficer},{Roles.HRManager},{Roles.FinanceManager}")) throw new DomainException("err.forbidden");
+        if (!own && !me.Can(Perm.PaySlips)) throw new DomainException("err.forbidden");
         if (own && !r.IsLocked) throw new DomainException("err.forbidden");
         return (r, l);
     }

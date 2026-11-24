@@ -25,6 +25,8 @@ builder.Services.AddScoped<AttendanceService>();
 builder.Services.AddScoped<LeaveService>();
 builder.Services.AddScoped<ApprovalService>();
 builder.Services.AddScoped<PayrollService>();
+builder.Services.AddScoped<WorkflowService>();
+builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddSingleton<Loc>();
 builder.Services.AddControllersWithViews(o => o.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
@@ -50,6 +52,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var hrPass = app.Environment.IsDevelopment() ? "Admin123!" : app.Configuration["HR_SEED_PASSWORD"];
     await SeedData.InitializeAsync(db, hrPass, "Demo123!", scope.ServiceProvider.GetRequiredService<AppClock>().Today);
+    await AdminService.ReloadCacheAsync(db);
 }
 if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Home/Error");
 app.UseStaticFiles();

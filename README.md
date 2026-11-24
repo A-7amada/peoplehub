@@ -23,7 +23,7 @@ In-app notifications exist. Email and SMS are not sent.
 
 ## Roles and demo accounts
 
-Nine roles are modelled: system admin, HR manager, HR specialist, attendance officer, payroll officer, finance manager, department manager, top management, employee. Data visibility is scoped: employees see themselves, department managers their team, company roles see everyone. Salary data is limited to HR manager, payroll, finance and the employee.
+Nine built-in roles are seeded (admins can add more): system admin, HR manager, HR specialist, attendance officer, payroll officer, finance manager, department manager, top management, employee. Data visibility is scoped: employees see themselves, department managers their team, company roles see everyone. Salary data is limited to HR manager, payroll, finance and the employee.
 
 | Account | Role |
 |---|---|
@@ -40,6 +40,16 @@ All accounts except `hr@` use the password `Demo123!` (fictional data only). The
 
 Try this flow: sign in as the employee and request leave, as the manager approve it, as HR give the second approval. Then as the payroll officer create a run, as HR review it, as finance approve it, as top management finalize it, and as payroll mark it paid and download the bank file.
 
+## Administration: roles, permissions and approval cycles
+
+Nothing about access or approvals is hardcoded to a person.
+
+- **Roles and permissions** (`Admin > Roles & permissions`): a matrix of 24 permissions (pages and actions) by role. Tick a box and it applies immediately, no restart. Admins can create custom roles. The system admin role always keeps every permission. Built-in roles start with sensible defaults.
+- **Users** (`Admin > Users`): create accounts, assign one or more roles, deactivate. You cannot remove your own admin access.
+- **Approval cycles** (`Admin > Approval cycles`): for each request kind (leave, overtime, attendance correction, salary advance) define the ordered steps. Each step is either the employee's direct manager or one or more roles, with an optional threshold (for example, HR approves leave only above 2 days). Steps can be reordered, added and removed. New requests follow the new cycle at once; requests already in flight keep their route.
+- Rules kept by the engine: the direct-manager step is skipped when the employee has none, nobody approves their own request, the system admin can act on any step, and an empty route falls back to the first role step.
+- Every change is written to the audit log.
+
 ## Architecture
 
 ```
@@ -52,8 +62,8 @@ tests/
   PeopleHub.Tests           xUnit tests for the domain rules
 ```
 
-- Business rules live in the domain layer and are unit tested (38 tests: attendance calculation, leave rules, approval routing, advances, contracts, status changes, payroll calculation and workflow, password hashing).
-- Cookie authentication, PBKDF2 password hashing, antiforgery on every POST, role checks in the application layer.
+- Business rules live in the domain layer and are unit tested (46 tests: attendance calculation, leave rules, approval routing, configurable cycles and role-driven permissions, advances, contracts, status changes, payroll calculation and workflow, password hashing).
+- Cookie authentication, PBKDF2 password hashing, antiforgery on every POST, permission checks in the application layer (role-to-permission map loaded from the database).
 - English and Arabic UI with a language switch and a right-to-left layout built with CSS logical properties.
 - The Egyptian weekend (Friday and Saturday) and public holidays are excluded from working days.
 
@@ -75,4 +85,8 @@ A `Dockerfile` is included (used for the Render free tier). Set `HR_SEED_PASSWOR
 ## Limits
 
 - Demo project with fictional data. Tax and insurance rates are illustrative, not legal advice or Egyptian law.
-- No file uploads, no email or SMS, no delegation of approvals, no external integrations.
+- No file uploads, no email or SMS, no delegation of approvals (out-of-office), no external integrations.
+
+## Documentation
+
+[BRD.md](BRD.md) is a business requirements document (Arabic) describing the whole system, its rules and its flows.

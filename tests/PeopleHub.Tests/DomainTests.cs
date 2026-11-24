@@ -41,7 +41,7 @@ public class LeaveTests
     private static LeaveBalance Bal(int entitled, int used = 0) => new() { Entitled = entitled, Used = used };
 
     [Fact] public void ShortPaidLeave_GoesToManagerOnly() => Assert.Equal("Manager", LeaveRequest.Create(Emp, Annual, Bal(21), new(2026, 11, 30), new(2026, 12, 1), null, null, Today).Route);
-    [Fact] public void LongLeave_AlsoNeedsHr() => Assert.Equal("Manager,HR", LeaveRequest.Create(Emp, Annual, Bal(21), new(2026, 11, 29), new(2026, 12, 3), null, null, Today).Route);
+    [Fact] public void LongLeave_AlsoNeedsHr() => Assert.Equal($"Manager,{ApprovalStage.HR}", LeaveRequest.Create(Emp, Annual, Bal(21), new(2026, 11, 29), new(2026, 12, 3), null, null, Today).Route);
     [Fact] public void UnpaidLeave_AlwaysNeedsHr() => Assert.Contains("HR", LeaveRequest.Create(Emp, Unpaid, null, new(2026, 11, 30), new(2026, 11, 30), null, null, Today).Route);
     [Fact] public void InsufficientBalance_Throws() => Assert.Throws<DomainException>(() => LeaveRequest.Create(Emp, Annual, Bal(21, 20), new(2026, 11, 29), new(2026, 12, 3), null, null, Today));
     [Fact] public void WeekendOnly_Throws() => Assert.Throws<DomainException>(() => LeaveRequest.Create(Emp, Annual, Bal(21), new(2026, 11, 27), new(2026, 11, 28), null, null, Today));
@@ -60,10 +60,10 @@ public class LeaveTests
 
 public class ApprovalTests
 {
-    [Fact] public void Route_SkipsManagerWhenNone() => Assert.Equal("HR", Approvable.BuildRoute(new Employee(), ApprovalStage.HR));
+    [Fact] public void Route_SkipsManagerWhenNone() => Assert.Equal(ApprovalStage.HR, Approvable.BuildRoute(new Employee(), ApprovalStage.HR));
     [Fact] public void Stages_AdvanceInOrder_ThenApprove()
     {
-        var r = new OvertimeRequest { Route = "Manager,HR" };
+        var r = new OvertimeRequest { Route = $"Manager,{ApprovalStage.HR}" };
         Assert.False(r.ApproveStage(DateTime.UtcNow)); Assert.Equal(ApprovalStage.HR, r.CurrentStage);
         Assert.True(r.ApproveStage(DateTime.UtcNow)); Assert.Equal(RequestStatus.Approved, r.Status);
     }
@@ -72,7 +72,7 @@ public class ApprovalTests
     [Fact] public void Advance_Route_IsHrThenFinance_AndLimited()
     {
         var e = new Employee { Id = 1, BasicSalary = 10000 };
-        Assert.Equal("HR,Finance", AdvanceRequest.Create(e, 5000, 5, 2026, 12, "x").Route);
+        Assert.Equal($"{ApprovalStage.HR},{ApprovalStage.Finance}", AdvanceRequest.Create(e, 5000, 5, 2026, 12, "x").Route);
         Assert.Throws<DomainException>(() => AdvanceRequest.Create(e, 31000, 5, 2026, 12, "x"));
         Assert.Throws<DomainException>(() => AdvanceRequest.Create(e, 1000, 30, 2026, 12, "x"));
     }

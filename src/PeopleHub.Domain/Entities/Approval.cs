@@ -1,7 +1,11 @@
 namespace PeopleHub.Domain.Entities;
 
 public enum RequestStatus { Pending = 0, Approved = 1, Rejected = 2, Cancelled = 3 }
-public enum ApprovalStage { Manager = 0, HR = 1, Finance = 2 }
+/// <summary>Route tokens: "Manager" means the employee's direct manager, anything else is a role code.</summary>
+public static class ApprovalStage
+{
+    public const string Manager = "Manager", HR = Roles.HRManager + "|" + Roles.HRSpecialist, Finance = Roles.FinanceManager;
+}
 
 /// <summary>Base for every request that goes through a multi-level approval route.</summary>
 public abstract class Approvable
@@ -16,13 +20,13 @@ public abstract class Approvable
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DecidedAt { get; set; }
 
-    public ApprovalStage[] Stages => Route.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(Enum.Parse<ApprovalStage>).ToArray();
-    public ApprovalStage? CurrentStage => Status == RequestStatus.Pending && StageIndex < Stages.Length ? Stages[StageIndex] : null;
+    public string[] Stages => Route.Split(',', StringSplitOptions.RemoveEmptyEntries);
+    public string? CurrentStage => Status == RequestStatus.Pending && StageIndex < Stages.Length ? Stages[StageIndex] : null;
 
     /// <summary>Manager stage is skipped for employees without a direct manager; HR is the fallback.</summary>
-    public static string BuildRoute(Employee e, params ApprovalStage[] after)
+    public static string BuildRoute(Employee e, params string[] after)
     {
-        var s = new List<ApprovalStage>();
+        var s = new List<string>();
         if (e.ManagerId != null) s.Add(ApprovalStage.Manager);
         foreach (var a in after) if (!s.Contains(a)) s.Add(a);
         if (s.Count == 0) s.Add(ApprovalStage.HR);

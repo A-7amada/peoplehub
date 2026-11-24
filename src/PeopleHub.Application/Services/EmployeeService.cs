@@ -49,7 +49,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
 
     private void RequireHr()
     {
-        if (!me.InAny(Roles.HR)) throw new DomainException("err.forbidden");
+        if (!me.Can(Perm.EmpManage)) throw new DomainException("err.forbidden");
     }
 
     public async Task SaveAsync(Employee model, string? reason)
@@ -146,7 +146,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
 
     public async Task SetComponentAsync(int employeeId, int componentId, decimal amount)
     {
-        if (!me.InAny($"{Roles.SystemAdmin},{Roles.HRManager},{Roles.PayrollOfficer}")) throw new DomainException("err.forbidden");
+        if (!me.Can(Perm.EmpPay)) throw new DomainException("err.forbidden");
         if (amount < 0) throw new DomainException("err.salary");
         var row = await repo.FirstOrDefaultAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == employeeId && c.ComponentId == componentId));
         var before = row?.Amount ?? 0;

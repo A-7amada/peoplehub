@@ -13,9 +13,8 @@ public record AttendanceSummary(int WorkingDays, int PresentDays, int LateCount,
 public record DayRow(DateTime Date, bool IsWorkingDay, string? HolidayName, string? HolidayNameAr, AttendanceRecord? Record, LeaveRequest? Leave, bool IsAbsent);
 public record DailyRow(Employee Employee, AttendanceRecord? Record, bool OnLeave);
 
-public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock)
+public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows)
 {
-    private const string Officers = $"{Roles.SystemAdmin},{Roles.HRManager},{Roles.HRSpecialist},{Roles.AttendanceOfficer}";
 
     public async Task<Shift> ShiftOfAsync(Employee e)
     {
@@ -62,7 +61,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
 
     public async Task AddManualAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source)
     {
-        if (!me.InAny(Officers)) throw new DomainException("err.forbidden");
+        if (!me.Can(Perm.AttManage)) throw new DomainException("err.forbidden");
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == employeeId)) ?? throw new DomainException("err.notFound");
         if (date.Date > clock.Today) throw new DomainException("err.future");
         if (checkIn == null) throw new DomainException("err.checkinRequired");
@@ -82,7 +81,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     {
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == employeeId)) ?? throw new DomainException("err.notFound");
         var manager = e.ManagerId != null && e.ManagerId == me.EmployeeId;
-        if (!manager && !me.InAny(Officers)) throw new DomainException("err.forbidden");
+        if (!manager && !me.Can(Perm.AttManage)) throw new DomainException("err.forbidden");
         if (string.IsNullOrWhiteSpace(note)) throw new DomainException("err.reasonRequired");
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == employeeId && r.Date == date.Date));
         if (rec != null && rec.Status != AttendanceStatus.Absent) throw new DomainException("err.notAbsent");
@@ -164,6 +163,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     {
         var e = await MeAsync();
         var o = OvertimeRequest.Create(e, date, hours, reason, clock.Today);
+        o.Route = await flows.RouteForAsync("Overtime", e, hours);
         if (await repo.AnyAsync(repo.Query<OvertimeRequest>().Where(x => x.EmployeeId == e.Id && x.Date == date.Date && (x.Status == RequestStatus.Pending || x.Status == RequestStatus.Approved))))
             throw new DomainException("err.overtimeExists");
         o.Employee = e;
@@ -177,6 +177,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var e = await MeAsync();
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == date.Date));
         var c = AttendanceCorrection.Create(e, date, rec?.CheckIn, rec?.CheckOut, newIn, newOut, reason, clock.Today);
+        c.Route = await flows.RouteForAsync("Correction", e, 0);
         c.Employee = e;
         repo.Add(c);
         await notify.NotifyStageAsync(c, $"{e.FullName}: {date:yyyy-MM-dd}");

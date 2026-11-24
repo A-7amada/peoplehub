@@ -1,0 +1,16 @@
+@model List<AppUser>
+@{ ViewData["Title"] = T["nav.users"]; var roles = (List<Role>)ViewBag.Roles; var emps = (List<Employee>)ViewBag.Employees; }
+<div class="page-head"><div><h1>@T["nav.users"]</h1><div class="sub">@T["users.sub"]</div></div></div>
+<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["login.email"]</th><th>@T["users.roles"]</th><th>@T["common.status"]</th><th></th></tr></thead><tbody>
+@foreach (var u in Model) { <tr>
+ <td dir="ltr" style="text-align:start">@u.Email</td>
+ <td><form method="post" action="/Admin/SaveUser" asp-antiforgery="true" id="u@(u.Id)" class="inline-form"><input type="hidden" name="id" value="@u.Id">
+   @foreach (var r in roles) { <label class="check"><input type="checkbox" name="roles" value="@r.Code" checked="@u.RoleArray.Contains(r.Code)"> @T.RoleName(r.Code)</label> }</form></td>
+ <td><label class="check"><input type="checkbox" form="u@(u.Id)" name="active" value="true" checked="@u.IsActive"> @T["common.active"]</label></td>
+ <td class="right"><button class="btn btn-sm" form="u@(u.Id)">@T["common.save"]</button></td></tr> }
+</tbody></table></div></div>
+<div class="card" style="margin-top:18px"><div class="card-h"><h2>@T["users.new"]</h2></div><div class="card-b"><form method="post" action="/Admin/CreateUser" asp-antiforgery="true">
+ <div class="form-grid"><div class="field"><label>@T["login.email"]</label><input name="email" type="email" required dir="ltr"></div><div class="field"><label>@T["users.password"]</label><input name="password" type="password" minlength="8" required></div>
+ <div class="field"><label>@T["users.employee"]</label><select name="employeeId"><option value="">-</option>@foreach (var e in emps) { <option value="@e.Id">@e.Code · @T.Name(e.FullName, e.FullNameAr)</option> }</select></div>
+ <div class="field"><label>@T["users.roles"]</label><div class="inline-form">@foreach (var r in roles) { <label class="check"><input type="checkbox" name="roles" value="@r.Code"> @T.RoleName(r.Code)</label> }</div></div></div>
+ <button class="btn btn-primary">@Ui.Icon("plus", 14) @T["common.add"]</button></form></div></div>

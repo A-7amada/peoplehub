@@ -1,7 +1,7 @@
 @model EmployeeProfile
 @{
   var e = Model.Employee; ViewData["Title"] = T.Name(e.FullName, e.FullNameAr); string tab = ViewBag.Tab;
-  bool hr = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager) || User.IsInRole(Roles.HRSpecialist);
+  bool hr = Me.Can(Perm.EmpManage);
   bool self = User.FindFirst("emp")?.Value == e.Id.ToString();
   var comps = (List<SalaryComponent>)ViewBag.Components; var bal = (List<LeaveBalance>)ViewBag.Balances; DateTime today = ViewBag.Today;
   string Tab(string k) => tab == k ? "on" : "";
@@ -54,7 +54,7 @@
  <div class="card"><div class="card-h"><h2>@T["emp.salary"]</h2></div><div class="card-b"><div class="kv"><span>@T["emp.basic"]</span><b class="num">@T.Money(e.BasicSalary)</b></div>
   @foreach (var c in Model.Components) { <div class="kv"><span>@T.Name(c.Component!.Name, c.Component.NameAr) @Ui.Chip(T.E(c.Component.Type), c.Component.Type == ComponentType.Earning ? "green" : "red")</span><b class="num">@T.Money(c.Amount)</b></div> }
   <div class="kv"><span>@T["emp.bankName"]</span><span>@e.BankName</span></div><div class="kv"><span>IBAN</span><span class="num" dir="ltr">@e.Iban</span></div></div></div>
- @if (hr || User.IsInRole(Roles.PayrollOfficer)) { <div class="card"><div class="card-h"><h2>@T["emp.setComponent"]</h2></div><div class="card-b"><form method="post" action="/Employees/SetComponent" asp-antiforgery="true"><input type="hidden" name="id" value="@e.Id">
+ @if (Me.Can(Perm.EmpPay)) { <div class="card"><div class="card-h"><h2>@T["emp.setComponent"]</h2></div><div class="card-b"><form method="post" action="/Employees/SetComponent" asp-antiforgery="true"><input type="hidden" name="id" value="@e.Id">
   <div class="field"><label>@T["common.type"]</label><select name="componentId">@foreach (var c in comps) { <option value="@c.Id">@T.Name(c.Name, c.NameAr) (@T.E(c.Type))</option> }</select></div>
   <div class="field"><label>@T["common.amount"]</label><input type="number" step="0.01" min="0" name="amount"></div><button class="btn btn-primary">@T["common.save"]</button></form></div></div> }
 </div>

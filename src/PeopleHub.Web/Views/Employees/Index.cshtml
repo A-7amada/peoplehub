@@ -1,5 +1,5 @@
 @model List<Employee>
-@{ ViewData["Title"] = T["nav.employees"]; var f = (EmployeeFilter)ViewBag.Filter; var depts = (List<Department>)ViewBag.Depts; var br = (List<Branch>)ViewBag.Branches; bool hr = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager) || User.IsInRole(Roles.HRSpecialist); bool pay = Model.Count > 0 && (hr || User.IsInRole(Roles.PayrollOfficer) || User.IsInRole(Roles.FinanceManager)); }
+@{ ViewData["Title"] = T["nav.employees"]; var f = (EmployeeFilter)ViewBag.Filter; var depts = (List<Department>)ViewBag.Depts; var br = (List<Branch>)ViewBag.Branches; bool hr = Me.Can(Perm.EmpManage); bool pay = Model.Count > 0 && Me.Can(Perm.EmpSalary); }
 <div class="page-head"><div><h1>@T["nav.employees"]</h1><div class="sub">@Model.Count @T["emp.found"]</div></div>
 <div class="actions"><a class="btn" href="/Reports/Csv?key=employees">@Ui.Icon("download", 16) CSV</a>@if (hr) { <a class="btn btn-primary" href="/Employees/Edit">@Ui.Icon("plus", 16) @T["emp.add"]</a> }</div></div>
 <div class="card"><form class="filters" method="get">

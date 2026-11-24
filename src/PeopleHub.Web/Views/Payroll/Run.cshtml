@@ -1,8 +1,8 @@
 @model PayrollRun
 @{
   var lines = (List<PayrollLine>)ViewBag.Lines; var hist = (List<ApprovalAction>)ViewBag.History; ViewData["Title"] = $"{T["nav.payroll"]} {Model.Year}-{Model.Month:00}";
-  bool prep = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.PayrollOfficer); bool hrm = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager);
-  bool fin = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.FinanceManager); bool top = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.TopManagement);
+  bool prep = Me.Can(Perm.PayPrepare); bool hrm = Me.Can(Perm.PayHr);
+  bool fin = Me.Can(Perm.PayFinance); bool top = Me.Can(Perm.PayFinalize);
   var order = new[] { PayrollStatus.Draft, PayrollStatus.HRReviewed, PayrollStatus.FinanceApproved, PayrollStatus.Finalized, PayrollStatus.Paid };
   string F(decimal v) => v.ToString("N2");
 }
@@ -27,5 +27,5 @@
  <div class="card"><div class="card-h"><h2>@T["pay.history"]</h2></div><div class="card-b"><ul class="timeline">@foreach (var h in hist) { <li><b>@T.E(h.Action)</b> <span class="faint small">· @h.At.ToString("yyyy-MM-dd HH:mm")</span><div class="muted small">@h.Actor @h.Comment</div></li> }</ul></div></div>
  <div class="card"><div class="card-h"><h2>@T["pay.controls"]</h2></div><div class="card-b">
   @if ((Model.Status == PayrollStatus.HRReviewed || Model.Status == PayrollStatus.FinanceApproved) && (hrm || fin)) { <form method="post" action="/Payroll/SendBack" asp-antiforgery="true" class="inline-form" style="margin-bottom:12px"><input type="hidden" name="id" value="@Model.Id"><input type="text" name="reason" placeholder="@T["common.reason"]" required style="flex:1"><button class="btn btn-bad">@T["pay.sendBack"]</button></form> }
-  @if (Model.Status == PayrollStatus.Finalized && User.IsInRole(Roles.SystemAdmin)) { <form method="post" action="/Payroll/Reopen" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@Model.Id"><input type="text" name="reason" placeholder="@T["common.reason"]" required style="flex:1"><button class="btn btn-bad">@T["pay.reopen"]</button></form> }
+  @if (Model.Status == PayrollStatus.Finalized && Me.Can(Perm.PayReopen)) { <form method="post" action="/Payroll/Reopen" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@Model.Id"><input type="text" name="reason" placeholder="@T["common.reason"]" required style="flex:1"><button class="btn btn-bad">@T["pay.reopen"]</button></form> }
   <p class="muted small">@T["pay.rulesNote"]</p></div></div></div>

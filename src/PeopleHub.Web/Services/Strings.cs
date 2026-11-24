@@ -28,7 +28,7 @@ public partial class Loc
         A("nav.reports", "Reports", "التقارير");
         A("nav.admin", "Administration", "الإدارة");
         A("nav.audit", "Audit log", "سجل التدقيق");
-        A("nav.users", "Users & roles", "المستخدمون والأدوار");
+        A("nav.users", "Users", "المستخدمون");
         A("nav.notifications", "Notifications", "الإشعارات");
         A("nav.logout", "Sign out", "تسجيل الخروج");
         A("nav.lang", "العربية", "English");
@@ -184,8 +184,39 @@ public partial class Loc
             ("Finalized", "Finalized", "معتمدة نهائياً"), ("Paid", "Paid", "تم الصرف"), ("Created", "Created", "أُنشئت"), ("SentBack", "Sent back", "أُعيدت"), ("Reopened", "Reopened", "أُعيد فتحها") })
             A("enum." + k, en, ar);
 
+
+        A("nav.roles", "Roles & permissions", "الأدوار والصلاحيات"); A("nav.workflows", "Approval cycles", "مسارات الموافقات");
+        A("common.delete", "Delete", "حذف"); A("common.name", "Name", "الاسم"); A("common.nameAr", "Name (Arabic)", "الاسم (عربي)");
+        A("roles.sub", "Roles are data. Tick which pages and actions each role can use. Changes apply immediately.", "الأدوار بيانات قابلة للتعديل. حدد الصفحات والإجراءات المتاحة لكل دور، وتُطبّق التغييرات فوراً.");
+        A("roles.matrix", "Permission matrix", "مصفوفة الصلاحيات"); A("roles.permission", "Permission", "الصلاحية"); A("roles.always", "always full access", "صلاحيات كاملة دائماً");
+        A("roles.custom", "Custom roles", "أدوار مخصصة"); A("roles.new", "New role", "دور جديد"); A("roles.code", "Code", "الكود");
+        A("roles.newHint", "After creating a role, tick its permissions in the matrix above and assign it to users.", "بعد إنشاء الدور، حدد صلاحياته في المصفوفة أعلاه ثم أسنده للمستخدمين.");
+        A("users.new", "New user", "مستخدم جديد"); A("users.password", "Password (8+ characters)", "كلمة المرور (8 أحرف أو أكثر)"); A("users.employee", "Linked employee", "الموظف المرتبط");
+        A("wf.sub", "Define the steps of each approval cycle and which role acts on every step. New requests follow these steps immediately; requests already in flight keep theirs.", "حدد خطوات كل مسار موافقة والدور المسؤول عن كل خطوة. الطلبات الجديدة تتبع التعديل فوراً، أما الطلبات الجارية فتكمل مسارها الحالي.");
+        A("wf.managerHint", "The employee's direct manager", "المدير المباشر للموظف (يُتخطى إن لم يوجد)"); A("wf.roleHint", "Anyone holding one of these roles", "أي مستخدم يحمل أحد هذه الأدوار");
+        A("wf.when", "only when above", "فقط عندما يزيد عن"); A("wf.approver", "Approver", "المعتمِد"); A("wf.byRole", "A role", "دور وظيفي"); A("wf.byManager", "Direct manager", "المدير المباشر");
+        A("wf.threshold", "Applies above", "يُطبّق عند تجاوز"); A("wf.always", "always", "دائماً"); A("wf.roles", "Roles (when approver is a role)", "الأدوار (عند اختيار دور)"); A("wf.addStep", "Add step", "إضافة خطوة");
+        A("wf.unit.Leave", "days", "أيام"); A("wf.unit.Overtime", "hours", "ساعات"); A("wf.unit.Correction", "n/a", "غير مستخدم"); A("wf.unit.Advance", "EGP", "ج.م");
+        A("wf.desc.Leave", "Unpaid leave always escalates to roles", "الإجازة بدون أجر تصعّد دائماً"); A("wf.desc.Overtime", "Based on hours", "حسب الساعات");
+        A("wf.desc.Correction", "Attendance fixes", "تصحيح الحضور"); A("wf.desc.Advance", "Based on amount", "حسب المبلغ");
+        A("wf.note", "Rules: a step for the direct manager is skipped when the employee has none; nobody can approve their own request; the system admin can act on any step; if every step is skipped the request goes to the first role step.", "القواعد: تُتخطى خطوة المدير المباشر إذا لم يكن للموظف مدير؛ لا يستطيع أحد الموافقة على طلبه؛ مدير النظام يستطيع العمل على أي خطوة؛ وإذا تخطّت كل الخطوات يذهب الطلب إلى أول خطوة دور.");
+        A("permg.Data scope", "Data scope", "نطاق البيانات");
+        A("permg.Employees", "Employees", "الموظفون");
+        A("permg.Organization", "Organization", "الهيكل التنظيمي");
+        A("permg.Attendance", "Attendance", "الحضور");
+        A("permg.Leave", "Leave", "الإجازات");
+        A("permg.Payroll", "Payroll", "المرتبات");
+        A("permg.Reports", "Reports", "التقارير");
+        A("permg.Administration", "Administration", "الإدارة");
+
         // errors
         foreach (var (k, en, ar) in new[] {
+            ("roleRequired", "Pick at least one role for a role step.", "اختر دوراً واحداً على الأقل لخطوة الدور."), ("maxSteps", "A cycle can have at most 6 steps.", "المسار يقبل 6 خطوات كحد أقصى."),
+            ("dupManager", "This cycle already has a direct-manager step.", "المسار يحتوي بالفعل على خطوة المدير المباشر."), ("minSteps", "A cycle needs at least one step.", "المسار يحتاج خطوة واحدة على الأقل."),
+            ("roleInvalid", "Role code needs 3+ letters or digits and a name.", "كود الدور 3 أحرف أو أرقام على الأقل مع اسم."), ("roleExists", "A role with this code already exists.", "يوجد دور بنفس الكود."),
+            ("roleSystem", "Built-in roles cannot be deleted.", "لا يمكن حذف الأدوار الأساسية."), ("roleInUse", "The role is still used by a user or an approval step.", "الدور ما زال مستخدماً في مستخدم أو خطوة موافقة."),
+            ("lockout", "You cannot remove your own admin access.", "لا يمكنك إزالة صلاحية الإدارة عن نفسك."), ("userInvalid", "A valid email and a password of 8+ characters are required.", "مطلوب بريد صحيح وكلمة مرور 8 أحرف على الأقل."),
+            ("userExists", "That email already has an account.", "هذا البريد لديه حساب بالفعل."),
             ("generic", "Something went wrong.", "حدث خطأ ما."), ("forbidden", "You do not have access to that.", "ليست لديك صلاحية لهذا الإجراء."), ("notFound", "Record not found.", "السجل غير موجود."),
             ("name", "Name is required.", "الاسم مطلوب."), ("email", "A valid email is required.", "البريد الإلكتروني غير صالح."), ("emailTaken", "That email is already used.", "هذا البريد مستخدم بالفعل."),
             ("salary", "Salary values must not be negative.", "قيم الراتب لا يمكن أن تكون سالبة."), ("salaryRange", "Salary is outside the range of the job title.", "الراتب خارج نطاق المسمى الوظيفي."),

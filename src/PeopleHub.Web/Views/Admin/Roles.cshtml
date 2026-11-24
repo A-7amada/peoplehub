@@ -1,0 +1,24 @@
+@model List<Role>
+@{ ViewData["Title"] = T["nav.roles"]; var perms = (List<RolePermission>)ViewBag.Perms; var groups = Perm.Catalog.GroupBy(p => p.Group).ToList(); }
+<div class="page-head"><div><h1>@T["nav.roles"]</h1><div class="sub">@T["roles.sub"]</div></div></div>
+<form method="post" action="/Admin/SavePermissions" asp-antiforgery="true">
+<div class="card"><div class="card-h"><h2>@T["roles.matrix"]</h2><button class="btn btn-primary btn-sm">@Ui.Icon("check", 14) @T["common.save"]</button></div>
+<div class="tbl-wrap"><table class="tbl matrix"><thead><tr><th>@T["roles.permission"]</th>@foreach (var r in Model) { <th class="center"><div>@T.RoleName(r.Code)</div>@if (r.Code == Roles.SystemAdmin) { <div class="faint small">@T["roles.always"]</div> } else if (!r.IsSystem) { <div class="faint small">@T["roles.custom"]</div> }</th> }</tr></thead><tbody>
+@foreach (var g in groups) {
+ <tr class="grp"><td colspan="@(Model.Count + 1)">@T["permg." + g.Key]</td></tr>
+ @foreach (var p in g) {
+ <tr><td>@T.Name(p.En, p.Ar)</td>
+ @foreach (var r in Model) { var on = r.Code == Roles.SystemAdmin || perms.Any(x => x.RoleCode == r.Code && x.Permission == p.Key);
+  <td class="center">@if (r.Code == Roles.SystemAdmin) { <input type="checkbox" checked disabled> } else { <input type="checkbox" name="grant" value="@(r.Code + "|" + p.Key)" checked="@on"> }</td> }
+ </tr> } }
+</tbody></table></div></div>
+</form>
+<div class="grid g2" style="margin-top:18px">
+<div class="card"><div class="card-h"><h2>@T["roles.new"]</h2></div><div class="card-b"><form method="post" action="/Admin/AddRole" asp-antiforgery="true">
+ <div class="form-grid"><div class="field"><label>@T["roles.code"]</label><input name="code" required placeholder="TeamLead" dir="ltr"></div><div class="field"><label>@T["common.name"]</label><input name="name" required></div>
+ <div class="field full"><label>@T["common.nameAr"]</label><input name="nameAr" dir="rtl"></div></div>
+ <button class="btn btn-primary">@Ui.Icon("plus", 14) @T["common.add"]</button><div class="faint small" style="margin-top:8px">@T["roles.newHint"]</div></form></div></div>
+<div class="card"><div class="card-h"><h2>@T["roles.custom"]</h2></div><div class="card-b">
+ @if (!Model.Any(r => !r.IsSystem)) { <div class="empty">@T["common.none"]</div> }
+ @foreach (var r in Model.Where(r => !r.IsSystem)) { <form method="post" action="/Admin/DeleteRole" asp-antiforgery="true" class="inline-form" style="justify-content:space-between;margin-bottom:8px"><span><b>@r.Name</b> <span class="faint" dir="ltr">@r.Code</span></span><input type="hidden" name="code" value="@r.Code"><button class="btn btn-sm btn-bad">@T["common.delete"]</button></form> }
+</div></div></div>

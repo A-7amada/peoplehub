@@ -78,13 +78,11 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
     }
 }
 
-public class ReportsController(Loc loc, ReportService svc, AppClock clock) : BaseController(loc)
+public class ReportsController(Loc loc, ReportService svc, AppClock clock, ICurrentUser me) : BaseController(loc)
 {
-    private const string Allowed = $"{Roles.Company},{Roles.DepartmentManager}";
-
     public async Task<IActionResult> Index(string key = "employees", int? year = null, int? month = null)
     {
-        if (!User.Claims.Any(c => c.Type.EndsWith("/role") && Allowed.Split(',').Contains(c.Value))) return Forbidden();
+        if (!me.Can(Perm.Reports)) return Forbidden();
         var y = year ?? clock.Today.Year; var m = month ?? clock.Today.Month;
         ViewBag.Key = key; ViewBag.Year = y; ViewBag.Month = m;
         try { return View(await svc.BuildAsync(key, y, m)); }
@@ -98,7 +96,7 @@ public class ReportsController(Loc loc, ReportService svc, AppClock clock) : Bas
     }
 }
 
-public class SystemController(Loc loc, NotificationService notes, AuditService audit, AuthService auth) : BaseController(loc)
+public class SystemController(Loc loc, NotificationService notes, AuditService audit) : BaseController(loc)
 {
     public async Task<IActionResult> Notifications()
     {
@@ -108,9 +106,6 @@ public class SystemController(Loc loc, NotificationService notes, AuditService a
         return View(copy);
     }
 
-    [Authorize(Roles = $"{Roles.SystemAdmin},{Roles.HRManager},{Roles.TopManagement}")]
+    [RequirePerm(Perm.Audit)]
     public async Task<IActionResult> Audit(string? entity) { ViewBag.Entity = entity; return View(await audit.RecentAsync(entity)); }
-
-    [Authorize(Roles = Roles.SystemAdmin)]
-    public async Task<IActionResult> Users() => View(await auth.UsersAsync());
 }

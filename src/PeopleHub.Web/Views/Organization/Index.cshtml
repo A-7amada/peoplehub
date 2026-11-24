@@ -1,5 +1,5 @@
 @model OrgOverview
-@{ ViewData["Title"] = T["nav.organization"]; bool hr = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager) || User.IsInRole(Roles.HRSpecialist); var mgrs = (List<Employee>)ViewBag.Managers; var flat = new List<DeptNode>(); void Walk(DeptNode n) { flat.Add(n); n.Children.ForEach(Walk); } Model.Tree.ForEach(Walk); }
+@{ ViewData["Title"] = T["nav.organization"]; bool hr = Me.Can(Perm.OrgManage); var mgrs = (List<Employee>)ViewBag.Managers; var flat = new List<DeptNode>(); void Walk(DeptNode n) { flat.Add(n); n.Children.ForEach(Walk); } Model.Tree.ForEach(Walk); }
 <div class="page-head"><div><h1>@T["nav.organization"]</h1><div class="sub">@T["org.sub"]</div></div></div>
 <div class="grid g-main-r">
 <div class="card"><div class="card-h"><h2>@T["org.departments"]</h2></div><div class="card-b">
