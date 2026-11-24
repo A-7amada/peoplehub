@@ -27,7 +27,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
     public async Task<int> CreateAsync(int year, int month)
     {
         Require(Perm.PayPrepare);
-        if (month is < 1 or > 12 || year < 2000) throw new DomainException("err.dates");
+        if (month is < 1 or > 12 || year < 2000 || year > 9998) throw new DomainException("err.dates");
         if (await repo.AnyAsync(repo.Query<PayrollRun>().Where(r => r.Year == year && r.Month == month))) throw new DomainException("err.runExists");
         var run = new PayrollRun { Year = year, Month = month, CreatedBy = me.Email, CreatedAt = clock.UtcNow };
         repo.Add(run);

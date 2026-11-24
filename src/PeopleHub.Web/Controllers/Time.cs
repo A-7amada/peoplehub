@@ -14,7 +14,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
         var y = year ?? clock.Today.Year; var m = month ?? clock.Today.Month;
         try
         {
-            ViewBag.Year = y; ViewBag.Month = m; ViewBag.Emp = await emps.GetAsync(eid.Value);
+            ViewBag.Year = y; ViewBag.Month = m; ViewBag.Emp = await emps.GetAsync(eid.Value) ?? throw new DomainException("err.notFound");
             ViewBag.Today = eid == me.EmployeeId ? await svc.TodayRecordAsync() : null;
             ViewBag.Summary = (await svc.SummariesAsync([ViewBag.Emp], y, m))[eid.Value];
             ViewBag.Own = eid == me.EmployeeId;

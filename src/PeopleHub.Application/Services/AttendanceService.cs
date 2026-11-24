@@ -106,6 +106,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     public async Task<List<DayRow>> MonthAsync(int employeeId, int year, int month)
     {
         if (!await scope.CanSeeAsync(employeeId)) throw new DomainException("err.forbidden");
+        if (year < 1900 || year > 9998 || month < 1 || month > 12) throw new DomainException("err.required");
         var first = new DateTime(year, month, 1);
         var last = first.AddMonths(1).AddDays(-1);
         var holidays = await repo.ToListAsync(repo.Query<Holiday>().Where(h => h.Date >= first && h.Date <= last));
@@ -129,6 +130,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     /// <summary>Monthly totals for many employees at once (used by payroll, reports and the dashboard).</summary>
     public async Task<Dictionary<int, AttendanceSummary>> SummariesAsync(IReadOnlyCollection<Employee> employees, int year, int month)
     {
+        if (year < 1900 || year > 9998 || month < 1 || month > 12) throw new DomainException("err.required");
         var first = new DateTime(year, month, 1);
         var last = first.AddMonths(1).AddDays(-1);
         var today = clock.Today;

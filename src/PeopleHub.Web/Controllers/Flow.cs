@@ -105,6 +105,7 @@ public class ReportsController(Loc loc, ReportService svc, AppClock clock, ICurr
     public async Task<IActionResult> Builder(string dataset = "employees", string[]? cols = null, int? dept = null, bool run = false)
     {
         if (!me.Can(Perm.Reports)) return Forbidden();
+        if (!ReportBuilderService.Columns.ContainsKey(dataset)) return BadRequest();
         ViewBag.Dataset = dataset; ViewBag.Cols = cols ?? ReportBuilderService.Columns[dataset]; ViewBag.Dept = dept; ViewBag.Depts = await org.DepartmentsAsync();
         try { return View(run ? await builder.RunAsync(dataset, cols, dept) : null); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }
@@ -112,22 +113,25 @@ public class ReportsController(Loc loc, ReportService svc, AppClock clock, ICurr
 
     public async Task<IActionResult> BuilderFile(string dataset, string[]? cols, int? dept, string format = "xlsx")
     {
-        var t = await builder.RunAsync(dataset, cols, dept);
-        return format == "csv" ? File(System.Text.Encoding.UTF8.GetBytes(ReportService.ToCsv(t)), "text/csv", $"{t.Key}.csv")
-            : File(XlsxWriter.Build(t.Key, t.Columns, t.Rows), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{t.Key}.xlsx");
+        if (!me.Can(Perm.Reports)) return Forbidden();
+        if (!ReportBuilderService.Columns.ContainsKey(dataset ?? "")) return BadRequest();
+        try {
+            var t = await builder.RunAsync(dataset!, cols, dept);
+            return format == "csv" ? File(System.Text.Encoding.UTF8.GetBytes(ReportService.ToCsv(t)), "text/csv", $"{t.Key}.csv")
+                : File(XlsxWriter.Build(t.Key, t.Columns, t.Rows), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{t.Key}.xlsx");
+        } catch (DomainException) { return BadRequest(); }
     }
 
-    public async Task<IActionResult> Xlsx(string key, int? year, int? month)
+    public async Task<IActionResult> Xlsx(string key, int? year, int? month) => await Export(key, year, month, false);
+    public async Task<IActionResult> Csv(string key, int? year, int? month) => await Export(key, year, month, true);
+    private async Task<IActionResult> Export(string key, int? year, int? month, bool csv)
     {
         if (!me.Can(Perm.Reports)) return Forbidden();
-        var t = await svc.BuildAsync(key, year ?? clock.Today.Year, month ?? clock.Today.Month);
-        return File(XlsxWriter.Build(t.Key, t.Columns, t.Rows), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"report-{key}.xlsx");
-    }
-
-    public async Task<IActionResult> Csv(string key, int? year, int? month)
-    {
-        var t = await svc.BuildAsync(key, year ?? clock.Today.Year, month ?? clock.Today.Month);
-        return File(System.Text.Encoding.UTF8.GetBytes(ReportService.ToCsv(t)), "text/csv", $"report-{key}.csv");
+        try {
+            var t = await svc.BuildAsync(key, year ?? clock.Today.Year, month ?? clock.Today.Month);
+            return csv ? File(System.Text.Encoding.UTF8.GetBytes(ReportService.ToCsv(t)), "text/csv", $"report-{key}.csv")
+                : File(XlsxWriter.Build(t.Key, t.Columns, t.Rows), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"report-{key}.xlsx");
+        } catch (DomainException) { return BadRequest(); }
     }
 }
 

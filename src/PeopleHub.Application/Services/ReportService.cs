@@ -75,6 +75,8 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
 
     public async Task<ReportTable> BuildAsync(string key, int year, int month)
     {
+        if (!me.Can(Perm.Reports)) throw new DomainException("err.forbidden");
+        if (!ReportKeys.Contains(key) || year < 1900 || year > 9998 || month < 1 || month > 12) throw new DomainException("err.required");
         var ids = await scope.VisibleEmployeeIdsAsync();
         var emps = (await repo.ToListAsync(repo.Query<Employee>().OrderBy(e => e.Code))).Where(e => ids == null || ids.Contains(e.Id)).ToList();
         switch (key)

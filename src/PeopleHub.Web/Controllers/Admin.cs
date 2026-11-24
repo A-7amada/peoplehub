@@ -17,7 +17,7 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
 
     [RequirePerm(Perm.AdmSettings), HttpPost]
     public Task<IActionResult> SaveSettings(IFormCollection f) =>
-        Do(() => settings.SaveAsync(SettingsService.Defaults.Keys.Where(k => f.ContainsKey(k) || k == "email.notify").ToDictionary(k => k, k => k == "email.notify" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : k == "zk.simulate" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : f[k].ToString().Trim())), "msg.saved", () => RedirectToAction(nameof(Settings)));
+        Do(() => settings.SaveAsync(SettingsService.Defaults.Keys.Where(k => f.ContainsKey(k) || k == "email.notify" || k == "zk.simulate").ToDictionary(k => k, k => k == "email.notify" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : k == "zk.simulate" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : f[k].ToString().Trim())), "msg.saved", () => RedirectToAction(nameof(Settings)));
 
     [RequirePerm(Perm.AdmSettings), HttpPost]
     public async Task<IActionResult> TestDevice() { await settings.LoadAsync(); var (ok, msg) = await device.PingAsync(); if (ok) TempData["ok"] = msg; else TempData["err"] = msg; return RedirectToAction(nameof(Settings)); }

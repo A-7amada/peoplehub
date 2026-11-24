@@ -36,7 +36,6 @@ public abstract class BaseController(Loc loc) : Controller
     protected IActionResult Forbidden() { TempData["err"] = loc["err.forbidden"]; return Redirect("/"); }
 }
 
-[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
 public class AccountController(Loc loc, AuthService auth, AccountService accounts, Microsoft.AspNetCore.DataProtection.IDataProtectionProvider dp, AppClock clock, IConfiguration config) : Controller
 {
     private Microsoft.AspNetCore.DataProtection.IDataProtector Prot => dp.CreateProtector("peoplehub.2fa");
@@ -50,6 +49,7 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
     }
 
     [AllowAnonymous, HttpPost]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
     public async Task<IActionResult> Verify(string pending, string code)
     {
         try
@@ -65,6 +65,7 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
 
     [AllowAnonymous, HttpGet] public IActionResult Forgot() => View();
     [AllowAnonymous, HttpPost]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
     public async Task<IActionResult> Forgot(string email)
     {
         var baseUrl = config["PUBLIC_BASE_URL"];
@@ -75,6 +76,7 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
     }
     [AllowAnonymous, HttpGet] public async Task<IActionResult> Reset(string token) { ViewBag.Token = token; ViewBag.Valid = await accounts.TokenValidAsync(token ?? ""); return View(); }
     [AllowAnonymous, HttpPost]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
     public async Task<IActionResult> Reset(string token, string password)
     {
         try { if (await accounts.ResetAsync(token ?? "", password)) { TempData["ok"] = loc["msg.saved"]; return RedirectToAction(nameof(Login)); } ViewBag.Error = loc["err.badToken"]; }
@@ -84,7 +86,7 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
 
     [Authorize] public async Task<IActionResult> Security(string? setup) { ViewBag.User = await accounts.CurrentAsync(); ViewBag.Setup = setup == "1"; return View(); }
     [Authorize, HttpPost] public async Task<IActionResult> ChangePassword(string current, string next) { try { await accounts.ChangePasswordAsync(current, next); TempData["ok"] = loc["msg.saved"]; } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; } return RedirectToAction(nameof(Security)); }
-    [Authorize, HttpPost] public async Task<IActionResult> BeginTotp() { await accounts.BeginTotpAsync(); return RedirectToAction(nameof(Security), new { setup = 1 }); }
+    [Authorize, HttpPost] public async Task<IActionResult> BeginTotp() { try { await accounts.BeginTotpAsync(); return RedirectToAction(nameof(Security), new { setup = 1 }); } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; return RedirectToAction(nameof(Security)); } }
     [Authorize, HttpPost] public async Task<IActionResult> EnableTotp(string code) { try { await accounts.EnableTotpAsync(code); TempData["ok"] = loc["msg.saved"]; return RedirectToAction(nameof(Security)); } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; return RedirectToAction(nameof(Security), new { setup = 1 }); } }
     [Authorize, HttpPost] public async Task<IActionResult> DisableTotp(string password) { try { await accounts.DisableTotpAsync(password); TempData["ok"] = loc["msg.saved"]; } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; } return RedirectToAction(nameof(Security)); }
 
@@ -92,6 +94,7 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
     public IActionResult Login() => User.Identity?.IsAuthenticated == true ? Redirect("/") : View();
 
     [AllowAnonymous, HttpPost]
+    [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
     public async Task<IActionResult> Login(string email, string password)
     {
         var u = await auth.LoginAsync(email, password);

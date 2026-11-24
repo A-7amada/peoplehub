@@ -55,7 +55,15 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     public async Task SaveAsync(Employee model, string? reason)
     {
         RequireHr();
+        model.FullNameAr ??= ""; model.NationalId ??= ""; model.MaritalStatus ??= ""; model.Nationality ??= "Egyptian";
+        model.Address ??= ""; model.Phone ??= ""; model.BankName ??= ""; model.Iban ??= ""; model.InsuranceNumber ??= "";
         model.Validate();
+        if (!await repo.AnyAsync(repo.Query<Department>().Where(x => x.Id == model.DepartmentId)) ||
+            !await repo.AnyAsync(repo.Query<Branch>().Where(x => x.Id == model.BranchId)) ||
+            !await repo.AnyAsync(repo.Query<JobTitle>().Where(x => x.Id == model.JobTitleId)) ||
+            (model.ShiftId.HasValue && !await repo.AnyAsync(repo.Query<Shift>().Where(x => x.Id == model.ShiftId))) ||
+            (model.ManagerId.HasValue && !await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Id == model.ManagerId))))
+            throw new DomainException("err.notFound");
         if (await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Email == model.Email && x.Id != model.Id))) throw new DomainException("err.emailTaken");
         var today = clock.Today;
 
