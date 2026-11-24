@@ -20,13 +20,13 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     public Task<IActionResult> SaveSettings(IFormCollection f) =>
         Do(() => settings.SaveAsync(SettingsService.Defaults.Keys.Where(k => f.ContainsKey(k) || k == "email.notify" || k == "zk.simulate").ToDictionary(k => k, k => k == "email.notify" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : k == "zk.simulate" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : f[k].ToString().Trim())), "msg.saved", () => RedirectToAction(nameof(Settings)));
 
-    [RequirePerm(Perm.AdmSettings), HttpPost]
+    [RequirePerm(Perm.AdmSettings), HttpPost,RequireStepUp]
     public async Task<IActionResult> TestDevice() { await settings.LoadAsync(); var (ok, msg) = await device.PingAsync(); if (ok) TempData["ok"] = msg; else TempData["err"] = msg; return RedirectToAction(nameof(Settings)); }
 
-    [RequirePerm(Perm.AdmSettings), HttpPost]
+    [RequirePerm(Perm.AdmSettings), HttpPost,RequireStepUp]
     public async Task<IActionResult> SyncDevice() { try { var n = await device.SyncAsync(); TempData["ok"] = (L.IsAr ? "تمت المزامنة: " : "Synced: ") + n + (L.IsAr ? " بصمة جديدة" : " new punches"); } catch (DomainException ex) { TempData["err"] = L[ex.Message]; } return RedirectToAction(nameof(Settings)); }
 
-    [RequirePerm(Perm.AdmSettings), HttpPost]
+    [RequirePerm(Perm.AdmSettings), HttpPost,RequireStepUp]
     public async Task<IActionResult> FlushMail() { await mail.FlushAsync(); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Settings)); }
 
     [RequirePerm(Perm.AdmSettings)]
@@ -88,16 +88,16 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     }
 
     [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> ReminderPolicy(string kind,int hours)=>Do(()=>flows.SetReminderHoursAsync(kind,hours),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
-    [RequirePerm(Perm.AdmFlows), HttpPost]
+    [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]
     public Task<IActionResult> ApprovalComment(string kind,bool required) => Do(()=>flows.SetApprovalCommentAsync(kind,required),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
 
-    [RequirePerm(Perm.AdmFlows), HttpPost]
+    [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]
     public Task<IActionResult> AddStep(string kind, ApproverType type, string[]? roles, decimal? threshold) =>
         Do(() => flows.AddStepAsync(kind, type, roles, threshold), "msg.saved", () => RedirectToAction(nameof(Workflows)));
 
-    [RequirePerm(Perm.AdmFlows), HttpPost]
+    [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]
     public Task<IActionResult> RemoveStep(int id) => Do(() => flows.RemoveStepAsync(id), "msg.saved", () => RedirectToAction(nameof(Workflows)));
 
-    [RequirePerm(Perm.AdmFlows), HttpPost]
+    [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]
     public Task<IActionResult> MoveStep(int id, int dir) => Do(() => flows.MoveStepAsync(id, dir), "msg.saved", () => RedirectToAction(nameof(Workflows)));
 }

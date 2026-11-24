@@ -71,7 +71,7 @@
 | SEC-007 | Retention/deletion/access policies | P0 | Open: owner policy decisions required |
 | SEC-008 | Malware scan, signatures/private attachments | P0 | Partial: private scoped storage, size/extension and file signature checks; malware scanner remains unconnected |
 | SEC-009 | Encrypted backup and controlled restore | P0 | Open: encryption/key custody/restore drill |
-| SEC-010 | Step-up auth for sensitive admin actions | P0 | Partial: five-minute current-session password + enabled TOTP challenge on settings/user/role writes, database export and payroll finalization/bank/full snapshot exports; action is not replayed. Broader sensitive-action coverage remains under review |
+| SEC-010 | Step-up auth for sensitive admin actions | P0 | Partial: five-minute current-session password + enabled TOTP challenge on settings/user/role/workflow writes, manual device/mail operations, database export and payroll finalization/bank/full snapshot exports; action is not replayed. Broader sensitive-action coverage remains under review |
 | ARC-001 | Modular monolith domain boundaries and policies | P1 | Existing layers; deeper policy extraction open |
 | ARC-002 | PostgreSQL/SQL Server | P0 | PostgreSQL existing |
 | ARC-003 | Explicit business transactions | P0 | Partial: payroll, attendance, device ingestion, final approvals, leave request/adjustment and employee save atomic; remaining service paths under review |
