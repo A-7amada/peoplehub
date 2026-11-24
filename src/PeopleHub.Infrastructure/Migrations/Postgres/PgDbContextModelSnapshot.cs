@@ -3316,6 +3316,37 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("TrainingCertificate");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCertificateAlert", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("CertificateId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("OnDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CertificateId", "OnDate")
+                        .IsUnique();
+
+                    b.ToTable("TrainingCertificateAlert");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCourse", b =>
                 {
                     b.Property<int>("Id")

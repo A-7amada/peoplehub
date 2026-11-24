@@ -27,7 +27,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
-        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse or WorkflowRevision or PipProgress or ApprovalAssignment or ApprovalAction or TrainingCertificate or TrainingOutcome or RecruitmentEvent or CandidateOffer or CandidateOfferEvent) && e.State is EntityState.Modified or EntityState.Deleted))
+        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse or WorkflowRevision or PipProgress or ApprovalAssignment or ApprovalAction or TrainingCertificate or TrainingOutcome or RecruitmentEvent or CandidateOffer or CandidateOfferEvent or TrainingCertificateAlert) && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Append-only business evidence cannot be edited or deleted.");
         foreach (var e in ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified))
             e.Property("Revision").CurrentValue = Guid.NewGuid().ToString("N");
@@ -47,6 +47,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
         b.Entity<TrainingCourse>().Property(x=>x.ApprovalStatus).HasDefaultValue("Legacy");b.Entity<JobOpening>().Property(x=>x.ApprovalStatus).HasDefaultValue("Legacy");
         b.Entity<CandidateOffer>().HasIndex(x=>x.CandidateId);b.Entity<CandidateOfferEvent>().HasIndex(x=>x.OfferId);
         b.Entity<CandidateInterview>().HasIndex(x=>new{x.CandidateId,x.StartsAt});b.Entity<RecruitmentEvent>().HasIndex(x=>x.CandidateId);
+        b.Entity<TrainingCertificateAlert>().HasIndex(x=>new{x.CertificateId,x.OnDate}).IsUnique();
         b.Entity<TrainingCertificate>().HasIndex(x=>x.AttachmentToken).IsUnique();b.Entity<TrainingOutcome>().HasIndex(x=>x.EnrollmentId);
         b.Entity<ApprovalAssignment>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex});
         b.Entity<PipMilestone>().HasIndex(x=>x.AppraisalId);b.Entity<PipProgress>().HasIndex(x=>x.MilestoneId);

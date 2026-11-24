@@ -1,0 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Services;
+using PeopleHub.Domain.Entities;
+namespace PeopleHub.Tests;
+public class TrainingExpiryTests
+{
+ class Time:TimeProvider{public DateTimeOffset Now=new(2026,11,24,18,0,0,TimeSpan.Zero);public override DateTimeOffset GetUtcNow()=>Now;}
+ static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
+ static TrainingCertificate Cert(int employee,DateTime? expiry)=>new(){EmployeeId=employee,EnrollmentId=1,Issuer="Fictional issuer",Reference="DEMO",IssuedOn=new(2026,1,1),ExpiresOn=expiry,AttachmentToken=Guid.NewGuid().ToString("N"),Actor="test",At=new(2026,11,24)};
+ [Fact]public async Task OnlyDueCertificatesAlertAndDailyRerunDoesNotDuplicate(){await using var d=await Db();d.AddRange(Cert(6,new(2026,11,1)),Cert(6,new(2026,12,24)),Cert(6,new(2026,12,25)),Cert(6,null));await d.SaveAsync();var t=new Time();var s=new TrainingExpiry(d,new(t));await s.AlertAsync();Assert.Equal(2,await d.Set<TrainingCertificateAlert>().CountAsync());var count=await d.Set<Notification>().CountAsync(x=>x.TitleKey=="notif.trainingExpiry");Assert.True(count>0);await s.AlertAsync();Assert.Equal(count,await d.Set<Notification>().CountAsync(x=>x.TitleKey=="notif.trainingExpiry"));t.Now=t.Now.AddDays(1);await s.AlertAsync();Assert.Equal(5,await d.Set<TrainingCertificateAlert>().CountAsync());}
+ [Fact]public async Task AlertsArePrivateInAppAndRetainImmutableLedger(){await using var d=await Db();d.Add(Cert(6,new(2026,11,1)));await d.SaveAsync();var before=await d.Set<EmailOutbox>().CountAsync();await new TrainingExpiry(d,new(new Time())).AlertAsync();var recipients=await d.Set<Notification>().Where(x=>x.TitleKey=="notif.trainingExpiry").Select(x=>x.UserId).ToListAsync();var users=await d.Set<AppUser>().ToListAsync();foreach(var id in recipients){var u=users.Single(x=>x.Id==id);Assert.True(u.EmployeeId==6||PermissionCache.Has(u.RoleArray,Perm.TalentManage));}Assert.Equal(before,await d.Set<EmailOutbox>().CountAsync());var ledger=await d.Set<TrainingCertificateAlert>().SingleAsync();ledger.OnDate=ledger.OnDate.AddDays(1);await Assert.ThrowsAsync<InvalidOperationException>(()=>d.SaveAsync());}
+ [Fact]public async Task DailyDatabaseKeyPreventsDuplicateAlertMarker(){await using var d=await Db();d.Add(Cert(6,new(2026,11,1)));await d.SaveAsync();await new TrainingExpiry(d,new(new Time())).AlertAsync();var row=await d.Set<TrainingCertificateAlert>().SingleAsync();d.Add(new TrainingCertificateAlert{CertificateId=row.CertificateId,OnDate=row.OnDate,At=row.At});await Assert.ThrowsAsync<DbUpdateException>(()=>d.SaveAsync());}
+}

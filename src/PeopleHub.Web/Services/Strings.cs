@@ -21,6 +21,7 @@ public partial class Loc
         A("notif.perfAppealDecision","Performance appeal decision recorded","تم تسجيل قرار تظلم الأداء");
         A("notif.reassigned","Approval stage assigned to you","تكليفك بمرحلة موافقة");
         A("notif.lifecycle","Employee lifecycle task assigned","تم إسناد مهمة في دورة الموظف");
+        A("notif.trainingExpiry","Training certificate expires within 30 days or has expired","شهادة تدريب تنتهي خلال ٣٠ يوماً أو انتهت");
         A("notif.documentExpiry","Employee document expires soon or has expired","مستند موظف يقترب من الانتهاء أو انتهى");
         // app & shell
         A("app.name", "PeopleHub", "بيبل هَب");

@@ -268,3 +268,9 @@ public class CandidateOfferEvent
 {
  public int Id {get;set;}public int OfferId {get;set;}public string Kind {get;set;}="";public string Note {get;set;}="";public int ActorUserId {get;set;}public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+
+/// <summary>Daily in-app certificate expiry alert ledger, no email delivery.</summary>
+public class TrainingCertificateAlert
+{
+ public int Id {get;set;}public int CertificateId {get;set;}public DateTime OnDate {get;set;}public DateTime At {get;set;}
+}
