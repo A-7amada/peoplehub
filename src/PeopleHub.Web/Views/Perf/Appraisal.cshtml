@@ -48,3 +48,5 @@
 </div></div>}
 
 <partial name="_Pip" model="((PipView)ViewBag.Pip,a.Id)" />
+
+<div class="card" style="margin-top:20px"><div class="card-h"><h2>@X("Closed-cycle performance history","سجل الأداء للدورات المغلقة")</h2></div><div class="card-b"><p class="muted small">@X("Up to 12 closed cycles in date order. Missing results stay unknown. Cycle weights and goals may differ, so scores are descriptive, not a normalized trend or a promotion decision.","حتى 12 دورة مغلقة بترتيب التاريخ. النتائج الناقصة تبقى غير معروفة. قد تختلف الأوزان والأهداف، فالدرجات وصفية وليست اتجاها موحدا أو قرار ترقية.")</p><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("Cycle","الدورة")</th><th>@X("Ends","النهاية")</th><th>@X("Score","الدرجة")</th><th>@X("Open milestones","مراحل مفتوحة")</th><th>@X("Completed milestones","مراحل مكتملة")</th></tr></thead><tbody>@foreach(var row in (List<PerformanceTrend>)ViewBag.Trends){<tr><td><a href="/Perf/Appraisal/@row.AppraisalId">@row.Cycle</a></td><td>@T.Date(row.EndsOn)</td><td>@(row.Score?.ToString("0.00")??"-")</td><td>@row.OpenMilestones</td><td>@row.CompletedMilestones</td></tr>}</tbody></table></div></div></div>

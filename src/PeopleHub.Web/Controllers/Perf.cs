@@ -16,7 +16,7 @@ public class PerfController(Loc loc, PerfService svc, ICurrentUser me, PayrollSe
     }
     public async Task<IActionResult> Appraisal(int id)
     {
-        try { await svc.MaintainAsync(); ViewBag.Tools = await svc.ToolsAsync(id);ViewBag.Pip=await svc.PipAsync(id);ViewBag.Responses=await svc.ResponsesAsync(id); return View(await svc.GetAsync(id)); } catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/Perf"); }
+        try { await svc.MaintainAsync(); ViewBag.Tools = await svc.ToolsAsync(id);ViewBag.Pip=await svc.PipAsync(id);ViewBag.Trends=await svc.TrendsAsync(id);ViewBag.Responses=await svc.ResponsesAsync(id); return View(await svc.GetAsync(id)); } catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/Perf"); }
     }
     [HttpPost]public Task<IActionResult> AddMilestone(int id,string title,string measure,DateTime dueOn,string reason)=>Do(()=>svc.AddMilestoneAsync(id,title,measure,dueOn,reason),"msg.saved",()=>Ap(id));
     [HttpPost]public Task<IActionResult> UpdateMilestone(int id,int milestoneId,int progress,string note,string action)=>Do(()=>svc.UpdateMilestoneAsync(milestoneId,progress,note,action),"msg.saved",()=>Ap(id));

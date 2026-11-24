@@ -1,8 +1,16 @@
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Application.Services;
+public record PerformanceTrend(int AppraisalId,string Cycle,DateTime EndsOn,decimal? Score,int OpenMilestones,int CompletedMilestones);
 public record PipView(List<PipMilestone> Milestones,List<PipProgress> Progress,bool CanReview);
 public partial class PerfService
 {
+ public async Task<List<PerformanceTrend>> TrendsAsync(int id)
+ {
+  var current=await GetAsync(id);var employeeId=current.A.EmployeeId;
+  var apps=await repo.ToListAsync(repo.Query<PerfAppraisal>().Where(a=>a.EmployeeId==employeeId&&a.Cycle!.Status==CycleStatus.Closed).OrderByDescending(a=>a.Cycle!.End).Take(12));
+  var appIds=apps.Select(a=>a.Id).ToList();var milestones=await repo.ToListAsync(repo.Query<PipMilestone>().Where(m=>appIds.Contains(m.AppraisalId)));var rows=new List<PerformanceTrend>();
+  foreach(var app in apps){var v=await GetAsync(app.Id);rows.Add(new(app.Id,app.Cycle!.Name,app.Cycle.End,v.Final,milestones.Count(m=>m.AppraisalId==app.Id&&m.Status=="Open"),milestones.Count(m=>m.AppraisalId==app.Id&&m.Status=="Completed")));}return rows.OrderBy(x=>x.EndsOn).ToList();
+ }
  private bool CanReviewPip(AppraisalView v)=>v.A.EmployeeId!=me.EmployeeId&&(Hr||v.A.Employee?.ManagerId==me.EmployeeId);
  public async Task<PipView> PipAsync(int id){var v=await GetAsync(id);var milestones=await repo.ToListAsync(repo.Query<PipMilestone>().Where(x=>x.AppraisalId==id).OrderBy(x=>x.DueOn));var ids=milestones.Select(x=>x.Id).ToList();return new(milestones,await repo.ToListAsync(repo.Query<PipProgress>().Where(x=>ids.Contains(x.MilestoneId)).OrderBy(x=>x.Id)),CanReviewPip(v));}
  public Task AddMilestoneAsync(int id,string title,string measure,DateTime dueOn,string reason)=>repo.AtomicAsync(async()=>{
