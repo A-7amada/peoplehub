@@ -203,3 +203,5 @@ Lifecycle privacy review also rejects null employee identity when reading or com
 Performance manager detection requires a non-null employee identity before matching the employee manager. An unlinked account does not inherit unmanaged appraisals or development actions.
 
 Applied correction preservation: manual total updates cannot erase applied earning/deduction amounts; bounded cent validation applies. Recalculation rolls back if an applied employee would disappear from eligibility, and HR review rechecks recorded floors. Explicit correction reversal remains unsupported rather than silently removing independent approvals.
+
+Report CSV hardening: formula-like or control-containing display cells are apostrophe-prefixed before CSV quoting, including headers and cost-centre text. Bank interchange values remain exact through the separate serializer; a general report is not a bank-format adapter.

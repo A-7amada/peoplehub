@@ -110,10 +110,18 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
         }
     }
 
+    // Quoting alone does not stop spreadsheet formula interpretation. Keep this
+    // separate from the bank interchange serializer, whose values must stay exact.
+    public static string SpreadsheetCell(string? value)
+    {
+        value??="";var trimmed=value.TrimStart();
+        if((trimmed.Length>0&&"=+-@".Contains(trimmed[0]))||value.Any(c=>c is '\t' or '\r' or '\n'))value="'"+value;
+        return PayrollService.Csv(value);
+    }
     public static string ToCsv(ReportTable t)
     {
-        var sb = new StringBuilder("\uFEFF").AppendLine(string.Join(',', t.Columns.Select(PayrollService.Csv)));
-        foreach (var r in t.Rows) sb.AppendLine(string.Join(',', r.Select(PayrollService.Csv)));
+        var sb = new StringBuilder("\uFEFF").AppendLine(string.Join(',', t.Columns.Select(SpreadsheetCell)));
+        foreach (var r in t.Rows) sb.AppendLine(string.Join(',', r.Select(SpreadsheetCell)));
         return sb.ToString();
     }
 }

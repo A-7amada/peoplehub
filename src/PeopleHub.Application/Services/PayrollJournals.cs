@@ -16,9 +16,8 @@ public class PayrollJournals(IRepository repo,ICurrentUser me)
   var rows=lines.GroupBy(x=>string.IsNullOrWhiteSpace(x.CostCenterSnapshot)?"[Unallocated / legacy]":x.CostCenterSnapshot).OrderBy(x=>x.Key).Select(g=>new CostCentreJournalRow(g.Key,g.Count(),g.Sum(x=>x.Gross),g.Sum(x=>x.TotalDeductions),g.Sum(x=>x.Net))).ToList();
   if(rows.Any(x=>Math.Abs(x.Gross-x.Deductions-x.Net)>0.01m))throw new DomainException("err.required");return new(run.Id,run.Year,run.Month,run.CalculationVersion,rows);
  }
- private static string SafeCell(string value)=>(value.TrimStart() is var t && t.Length>0 && "=+-@".Contains(t[0]))?"'"+value:value;
  public async Task<string> CsvAsync(int id)
  {
-  if(!me.Can(Perm.PayExport))throw new DomainException("err.forbidden");var journal=await BuildAsync(id);var b=new System.Text.StringBuilder("Run,Period,CalculationVersion,CostCenter,Employees,GrossExpense,DeductionsClearing,NetPayable,Currency\n");foreach(var r in journal.Rows)b.AppendLine(string.Join(',',id,$"{journal.Year}-{journal.Month:00}",journal.Version,PayrollService.Csv(SafeCell(r.CostCenter)),r.EmployeeCount,r.Gross.ToString("0.00",CultureInfo.InvariantCulture),r.Deductions.ToString("0.00",CultureInfo.InvariantCulture),r.Net.ToString("0.00",CultureInfo.InvariantCulture),"EGP"));return b.ToString();
+  if(!me.Can(Perm.PayExport))throw new DomainException("err.forbidden");var journal=await BuildAsync(id);var b=new System.Text.StringBuilder("Run,Period,CalculationVersion,CostCenter,Employees,GrossExpense,DeductionsClearing,NetPayable,Currency\n");foreach(var r in journal.Rows)b.AppendLine(string.Join(',',id,$"{journal.Year}-{journal.Month:00}",journal.Version,ReportService.SpreadsheetCell(r.CostCenter),r.EmployeeCount,r.Gross.ToString("0.00",CultureInfo.InvariantCulture),r.Deductions.ToString("0.00",CultureInfo.InvariantCulture),r.Net.ToString("0.00",CultureInfo.InvariantCulture),"EGP"));return b.ToString();
  }
 }
