@@ -51,7 +51,7 @@
 | WFL-004 | Explicit workflow versions | P1 | Implemented content-addressed immutable observed definitions linked to new requests plus resolved route snapshot; legacy version unknown, separate draft/publish lifecycle not implemented |
 | WFL-005 | Pending task reassignment | P1 | Open |
 | WFL-006 | Recall/substitute/unavailable approver | P1 | Partial: pending cancel/delegation existing |
-| WFL-007 | Required decision comments | P1 | Partial: rejection existing |
+| WFL-007 | Required decision comments | P1 | Implemented admin-configured required approval comments per request kind, server validation, retained visible decision history; rejection reasons always required. Changes explicitly apply to next decisions including pending requests |
 | PER-001 | Grade competency framework and rating configuration | P1 | Open |
 | PER-002 | Multiple cycles | P1 | Existing |
 | PER-003 | Employee result acknowledgement and appeal | P1 | Implemented immutable employee acknowledgement/appeal and independent HR disposition after closure; score correction workflow remains separate/open |
@@ -135,3 +135,5 @@ Workflow revision follow-up: 193 tests pass (190 regression plus 3 revision test
 PIP follow-up: 196 tests pass (193 regression plus 3 milestone tests). Reviewer chooses goals, success measures, due dates and support. Owner may record progress but not approve own completion. Completion requires 100% and reviewer evidence, no automatic disciplinary, score, salary or employment effect. Both provider migrations and local MVC creation/update verified, EN/AR inspected.
 
 Performance history follow-up: 197 tests pass (193 regression and 4 PIP tests). Closed-cycle history is access-scoped, preserves missing scores and labels cross-cycle comparability limits. Employee progress-only controls and EN/AR history views inspected locally.
+
+Approval-comment follow-up: 200 tests pass (197 regression, 3 new policy tests). Default approvals remain optional until an administrator enables the per-kind policy. Rejection/cancellation now use an explicit transaction. EN/AR policy save and required inbox controls inspected locally.

@@ -5,7 +5,7 @@ namespace PeopleHub.Application.Services;
 
 public record RequestRow(string Kind, int Id, Employee Employee, string TypeName, string TypeNameAr, string Detail,
     RequestStatus Status, string? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel, string? AttachmentToken, string? AttachmentName,
-    List<ApprovalAction> History,string? WorkflowRevisionHash=null);
+    List<ApprovalAction> History,string? WorkflowRevisionHash=null,bool ApprovalCommentRequired=false);
 
 public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows, DelegationService delegations)
 {
@@ -43,10 +43,11 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
         if (kind is null or "Advance")
             items.AddRange((await repo.ToListAsync(repo.Query<AdvanceRequest>())).Where(Vis).Select(a => ("Advance", (Approvable)a, "", "", $"{a.Amount:N0} / {a.Installments}")));
 
+        var requiredComments=await flows.RequiredApprovalCommentsAsync();
         var actions = (await repo.ToListAsync(repo.Query<ApprovalAction>().OrderBy(x => x.At))).ToLookup(x => (x.Kind, x.RequestId));
         var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, i.A.Employee!, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
                 i.A.CreatedAt, i.A.Comment, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)), i.A.AttachmentToken, i.A.AttachmentName,
-                actions[(i.Kind, i.A.Id)].ToList(),i.A.WorkflowRevisionHash))
+                actions[(i.Kind, i.A.Id)].ToList(),i.A.WorkflowRevisionHash,requiredComments.Contains(i.Kind)))
             .Where(r => status == null || r.Status == status)
             .Where(r => !inboxOnly || r.CanAct)
             .OrderByDescending(r => r.CreatedAt).ToList();
@@ -70,6 +71,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
     {
         var a = await LoadAsync(kind, id);
         if (!CanActOn(a)) throw new DomainException("err.forbidden");
+        if(comment?.Length>2000 || ((await flows.RequiredApprovalCommentsAsync()).Contains(kind)&&string.IsNullOrWhiteSpace(comment)))throw new DomainException("err.reasonRequired");
         var stage = a.CurrentStage!;
         var done = a.ApproveStage(clock.UtcNow);
         repo.Add(new ApprovalAction { Kind = kind, RequestId = id, Actor = me.Email, Action = $"Approved:{stage}", Comment = comment?.Trim(), At = clock.UtcNow });
@@ -84,18 +86,22 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
         await repo.SaveAsync();
     }
 
-    public async Task RejectAsync(string kind, int id, string? comment)
+    public Task RejectAsync(string kind,int id,string? comment)=>repo.AtomicAsync(()=>RejectCoreAsync(kind,id,comment));
+    private async Task RejectCoreAsync(string kind, int id, string? comment)
     {
         var a = await LoadAsync(kind, id);
         if (!CanActOn(a)) throw new DomainException("err.forbidden");
+        if(comment?.Length>2000)throw new DomainException("err.required");
+        var stage=a.CurrentStage;
         a.RejectRequest(comment, clock.UtcNow);
-        repo.Add(new ApprovalAction { Kind = kind, RequestId = id, Actor = me.Email, Action = $"Rejected:{a.CurrentStage}", Comment = comment, At = clock.UtcNow });
+        repo.Add(new ApprovalAction { Kind = kind, RequestId = id, Actor = me.Email, Action = $"Rejected:{stage}", Comment = comment, At = clock.UtcNow });
         audit.Log("Reject", kind, id, comment ?? "");
         await notify.NotifyEmployeeAsync(a.EmployeeId, "notif.rejected", $"{kind} #{id}: {comment}", "/Requests");
         await repo.SaveAsync();
     }
 
-    public async Task CancelAsync(string kind, int id)
+    public Task CancelAsync(string kind,int id)=>repo.AtomicAsync(()=>CancelCoreAsync(kind,id));
+    private async Task CancelCoreAsync(string kind, int id)
     {
         var a = await LoadAsync(kind, id);
         if (a.EmployeeId != me.EmployeeId && !me.Can(Perm.LeaveAdmin)) throw new DomainException("err.forbidden");

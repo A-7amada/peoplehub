@@ -76,8 +76,12 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     public async Task<IActionResult> Workflows()
     {
         ViewBag.Roles = await admin.RolesAsync();
+        ViewBag.RequiredComments=await flows.RequiredApprovalCommentsAsync();
         ViewBag.Revisions=await flows.RevisionsAsync();return View(await flows.ListAsync());
     }
+
+    [RequirePerm(Perm.AdmFlows), HttpPost]
+    public Task<IActionResult> ApprovalComment(string kind,bool required) => Do(()=>flows.SetApprovalCommentAsync(kind,required),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
 
     [RequirePerm(Perm.AdmFlows), HttpPost]
     public Task<IActionResult> AddStep(string kind, ApproverType type, string[]? roles, decimal? threshold) =>

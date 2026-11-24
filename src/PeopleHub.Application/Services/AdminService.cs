@@ -38,6 +38,14 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
     }
     public Task<List<WorkflowRevision>> RevisionsAsync(){Require();return repo.ToListAsync(repo.Query<WorkflowRevision>().OrderByDescending(x=>x.ObservedAt).Take(100));}
 
+    public async Task<HashSet<string>> RequiredApprovalCommentsAsync() => (await repo.ToListAsync(repo.Query<AppSetting>().Where(x=>x.Key.StartsWith("Workflow.ApprovalComment.") && x.Value=="true"))).Select(x=>x.Key["Workflow.ApprovalComment.".Length..]).Where(Kinds.Contains).ToHashSet();
+    public async Task SetApprovalCommentAsync(string kind,bool required)
+    {
+        Require();if(!Kinds.Contains(kind))throw new DomainException("err.required");
+        var key="Workflow.ApprovalComment."+kind;var setting=await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x=>x.Key==key));
+        if(setting==null){setting=new(){Key=key};repo.Add(setting);}setting.Value=required?"true":"false";audit.Log("ApprovalCommentPolicy","Workflow",kind,required?"Required for approvals, including pending requests":"Optional for approvals; rejection reason remains required");await repo.SaveAsync();
+    }
+
     private void Require() { if (!me.Can(Perm.AdmFlows)) throw new DomainException("err.forbidden"); }
 
     private async Task<WorkflowDefinition> LoadAsync(string kind) =>
