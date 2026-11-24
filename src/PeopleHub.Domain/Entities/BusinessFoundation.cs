@@ -317,3 +317,13 @@ public class ApprovalReminder
 {
  public int Id {get;set;}public string Kind {get;set;}="";public int RequestId {get;set;}public int StageIndex {get;set;}public int UserId {get;set;}public DateTime OnDate {get;set;}public DateTime At {get;set;}
 }
+
+/// <summary>Immutable explicit grade compensation template. No automatic salary rule.</summary>
+public class SalaryStructure
+{
+ public int Id {get;set;}public string Name {get;set;}="";public int JobGrade {get;set;}public decimal Basic {get;set;}public string ComponentsJson {get;set;}="{}";public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
+public class SalaryStructureApplication
+{
+ public int Id {get;set;}public int EmployeeId {get;set;}public int StructureId {get;set;}public string BeforeJson {get;set;}="";public string AfterJson {get;set;}="";public string Sha256 {get;set;}="";public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}

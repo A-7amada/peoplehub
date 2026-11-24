@@ -53,6 +53,7 @@ builder.Services.AddScoped<LeaveService>();
 builder.Services.AddScoped<LeaveCalendar>();
 builder.Services.AddScoped<ApprovalService>();
 builder.Services.AddScoped<PayrollService>();
+builder.Services.AddScoped<SalaryStructures>();
 builder.Services.AddScoped<BankReconciliation>();
 builder.Services.AddScoped<WorkflowService>();
 builder.Services.AddScoped<AttachmentService>();

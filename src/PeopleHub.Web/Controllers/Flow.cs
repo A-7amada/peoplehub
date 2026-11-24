@@ -165,3 +165,10 @@ public class BankReconciliationController(Loc loc,BankReconciliation svc,Payroll
  public async Task<IActionResult> Index(int id){try{var(run,lines,_)=await payroll.RunAsync(id);ViewBag.Run=run;ViewBag.Lines=lines;return View(await svc.ResultsAsync(id));}catch(DomainException){return Forbidden();}}
  [HttpPost,RequireStepUp]public Task<IActionResult> Record(int runId,int lineId,string outcome,decimal amount,string reference,string note)=>Do(()=>svc.RecordAsync(runId,lineId,outcome,amount,reference,note),"msg.saved",()=>RedirectToAction(nameof(Index),new{id=runId}));
 }
+
+public class SalaryStructuresController(Loc loc,SalaryStructures svc,EmployeeService employees):BaseController(loc)
+{
+ public async Task<IActionResult> Index(){try{ViewBag.Components=await employees.ComponentsAsync();ViewBag.History=await svc.HistoryAsync();return View(await svc.ListAsync());}catch(DomainException){return Forbidden();}}
+ [HttpPost,RequireStepUp]public Task<IActionResult> Create(string name,int grade,decimal basic,string componentAmounts,string reason)=>Do(()=>svc.CreateAsync(name,grade,basic,componentAmounts,reason),"msg.saved",()=>RedirectToAction(nameof(Index)));
+ [HttpPost,RequireStepUp]public Task<IActionResult> Apply(int employeeId,int structureId,string reason)=>Do(()=>svc.ApplyAsync(employeeId,structureId,reason),"msg.saved",()=>RedirectToAction(nameof(Index)));
+}

@@ -32,7 +32,7 @@
 | LEV-007 | Notice-period and negative-balance policies | P0 | Partial: no negative balance; notice policy open |
 | LEV-008 | Department calendar | P1 | Implemented scoped month view of approved leave spans, historical department filter, no reason/type/medical detail; weekends shown as span context, not deducted leave days |
 | LEV-009 | Simultaneous request/approval constraints | P0 | Partial: employee revision serializes concurrent request creation, final balance check is atomic; PostgreSQL race stress remains unverified |
-| PAY-001 | Grade/category salary structures | P0 | Open |
+| PAY-001 | Grade/category salary structures | P0 | Partial: immutable explicit grade templates with basic salary and listed fixed components, individual grade-match application from today, unchanged unlisted components and append-only before/after hash evidence; historical runs unchanged. Pending employment schedules block application. Category rules, approval/publication lifecycle and effective-dated component allocations remain open |
 | PAY-002 | Payroll eligibility | P0 | Partial: active/on-leave employed by month end; terminal-period eligibility open |
 | PAY-003 | Joining/termination proration | P0 | Partial: settlement fixed, regular payroll proration open |
 | PAY-004 | Retroactive pay and referenced adjustments | P0 | Open |
@@ -183,3 +183,5 @@ Session step-up follow-up: three focused tests cover password lockout, mandatory
 Bank reconciliation follow-up: four tests cover separate grant, locked-run/exact-net validation, paid/return/retry order and immutable evidence. Local MVC result recording and EN/AR inspected. This is manual recorded evidence, not independent confirmation that a bank transferred funds. Legacy lines without identity snapshots are shown by employee ID instead of inventing historical identity.
 
 Approval reminder follow-up: five tests cover disabled defaults, elapsed stage timing, daily dedupe, new-stage clock, reassignment/inactive/subject restrictions, delegation, decisions stopping reminders and immutable markers. Policy saved through local MVC with session step-up; EN/AR workflow settings inspected. Does not email, approve, escalate or change request routes.
+
+Salary structure follow-up: five tests cover salary/manage permission boundaries, grade and pending-schedule guards, invalid/duplicate components, explicit application with historical payroll unchanged and immutable source/application evidence. Local MVC creation/application and EN/AR inspected. No automatic grade-based update, backdating, real payment, compliance claim or assumed compensation value.
