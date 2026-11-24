@@ -4,7 +4,7 @@
 <div class="grid g3" style="margin-bottom:18px">
 @foreach (var b in bal) { var tot = Math.Max(1, b.Entitled + b.CarriedOver); <div class="card kpi"><div class="lbl">@T.Name(b.LeaveType!.Name, b.LeaveType.NameAr)</div><div class="val">@b.Remaining <span class="faint small" style="font-weight:500">/ @tot @T["common.days"]</span></div><div class="progress" style="margin-top:10px"><i style="width:@(100 * b.Remaining / tot)%"></i></div></div> }
 </div>
-<div class="grid g-main">
+<div class="grid g-main leave-workspace">
 <div class="card"><div class="card-h"><h2>@T["leave.myRequests"]</h2></div>
  <partial name="_ReqTable" model="Model" />
 </div>

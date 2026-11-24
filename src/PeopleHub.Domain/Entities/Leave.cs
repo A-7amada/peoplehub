@@ -49,7 +49,7 @@ public class LeaveRequest : Approvable
         string? reason, string? document, DateTime today, IEnumerable<DateTime>? holidays = null)
     {
         if (!e.IsWorking) throw new DomainException("err.terminated");
-        if (end < start) throw new DomainException("err.dates");
+        if (end.Date < start.Date) throw new DomainException("err.dates");
         if (start.Date < today.Date && !type.AllowBackdated) throw new DomainException("err.past");
         var days = AttendanceCalculator.CountWorkingDays(start, end, holidays);
         if (days == 0) throw new DomainException("err.noWorkingDays");
@@ -78,7 +78,11 @@ public class LeaveRequest : Approvable
     {
         if (Status != RequestStatus.Approved) throw new DomainException("err.notPending");
         if (StartDate.Date <= today.Date) throw new DomainException("err.alreadyStarted");
-        if (LeaveType is { DeductsBalance: true } && balance != null) balance.Used -= Days;
+        if (LeaveType is { DeductsBalance: true })
+        {
+            if (balance == null || Days <= 0 || balance.Used < Days) throw new DomainException("err.balance");
+            balance.Used -= Days;
+        }
         Status = RequestStatus.Cancelled;
         DecidedAt = now;
     }

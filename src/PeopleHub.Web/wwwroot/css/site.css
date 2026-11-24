@@ -209,3 +209,6 @@ bdi{unicode-bidi:isolate}
 
 /* Narrow screens keep the bilingual shell usable without a full-height navigation wall. */
 @media(max-width:860px){.app{grid-template-columns:minmax(0,1fr)}.sidebar{min-width:0;max-width:100vw;padding:12px 14px;gap:8px}.brand{padding:0 8px}.sidebar .nav{display:flex;gap:6px;overflow-x:auto;max-width:100%;flex-basis:100%;min-width:0}.sidebar .nav a{white-space:nowrap;flex:none}.topbar{flex-wrap:wrap;gap:8px}.topbar .grow{display:none}.userbox{max-width:100%;overflow-wrap:anywhere}.g3,.g4,.g-main,.g-main-r{grid-template-columns:minmax(0,1fr)}.leave-calendar .card-h{flex-wrap:wrap}}
+
+/* Leave request dates and controls need a full-width review surface. */
+.leave-workspace{grid-template-columns:minmax(0,1fr)}.leave-workspace>.card{min-width:0}.leave-workspace .request-table{min-width:900px}.request-table .request-detail{min-width:170px}.leave-workspace>.card:last-child{max-width:720px;width:100%}

@@ -84,6 +84,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         if (string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
         if (entitled < 0 || entitled > 90) throw new DomainException("err.balance");
         var b = (await BalancesAsync(employeeId, year)).FirstOrDefault(x => x.LeaveTypeId == typeId) ?? throw new DomainException("err.notFound");
+        if (entitled + b.CarriedOver < b.Used) throw new DomainException("err.balance");
         audit.Log("Update", "LeaveBalance", $"{employeeId}/{typeId}/{year}", $"entitled {b.Entitled} -> {entitled}; {reason}");
         Entry(employeeId,typeId,year,entitled-b.Entitled,"Adjustment",reason!.Trim());
         b.Entitled = entitled;
