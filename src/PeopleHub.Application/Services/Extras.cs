@@ -28,8 +28,11 @@ public class AttachmentService(IRepository repo, AccessScope scope, ICurrentUser
         var a = await repo.FirstOrDefaultAsync(repo.Query<Attachment>().Where(x => x.Token == token)) ?? throw new DomainException("err.notFound");
         var leave=await repo.FirstOrDefaultAsync(repo.Query<LeaveRequest>().Where(x=>x.AttachmentToken==token));
         if(leave!=null&&leave.EmployeeId!=me.EmployeeId&&!me.Can(Perm.LeaveEvidence))throw new DomainException("err.forbidden");
+        var certificate=await repo.FirstOrDefaultAsync(repo.Query<TrainingCertificate>().Where(x=>x.AttachmentToken==token));
+        if(certificate!=null&&certificate.EmployeeId!=me.EmployeeId&&!me.Can(Perm.TalentManage))throw new DomainException("err.forbidden");
         var document=await repo.FirstOrDefaultAsync(repo.Query<EmployeeDocument>().Where(x=>x.AttachmentToken==token));
         if(document!=null && document.EmployeeId!=me.EmployeeId && !me.Can(Perm.EmpManage))throw new DomainException("err.forbidden");
+        if(certificate!=null)return a;
         if (a.OwnerEmployeeId != me.EmployeeId && !await scope.CanSeeAsync(a.OwnerEmployeeId)) throw new DomainException("err.forbidden");
         return a;
     }

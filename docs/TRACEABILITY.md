@@ -58,7 +58,7 @@
 | PER-004 | Separate feedback identity/comment/aggregate privacy and reviewer threshold | P0 | Implemented configurable separate grants and threshold gate; owner policy values remain unset. Existing finalized scores preserved |
 | PER-005 | PIP milestones and trends | P1 | Implemented explicit measurable milestones, dated progress evidence, independent completion/cancellation, immutable timeline and latest 12 closed-cycle descriptive score/milestone history; cycles may differ and no normalized comparison or employment decision is implied |
 | HR-001 | Asset assignment, handover, condition, return, maintenance | P1 | Implemented inventory, unique tags, explicit assignment/return, maintenance/release/retirement and append-only movement evidence |
-| HR-002 | Training needs, budgets, approval, certificates/expiry/effectiveness | P1 | Open |
+| HR-002 | Training needs, budgets, approval, certificates/expiry/effectiveness | P1 | Partial: append-only private completed-enrolment certificate files, issuer/reference/expiry, participant reflection and independent HR effectiveness evidence. Needs, budgets, course approval, expiry reminders and normalized effectiveness metrics remain open |
 | HR-003 | Requisitions, interviews, offers and onboarding | P1 | Open |
 | HR-004 | Benefits plans/dependents/eligibility/enrolment/cost allocation | P1 | Open |
 | HR-005 | Confidential grievances, investigation and discipline | P1 | Open |
@@ -153,3 +153,5 @@ Temporary assignment follow-up: explicit return date snapshots current departmen
 Round 35: 215 tests pass, including linked return restoration, cancellation atomicity, missed-start-and-return catch-up and invalid return validation. Both provider migrations generated, local SQLite upgrade and end-to-end temporary assignment staged, EN/AR form and linked return visually inspected. PostgreSQL parallel stress remains unverified.
 
 Custom-report privacy follow-up: the selectable-column leave dataset now masks private leave types without the separate evidence grant. Nine focused sensitive-field tests pass; other datasets and new modules remain independently scoped.
+
+Round 37: 220 tests pass, including private certificate download, completion/date/file validation, independent effectiveness reviewer, participant-only authorship and append-only outcomes. Both provider migrations generated; local SQLite upgrade, upload/download and EN/AR evidence/form screenshots inspected. Certificate issuer authenticity is not verified, no automated expiry notification or normalized training score is claimed.

@@ -27,7 +27,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
-        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse or WorkflowRevision or PipProgress or ApprovalAssignment or ApprovalAction) && e.State is EntityState.Modified or EntityState.Deleted))
+        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse or WorkflowRevision or PipProgress or ApprovalAssignment or ApprovalAction or TrainingCertificate or TrainingOutcome) && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Append-only business evidence cannot be edited or deleted.");
         foreach (var e in ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified))
             e.Property("Revision").CurrentValue = Guid.NewGuid().ToString("N");
@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<TrainingCertificate>().HasIndex(x=>x.AttachmentToken).IsUnique();b.Entity<TrainingOutcome>().HasIndex(x=>x.EnrollmentId);
         b.Entity<ApprovalAssignment>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex});
         b.Entity<PipMilestone>().HasIndex(x=>x.AppraisalId);b.Entity<PipProgress>().HasIndex(x=>x.MilestoneId);
         b.Entity<WorkflowRevision>().HasIndex(x=>new{x.Kind,x.Hash}).IsUnique();

@@ -3045,6 +3045,59 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("StatusHistory");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCertificate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("AttachmentToken")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("ExpiresOn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("IssuedOn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Issuer")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttachmentToken")
+                        .IsUnique();
+
+                    b.ToTable("TrainingCertificate");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCourse", b =>
                 {
                     b.Property<int>("Id")
@@ -3108,6 +3161,48 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("TrainingEnrollment");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingOutcome", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId");
+
+                    b.ToTable("TrainingOutcome");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.WorkflowDefinition", b =>

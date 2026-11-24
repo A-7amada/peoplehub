@@ -2912,6 +2912,57 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("StatusHistory");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCertificate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AttachmentToken")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ExpiresOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("IssuedOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Issuer")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AttachmentToken")
+                        .IsUnique();
+
+                    b.ToTable("TrainingCertificate");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCourse", b =>
                 {
                     b.Property<int>("Id")
@@ -2971,6 +3022,46 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasIndex("EmployeeId");
 
                     b.ToTable("TrainingEnrollment");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingOutcome", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId");
+
+                    b.ToTable("TrainingOutcome");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.WorkflowDefinition", b =>

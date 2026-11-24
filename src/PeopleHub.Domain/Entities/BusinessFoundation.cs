@@ -235,3 +235,16 @@ public class PipProgress
  public string Actor {get;set;}="";
  public DateTime At {get;set;}
 }
+
+/// <summary>Append-only certificate evidence. Does not certify issuer authenticity.</summary>
+public class TrainingCertificate
+{
+ public int Id {get;set;} public int EnrollmentId {get;set;} public int EmployeeId {get;set;}
+ public string Issuer {get;set;}="";public string Reference {get;set;}="";public DateTime IssuedOn {get;set;} public DateTime? ExpiresOn {get;set;}
+ public string AttachmentToken {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
+public class TrainingOutcome
+{
+ public int Id {get;set;}public int EnrollmentId {get;set;}public int EmployeeId {get;set;}public string Kind {get;set;}="Participant";
+ public string Note {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
