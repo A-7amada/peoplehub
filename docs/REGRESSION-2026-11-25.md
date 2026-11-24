@@ -6,7 +6,7 @@ This is an interim evidence log, not the final all-module acceptance report. The
 
 ## Current automated evidence
 
-After lifecycle privacy and financial session-guard review, 347 automated cases passed: 88 + 93 + 166 cases including advance validation and controller guard tests. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
+After lifecycle privacy and financial session-guard review, 351 automated cases passed: 88 + 93 + 170 cases including advance validation and controller guard tests. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
 
 Referenced-correction coverage: separate initially-unset permission, source/target period and state, positive cent amounts, independent non-subject decision, unique decision sequence, proposer-only unapplied withdrawal, review gate, exactly-once draft application, source immutability, deduction safety and preservation on recalculation. Local MVC proposal, separate Finance approval and explicit preparer apply passed; temporary local Finance grant removed. EN/AR viewport screenshots inspected after application.
 
@@ -36,3 +36,5 @@ Applied correction integrity review: four added cases cover bounded cent manual 
 Spreadsheet export review: 15 added serialization cases neutralize formula-prefixed/control-containing report cells and headers, retain CSV escaping and Arabic text, and preserve the exact-value bank interchange serializer separately. Cost-centre report uses the same spreadsheet helper. No report layout changed. This is serializer coverage, not bank adapter certification.
 
 Salary-component write review: six added cases cover missing employee/component rejection, bounded nonnegative cent amounts, explicit zero, permission denial, one-row update and employee revision touch inside a transaction. Existing payroll lines remain unchanged. No UI change or historical component allocation claimed.
+
+Contract/state integrity review: four added cases cover invalid employment status/contract enums, same-calendar-day time bypass, missing employee, atomic current-contract replacement and prevention of renewing a superseded contract twice. Contract writes touch employee revision. No contract template, notice or renewal-policy assumptions were introduced; no UI change.

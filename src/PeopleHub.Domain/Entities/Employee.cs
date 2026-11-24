@@ -53,6 +53,7 @@ public class Employee
     /// <summary>Returns the history entry for the change. Terminal statuses cannot be left.</summary>
     public StatusHistory ChangeStatus(EmployeeStatus to, string by, string? reason, DateTime now)
     {
+        if (!Enum.IsDefined(to)) throw new DomainException("err.required");
         if (to == Status) throw new DomainException("err.sameStatus");
         if (Status is EmployeeStatus.Terminated or EmployeeStatus.Resigned or EmployeeStatus.Retired)
             throw new DomainException("err.finalStatus");
@@ -95,7 +96,8 @@ public class Contract
 
     public static Contract Create(int employeeId, ContractType type, DateTime start, DateTime? end, string? notes)
     {
-        if (type == ContractType.FixedTerm && (end is null || end <= start)) throw new DomainException("err.contractDates");
+        if (!Enum.IsDefined(type)||start.Year<1900||start.Year>9998||end?.Year>9998||employeeId<=0)throw new DomainException("err.contractDates");
+        if (type == ContractType.FixedTerm && (end is null || end.Value.Date <= start.Date)) throw new DomainException("err.contractDates");
         return new Contract { EmployeeId = employeeId, Type = type, StartDate = start.Date, EndDate = type == ContractType.Permanent ? null : end?.Date, Notes = notes?.Trim() ?? "" };
     }
 
@@ -105,7 +107,7 @@ public class Contract
     public Contract Renew(DateTime newEnd)
     {
         if (EndDate is null) throw new DomainException("err.contractPermanent");
-        if (newEnd <= EndDate) throw new DomainException("err.contractDates");
+        if (!IsCurrent || newEnd.Year>9998 || newEnd.Date <= EndDate.Value.Date) throw new DomainException("err.contractDates");
         IsCurrent = false;
         return new Contract { EmployeeId = EmployeeId, Type = Type, StartDate = EndDate.Value.AddDays(1), EndDate = newEnd.Date, Notes = "Renewal" };
     }

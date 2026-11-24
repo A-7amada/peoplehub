@@ -207,3 +207,5 @@ Applied correction preservation: manual total updates cannot erase applied earni
 Report CSV hardening: formula-like or control-containing display cells are apostrophe-prefixed before CSV quoting, including headers and cost-centre text. Bank interchange values remain exact through the separate serializer; a general report is not a bank-format adapter.
 
 Direct salary component writes now validate employee/component existence and bounded cent amounts inside an atomic transaction, touching the employee revision to detect competing writes. Historical component allocations and broader compensation approval lifecycle remain open.
+
+Contract integrity: creation/renewal now validates employee reference and type/calendar bounds, serializes through employee revision in a transaction, and rejects renewing an already superseded contract. Undefined status values are rejected in the domain. This is data integrity, not a new contract/legal policy.

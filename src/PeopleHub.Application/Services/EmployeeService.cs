@@ -176,27 +176,31 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         await repo.SaveAsync();
     }
 
-    public async Task AddContractAsync(int employeeId, ContractType type, DateTime start, DateTime? end, string? notes)
+    public Task AddContractAsync(int employeeId, ContractType type, DateTime start, DateTime? end, string? notes) => repo.AtomicAsync(async()=>
     {
         RequireHr();
+        var employee=await GetAsync(employeeId)??throw new DomainException("err.notFound");
+        employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         var old = await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == employeeId && c.IsCurrent));
         var c = Contract.Create(employeeId, type, start, end, notes);
         foreach (var o in old) o.IsCurrent = false;
         repo.Add(c);
         audit.Log("Create", "Contract", employeeId, $"{type} {start:yyyy-MM-dd} -> {end:yyyy-MM-dd}");
         await repo.SaveAsync();
-    }
+    });
 
-    public async Task RenewContractAsync(int contractId, DateTime newEnd)
+    public Task RenewContractAsync(int contractId, DateTime newEnd) => repo.AtomicAsync(async()=>
     {
         RequireHr();
         var c = await repo.FirstOrDefaultAsync(repo.Query<Contract>().Where(x => x.Id == contractId)) ?? throw new DomainException("err.notFound");
+        var employee=await GetAsync(c.EmployeeId)??throw new DomainException("err.notFound");
+        employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         var nc = c.Renew(newEnd);
         repo.Add(nc);
         repo.Add(new CareerEvent { EmployeeId = c.EmployeeId, Type = CareerEventType.ContractRenewal, Date = clock.Today, Details = $"until {newEnd:yyyy-MM-dd}", RecordedBy = me.Email });
         audit.Log("Renew", "Contract", contractId, $"until {newEnd:yyyy-MM-dd}");
         await repo.SaveAsync();
-    }
+    });
 
     public async Task AddCareerEventAsync(int employeeId, CareerEventType type, string? details)
     {
