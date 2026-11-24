@@ -2700,6 +2700,59 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("PasswordReset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollBankResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("LineId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RunId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("PayrollBankResult");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollCalculationSnapshot", b =>
                 {
                     b.Property<int>("Id")

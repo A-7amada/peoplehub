@@ -2583,6 +2583,57 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("PasswordReset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollBankResult", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reference")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RunId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LineId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("PayrollBankResult");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollCalculationSnapshot", b =>
                 {
                     b.Property<int>("Id")

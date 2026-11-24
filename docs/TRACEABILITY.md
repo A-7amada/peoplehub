@@ -41,7 +41,7 @@
 | PAY-007 | Loan cancellation/reschedule/repayment | P1 | Partial: early settlement existing |
 | PAY-008 | Immutable calculation inputs, policy/version/hash and history | P0 | Implemented for new calculations; old history not reconstructed |
 | PAY-009 | Approved payroll locking and separate final approver | P0 | Implemented this batch |
-| PAY-010 | Bank-result reconciliation | P1 | Open |
+| PAY-010 | Bank-result reconciliation | P1 | Partial: separate initially-unset grant, manual append-only full-net paid/rejected/returned evidence per locked payroll line, reference/reason/amount/state/duplicate guards and current result view. No transfer, automatic status/advance changes, partial payment or bank file import; external verification/adapters remain open |
 | PAY-011 | Cost-centre journals | P2 | Open |
 | PAY-012 | Complete final settlement and approval | P0 | Partial: estimator only |
 | PAY-013 | Single versioned Egyptian policy, legal validation status | P0 | Documented EG-DEMO-2026-v1, not legally validated |
@@ -179,3 +179,5 @@ Benefits record follow-up: seven focused tests cover owner/grant privacy, depend
 Employee relations follow-up: five focused tests pass for separate-grant boundaries, audit-content minimization, independent approval, pending/closed transitions and source/event immutability. Local MVC fictional grievance/investigation and EN/AR inspected. Internal records only, never an accusation, legal finding, delivered notice or automatic sanction.
 
 Session step-up follow-up: three focused tests cover password lockout, mandatory enabled authenticator, five-minute expiry, per-session binding and revocation. Local MVC verifies a role-creation POST is blocked and not replayed after verification. EN/AR challenge pixels inspected. No new permissions are granted; other sensitive workflows remain under review.
+
+Bank reconciliation follow-up: four tests cover separate grant, locked-run/exact-net validation, paid/return/retry order and immutable evidence. Local MVC result recording and EN/AR inspected. This is manual recorded evidence, not independent confirmation that a bank transferred funds. Legacy lines without identity snapshots are shown by employee ID instead of inventing historical identity.

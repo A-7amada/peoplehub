@@ -159,3 +159,9 @@ public class SystemController(Loc loc, NotificationService notes, AuditService a
     [RequirePerm(Perm.Audit)]
     public async Task<IActionResult> Audit(string? entity) { ViewBag.Entity = entity; return View(await audit.RecentAsync(entity)); }
 }
+
+public class BankReconciliationController(Loc loc,BankReconciliation svc,PayrollService payroll):BaseController(loc)
+{
+ public async Task<IActionResult> Index(int id){try{var(run,lines,_)=await payroll.RunAsync(id);ViewBag.Run=run;ViewBag.Lines=lines;return View(await svc.ResultsAsync(id));}catch(DomainException){return Forbidden();}}
+ [HttpPost,RequireStepUp]public Task<IActionResult> Record(int runId,int lineId,string outcome,decimal amount,string reference,string note)=>Do(()=>svc.RecordAsync(runId,lineId,outcome,amount,reference,note),"msg.saved",()=>RedirectToAction(nameof(Index),new{id=runId}));
+}

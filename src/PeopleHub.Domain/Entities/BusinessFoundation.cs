@@ -305,3 +305,9 @@ public class EmployeeCaseEvent
 {
  public int Id {get;set;}public int CaseId {get;set;}public string Kind {get;set;}="Investigation";public string Note {get;set;}="";public int ActorUserId {get;set;}public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+
+/// <summary>Append-only manually recorded bank result, never initiates or proves a transfer.</summary>
+public class PayrollBankResult
+{
+ public int Id {get;set;}public int LineId {get;set;}public int RunId {get;set;}public int Version {get;set;}public string Outcome {get;set;}="";public decimal Amount {get;set;}public string Reference {get;set;}="";public string Note {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
