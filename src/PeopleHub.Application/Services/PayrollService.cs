@@ -98,7 +98,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         foreach (var l in old) repo.Remove(l);
         await repo.SaveAsync();
         await BuildLinesAsync(run, manual);
-        await repo.SaveAsync(); await SnapshotAsync(run,"Recalculated");
+        await repo.SaveAsync(); await ValidateAppliedCorrectionsAsync(run.Id); await SnapshotAsync(run,"Recalculated");
         audit.Log("Recalculate", "PayrollRun", $"{run.Year}-{run.Month:00}", "lines rebuilt, manual adjustments kept");
         await repo.SaveAsync();
     }
@@ -110,7 +110,11 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         var l = await repo.FirstOrDefaultAsync(repo.Query<PayrollLine>().Where(x => x.Id == lineId)) ?? throw new DomainException("err.notFound");
         var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Id == l.RunId)) ?? throw new DomainException("err.notFound");
         if (run.IsLocked || run.Status != PayrollStatus.Draft) throw new DomainException("err.payrollLocked");
-        if (bonus < 0 || otherDeduction < 0) throw new DomainException("err.salary");
+        if (bonus < 0 || otherDeduction < 0 || bonus>100000000 || otherDeduction>100000000 || decimal.Round(bonus,2)!=bonus || decimal.Round(otherDeduction,2)!=otherDeduction) throw new DomainException("err.salary");
+        var proposals=await repo.ToListAsync(repo.Query<PayrollAdjustment>().Where(x=>x.TargetRunId==run.Id&&x.EmployeeId==l.EmployeeId));
+        var proposalIds=proposals.Select(x=>x.Id).ToArray();var appliedIds=(await repo.ToListAsync(repo.Query<PayrollAdjustmentEvent>().Where(x=>proposalIds.Contains(x.AdjustmentId)&&x.Action=="Applied"))).Select(x=>x.AdjustmentId).ToHashSet();
+        // Manual totals may change, but cannot erase independently approved, explicitly applied amounts.
+        if(bonus<proposals.Where(x=>appliedIds.Contains(x.Id)&&x.Kind=="Earning").Sum(x=>x.Amount)||otherDeduction<proposals.Where(x=>appliedIds.Contains(x.Id)&&x.Kind=="Deduction").Sum(x=>x.Amount))throw new DomainException("err.pendingCorrection");
         if (string.IsNullOrWhiteSpace(note)) throw new DomainException("err.reasonRequired");
         var fixedDed = string.IsNullOrEmpty(l.EmployeeCodeSnapshot) ? (await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c=>c.EmployeeId==l.EmployeeId))).Where(c=>c.Component?.Type==ComponentType.Deduction).Sum(c=>c.Amount) : l.FixedDeduction;
         var before = $"bonus {l.Bonus}, other {l.OtherDeduction}, net {l.Net}";
@@ -119,6 +123,18 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         await repo.SaveAsync(); await SnapshotAsync(run,"Adjusted");
         audit.Log("Adjust", "PayrollLine", lineId, $"{before} -> bonus {bonus}, other {otherDeduction}, net {l.Net}; {note}");
         await repo.SaveAsync();
+    }
+
+    private async Task ValidateAppliedCorrectionsAsync(int runId)
+    {
+        var proposals=await repo.ToListAsync(repo.Query<PayrollAdjustment>().Where(x=>x.TargetRunId==runId));
+        var ids=proposals.Select(x=>x.Id).ToArray();var applied=(await repo.ToListAsync(repo.Query<PayrollAdjustmentEvent>().Where(x=>ids.Contains(x.AdjustmentId)&&x.Action=="Applied"))).Select(x=>x.AdjustmentId).ToHashSet();
+        var lines=await repo.ToListAsync(repo.Query<PayrollLine>().Where(x=>x.RunId==runId));
+        foreach(var group in proposals.Where(x=>applied.Contains(x.Id)).GroupBy(x=>x.EmployeeId))
+        {
+            var line=lines.SingleOrDefault(x=>x.EmployeeId==group.Key);
+            if(line==null||line.Bonus<group.Where(x=>x.Kind=="Earning").Sum(x=>x.Amount)||line.OtherDeduction-line.FixedDeduction<group.Where(x=>x.Kind=="Deduction").Sum(x=>x.Amount))throw new DomainException("err.pendingCorrection");
+        }
     }
 
     private async Task<PayrollRun> LoadRunAsync(int id) =>
@@ -137,6 +153,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         var corrections=await repo.ToListAsync(repo.Query<PayrollAdjustment>().Where(x=>x.TargetRunId==id));
         var correctionIds=corrections.Select(x=>x.Id).ToArray();var correctionEvents=await repo.ToListAsync(repo.Query<PayrollAdjustmentEvent>().Where(x=>correctionIds.Contains(x.AdjustmentId)));
         if(corrections.Any(x=>!correctionEvents.Any(e=>e.AdjustmentId==x.Id&&(e.Action=="Applied"||e.Action=="Rejected"||e.Action=="Cancelled"))))throw new DomainException("err.pendingCorrection");
+        await ValidateAppliedCorrectionsAsync(id);
         r.Review(); Trail(r, "HRReviewed");
         await notify.NotifyPermAsync(Perm.PayFinance, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
         await repo.SaveAsync();
