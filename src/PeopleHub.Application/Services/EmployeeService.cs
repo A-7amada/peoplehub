@@ -5,7 +5,7 @@ namespace PeopleHub.Application.Services;
 
 public record EmployeeFilter(string? Search, int? DepartmentId, int? BranchId, EmployeeStatus? Status);
 public record EmployeeProfile(Employee Employee, string? ManagerName, string? ManagerNameAr, List<Contract> Contracts,
-    List<StatusHistory> StatusHistory, List<CareerEvent> Events, List<EmployeeSalaryComponent> Components, bool CanSeeSalary, Shift? Shift);
+    List<StatusHistory> StatusHistory, List<CareerEvent> Events, List<EmployeeSalaryComponent> Components, bool CanSeeSalary, Shift? Shift,bool CanSeeIdentity=false,bool CanSeeBank=false);
 
 public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, AppClock clock)
 {
@@ -38,13 +38,34 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
         var e = await GetAsync(id) ?? throw new DomainException("err.notFound");
         var mgr = e.ManagerId is { } m ? await GetAsync(m) : null;
-        return new EmployeeProfile(e, mgr?.FullName, mgr?.FullNameAr,
+        var visible=VisibleCopy(e);
+        return new EmployeeProfile(visible, mgr?.FullName, mgr?.FullNameAr,
             await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.StartDate)),
             await repo.ToListAsync(repo.Query<StatusHistory>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.At)),
             await repo.ToListAsync(repo.Query<CareerEvent>().Where(c => c.EmployeeId == id && (c.Type != CareerEventType.SalaryChange || scope.CanSeeSalary(id))).OrderByDescending(c => c.Date)),
             scope.CanSeeSalary(id) ? await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == id)) : [],
             scope.CanSeeSalary(id),
-            e.ShiftId is { } s ? await repo.FirstOrDefaultAsync(repo.Query<Shift>().Where(x => x.Id == s)) : null);
+            e.ShiftId is { } s ? await repo.FirstOrDefaultAsync(repo.Query<Shift>().Where(x => x.Id == s)) : null,CanIdentity(id),CanBank(id));
+    }
+
+    private bool CanIdentity(int id)=>me.EmployeeId==id||me.Can(Perm.EmpIdentity);
+    private bool CanBank(int id)=>me.EmployeeId==id||me.Can(Perm.EmpBank);
+    private Employee VisibleCopy(Employee source)
+    {
+        var e=System.Text.Json.JsonSerializer.Deserialize<Employee>(System.Text.Json.JsonSerializer.Serialize(source))!;
+        if(!CanIdentity(e.Id)){e.NationalId="";e.BirthDate=null;e.Address="";e.InsuranceNumber="";e.MaritalStatus="";}
+        if(!CanBank(e.Id)){e.BankName="";e.Iban="";}
+        if(!scope.CanSeeSalary(e.Id))e.BasicSalary=0;
+        return e;
+    }
+    public async Task<Employee?> EditModelAsync(int id)
+    {
+        RequireHr();var e=await GetAsync(id);if(e==null)return null;
+        e=System.Text.Json.JsonSerializer.Deserialize<Employee>(System.Text.Json.JsonSerializer.Serialize(e))!;
+        if(!me.Can(Perm.EmpIdentity)){e.NationalId="";e.BirthDate=null;e.Address="";e.InsuranceNumber="";e.MaritalStatus="";}
+        if(!me.Can(Perm.EmpBankEdit)||!me.Can(Perm.EmpPay)){e.BankName="";e.Iban="";}
+        if(!me.Can(Perm.EmpPay))e.BasicSalary=0;
+        return e;
     }
 
     public async Task<List<EmployeeAssignment>> AssignmentsAsync(int id)
@@ -67,10 +88,21 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         if (!me.Can(Perm.EmpPay))
         {
             var original=model.Id==0?null:await GetAsync(model.Id);
-            if (original==null && (model.BasicSalary!=0 || !string.IsNullOrEmpty(model.Iban) || !string.IsNullOrEmpty(model.BankName))) throw new DomainException("err.forbidden");
-            if (original!=null) {model.BasicSalary=original.BasicSalary;model.BankName=original.BankName;model.Iban=original.Iban;model.InsuranceNumber=original.InsuranceNumber;}
+            if (original==null && model.BasicSalary!=0) throw new DomainException("err.forbidden");
+            if (original!=null) {model.BasicSalary=original.BasicSalary;}
         }
-        model.Validate();
+        var protectedOriginal=model.Id==0?null:await GetAsync(model.Id);
+        if(!me.Can(Perm.EmpBankEdit)||!me.Can(Perm.EmpPay))
+        {
+            if(protectedOriginal==null&&(!string.IsNullOrEmpty(model.Iban)||!string.IsNullOrEmpty(model.BankName)))throw new DomainException("err.forbidden");
+            model.Iban=protectedOriginal?.Iban??"";model.BankName=protectedOriginal?.BankName??"";
+        }
+        if(!me.Can(Perm.EmpIdentity))
+        {
+            if(protectedOriginal==null&&(!string.IsNullOrEmpty(model.NationalId)||model.BirthDate!=null||!string.IsNullOrEmpty(model.Address)||!string.IsNullOrEmpty(model.InsuranceNumber)))throw new DomainException("err.forbidden");
+            model.NationalId=protectedOriginal?.NationalId??"";model.BirthDate=protectedOriginal?.BirthDate;model.Address=protectedOriginal?.Address??"";model.InsuranceNumber=protectedOriginal?.InsuranceNumber??"";model.MaritalStatus=protectedOriginal?.MaritalStatus??"";
+        }
+        model.Validate(protectedOriginal==null||model.NationalId!=protectedOriginal.NationalId);
         if (!await repo.AnyAsync(repo.Query<Department>().Where(x => x.Id == model.DepartmentId)) ||
             !await repo.AnyAsync(repo.Query<Branch>().Where(x => x.Id == model.BranchId)) ||
             !await repo.AnyAsync(repo.Query<JobTitle>().Where(x => x.Id == model.JobTitleId)) ||

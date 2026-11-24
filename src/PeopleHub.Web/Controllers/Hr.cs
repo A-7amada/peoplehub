@@ -51,8 +51,8 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     public async Task<IActionResult> Edit(int? id)
     {
         await Lists();
-        var e = id == null ? new Employee { HireDate = clock.Today, Email = "" } : await svc.GetAsync(id.Value);
-        if (e != null && !me.Can(Perm.EmpPay)) { e=System.Text.Json.JsonSerializer.Deserialize<Employee>(System.Text.Json.JsonSerializer.Serialize(e))!;e.BasicSalary=0;e.BankName="";e.Iban=""; }
+        var e = id == null ? new Employee { HireDate = clock.Today, Email = "" } : await svc.EditModelAsync(id.Value);
+
         return e == null ? NotFound() : View(e);
     }
 
@@ -60,7 +60,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     public async Task<IActionResult> Edit(Employee model, string? reason)
     {
         try { await svc.SaveAsync(model, reason); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Profile), new { id = model.Id == 0 ? (await svc.SearchAsync(new(model.Email, null, null, null))).FirstOrDefault()?.Id : model.Id }); }
-        catch (DomainException ex) { TempData["err"] = L[ex.Message]; if(!me.Can(Perm.EmpPay)){model.BasicSalary=0;model.Iban="";model.BankName="";} await Lists(); return View(model); }
+        catch (DomainException ex) { TempData["err"] = L[ex.Message]; if(!me.Can(Perm.EmpPay))model.BasicSalary=0;if(!me.Can(Perm.EmpBankEdit)){model.Iban="";model.BankName="";}if(!me.Can(Perm.EmpIdentity)){model.NationalId="";model.BirthDate=null;model.Address="";model.MaritalStatus="";model.InsuranceNumber="";} await Lists(); return View(model); }
     }
 
     [HttpPost]public Task<IActionResult> RegisterAsset(int employeeId,string tag,string name,string serial,string condition)=>Do(()=>assets.RegisterAsync(tag,name,serial??"",condition),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="assets"}));

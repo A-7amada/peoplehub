@@ -62,7 +62,7 @@
 | HR-003 | Requisitions, interviews, offers and onboarding | P1 | Open |
 | HR-004 | Benefits plans/dependents/eligibility/enrolment/cost allocation | P1 | Open |
 | HR-005 | Confidential grievances, investigation and discipline | P1 | Open |
-| SEC-001 | Field-level identity/salary/bank/medical access | P0 | Partial: salary/bank edit boundary repaired; granular identity/medical grants open |
+| SEC-001 | Field-level identity/salary/bank/medical access | P0 | Partial: implemented separate identity, bank-view, bank-edit and leave-evidence grants alongside salary permission; profile/edit redaction and tampered POST/file download guards. New grants are unset for existing non-SystemAdmin roles pending owner configuration; broader export/service privacy audit remains open |
 | SEC-002 | Separation of duties | P0 | Implemented creator cannot finalize own run |
 | SEC-003 | Session expiry/revocation/device management | P0 | Implemented hashed per-login sessions, 8h absolute expiry, owner inventory/revocation, logout and credential-change invalidation; no verified physical-device binding |
 | SEC-004 | Sensitive-field encryption at rest | P0 | Open: key management required |
@@ -139,3 +139,5 @@ Performance history follow-up: 197 tests pass (193 regression and 4 PIP tests). 
 Approval-comment follow-up: 200 tests pass (197 regression, 3 new policy tests). Default approvals remain optional until an administrator enables the per-kind policy. Rejection/cancellation now use an explicit transaction. EN/AR policy save and required inbox controls inspected locally.
 
 Approval reassignment follow-up: 203 tests pass. Both provider migrations generated, local SQLite upgrade and EN/AR current-assignee UI inspected. Reassignment replaces normal authority for only that stage, except SystemAdmin emergency override, and does not approve the request. Original routes remain unchanged. PostgreSQL parallel race stress still unverified.
+
+Sensitive-field follow-up: 207 tests pass (192 remaining regressions and 15 privacy/foundation cases). General employee management, company scope and salary access no longer imply identity or bank access. Owner retains own profile/leave evidence access. New independent grants default to unassigned rather than guessing owner policy. Medical leave type, supporting attachment and decision comments are hidden without the leave-evidence grant; direct file retrieval is guarded. EN/AR general-HR profile/edit screens inspected. Existing unchanged legacy identity values are preserved without blocking unrelated edits; changed identity values remain validated.

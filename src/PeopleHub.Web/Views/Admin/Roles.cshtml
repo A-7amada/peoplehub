@@ -1,4 +1,5 @@
 @model List<Role>
+<div class="card"><div class="card-b"><p class="muted">@(T.IsAr?"صلاحيات الحقول الحساسة مستقلة عن إدارة الموظفين ونطاق الشركة. الصلاحيات الجديدة غير ممنوحة افتراضيا للأدوار القائمة عدا مدير النظام. تعديل البنك يحتاج أيضا صلاحية تحديد مكونات الراتب. الموظف يرى بياناته الخاصة.":"Sensitive-field grants are separate from employee management and company scope. New grants are unassigned for existing roles except SystemAdmin. Bank editing also requires salary-component editing. Employees retain access to their own private profile.")</p></div></div>
 @{ ViewData["Title"] = T["nav.roles"]; var perms = (List<RolePermission>)ViewBag.Perms; var groups = Perm.Catalog.GroupBy(p => p.Group).ToList(); }
 <div class="page-head"><div><h1>@T["nav.roles"]</h1><div class="sub">@T["roles.sub"]</div></div></div>
 <form method="post" action="/Admin/SavePermissions" asp-antiforgery="true">

@@ -8,14 +8,17 @@
 <div class="card"><div class="card-h"><h2>@T["emp.personal"]</h2></div><div class="card-b form-grid">
  <div class="field"><label>@T["emp.nameEn"]</label><input type="text" name="FullName" value="@Model.FullName" required></div>
  <div class="field"><label>@T["emp.nameAr"]</label><input type="text" name="FullNameAr" value="@Model.FullNameAr" dir="rtl"></div>
+ @if(Me.Can(Perm.EmpIdentity)){
  <div class="field"><label>@T["emp.nationalId"]</label><input type="text" name="NationalId" value="@Model.NationalId" maxlength="14" dir="ltr"></div>
  <div class="field"><label>@T["emp.birthDate"]</label><input type="date" name="BirthDate" value="@Model.BirthDate?.ToString("yyyy-MM-dd")"></div>
+ }
  <div class="field"><label>@T["emp.gender"]</label><select name="Gender">@foreach (var g in Enum.GetValues<Gender>()) { <option value="@((int)g)" selected="@(Model.Gender == g)">@T.E(g)</option> }</select></div>
- <div class="field"><label>@T["emp.marital"]</label><select name="MaritalStatus">@foreach (var m in new[] { "Single", "Married" }) { <option value="@m" selected="@(Model.MaritalStatus == m)">@T.E(m)</option> }</select></div>
+ @if(Me.Can(Perm.EmpIdentity)){<div class="field"><label>@T["emp.marital"]</label><select name="MaritalStatus">@foreach (var m in new[] { "Single", "Married" }) { <option value="@m" selected="@(Model.MaritalStatus == m)">@T.E(m)</option> }</select></div>
+ }
  <div class="field"><label>@T["emp.phone"]</label><input type="text" name="Phone" value="@Model.Phone" dir="ltr"></div>
  <div class="field"><label>@T["emp.email"]</label><input type="email" name="Email" value="@Model.Email" required dir="ltr"></div>
- <div class="field full"><label>@T["emp.address"]</label><input type="text" name="Address" value="@Model.Address"></div>
-</div></div>
+ @if(Me.Can(Perm.EmpIdentity)){<div class="field full"><label>@T["emp.address"]</label><input type="text" name="Address" value="@Model.Address"></div>
+}</div></div>
 <div class="card"><div class="card-h"><h2>@T["emp.work"]</h2></div><div class="card-b form-grid">
  <div class="field"><label>@T["emp.department"]</label><select name="DepartmentId">@foreach (var d in depts) { <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@T.Name(d.Name, d.NameAr)</option> }</select></div>
  <div class="field"><label>@T["emp.title"]</label><select name="JobTitleId">@foreach (var t in titles) { <option value="@t.Id" selected="@(Model.JobTitleId == t.Id)">@T.Name(t.Name, t.NameAr)</option> }</select></div>
@@ -25,13 +28,15 @@
  <div class="field"><label>@T["emp.shift"]</label><select name="ShiftId">@foreach (var s in shifts) { <option value="@s.Id" selected="@(Model.ShiftId == s.Id)">@T.Name(s.Name, s.NameAr)</option> }</select></div>
  <div class="field"><label>@T["emp.hireDate"]</label><input type="date" name="HireDate" value="@Model.HireDate.ToString("yyyy-MM-dd")"></div>
 </div></div>
-@if (Me.Can(Perm.EmpPay)) {
+@if (Me.Can(Perm.EmpPay)||Me.Can(Perm.EmpIdentity)||Me.Can(Perm.EmpBankEdit)) {
 <div class="card"><div class="card-h"><h2>@T["emp.bank"]</h2></div><div class="card-b form-grid">
- <div class="field"><label>@T["emp.basic"]</label><input type="number" step="0.01" min="0" name="BasicSalary" value="@Model.BasicSalary.ToString(System.Globalization.CultureInfo.InvariantCulture)"></div>
- <div class="field"><label>@T["emp.insurance"]</label><input type="text" name="InsuranceNumber" value="@Model.InsuranceNumber" dir="ltr"></div>
- <div class="field"><label>@T["emp.bankName"]</label><input type="text" name="BankName" value="@Model.BankName"></div>
+ @if(Me.Can(Perm.EmpPay)){<div class="field"><label>@T["emp.basic"]</label><input type="number" step="0.01" min="0" name="BasicSalary" value="@Model.BasicSalary.ToString(System.Globalization.CultureInfo.InvariantCulture)"></div>
+ }
+ @if(Me.Can(Perm.EmpIdentity)){<div class="field"><label>@T["emp.insurance"]</label><input type="text" name="InsuranceNumber" value="@Model.InsuranceNumber" dir="ltr"></div>
+ }
+ @if(Me.Can(Perm.EmpBankEdit)&&Me.Can(Perm.EmpPay)){<div class="field"><label>@T["emp.bankName"]</label><input type="text" name="BankName" value="@Model.BankName"></div>
  <div class="field"><label>IBAN</label><input type="text" name="Iban" value="@Model.Iban" dir="ltr"></div>
-</div></div>
+}</div></div>
 }
 </div>
 <div class="card" style="align-self:start"><div class="card-h"><h2>@T["common.save"]</h2></div><div class="card-b">

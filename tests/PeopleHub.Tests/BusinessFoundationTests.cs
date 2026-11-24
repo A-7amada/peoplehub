@@ -5,7 +5,7 @@ using PeopleHub.Domain.Entities;
 namespace PeopleHub.Tests;
 public class BusinessFoundationTests
 {
- class User(string email="tester@example.local",bool financial=true):ICurrentUser { public string Email=>email;public int? EmployeeId=>6;public int UserId=>1;public bool IsAuthenticated=>true;public bool IsInRole(string r)=>true;public bool Can(string p)=>financial||p is not(Perm.EmpPay or Perm.EmpSalary); }
+ class User(string email="tester@example.local",bool financial=true):ICurrentUser { public string Email=>email;public int? EmployeeId=>6;public int UserId=>1;public bool IsAuthenticated=>true;public bool IsInRole(string r)=>true;public bool Can(string p)=>financial||p is not(Perm.EmpPay or Perm.EmpSalary or Perm.EmpBankEdit or Perm.EmpIdentity or Perm.EmpBank); }
  static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
  static PayrollService Pay(AppDbContext d,User u){var c=new AppClock(TimeProvider.System);var a=new AuditService(d,u,c);var n=new NotificationService(d,u,c);return new(d,u,a,n,new AttendanceService(d,new AccessScope(d,u),u,a,n,c,new WorkflowService(d,u,a)),c);}
  static LeaveService Leave(AppDbContext d,User u){var c=new AppClock(TimeProvider.System);var a=new AuditService(d,u,c);return new(d,new AccessScope(d,u),u,a,new NotificationService(d,u,c),c,new WorkflowService(d,u,a));}

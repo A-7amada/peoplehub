@@ -41,12 +41,12 @@ public class Employee
 
     public bool IsWorking => Status is EmployeeStatus.Active or EmployeeStatus.OnLeave;
 
-    public void Validate()
+    public void Validate(bool validateNationalId=true)
     {
         if (string.IsNullOrWhiteSpace(FullName)) throw new DomainException("err.name");
         if (string.IsNullOrWhiteSpace(Email) || !Email.Contains('@')) throw new DomainException("err.email");
         if (BasicSalary < 0) throw new DomainException("err.salary");
-        if (!string.IsNullOrWhiteSpace(NationalId) && NationalId.Trim().Length != 14) throw new DomainException("err.nationalId");
+        if (validateNationalId && !string.IsNullOrWhiteSpace(NationalId) && NationalId.Trim().Length != 14) throw new DomainException("err.nationalId");
         Email = Email.Trim().ToLowerInvariant();
     }
 

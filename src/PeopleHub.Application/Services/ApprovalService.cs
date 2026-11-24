@@ -18,6 +18,8 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
     private ApprovalAssignment? Assigned(Approvable a)=>_assignments.Where(x=>x.Kind==KindOf(a)&&x.RequestId==a.Id&&x.StageIndex==a.StageIndex).OrderByDescending(x=>x.Id).FirstOrDefault();
     private static string KindOf(Approvable a)=>a switch{LeaveRequest=>"Leave",OvertimeRequest=>"Overtime",AttendanceCorrection=>"Correction",AdvanceRequest=>"Advance",_=>""};
 
+    private bool CanLeaveEvidence(Approvable a)=>a is not LeaveRequest||a.EmployeeId==me.EmployeeId||me.Can(Perm.LeaveEvidence);
+
     private bool CanActOn(Approvable a)
     {
         if (a.Status != RequestStatus.Pending || a.CurrentStage is not { } stage) return false;
@@ -38,7 +40,7 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         bool Vis(Approvable a) => ids == null || ids.Contains(a.EmployeeId) || CanActOn(a);
         var items = new List<(string Kind, Approvable A, string T, string TAr, string Detail)>();
         if (kind is null or "Leave")
-            items.AddRange((await repo.ToListAsync(repo.Query<LeaveRequest>())).Where(Vis).Select(l => ("Leave", (Approvable)l, l.LeaveType?.Name ?? "", l.LeaveType?.NameAr ?? "",
+            items.AddRange((await repo.ToListAsync(repo.Query<LeaveRequest>())).Where(Vis).Select(l => ("Leave", (Approvable)l, CanLeaveEvidence(l)?l.LeaveType?.Name??"":"Private leave",CanLeaveEvidence(l)?l.LeaveType?.NameAr??"":"إجازة خاصة",
                 $"{l.StartDate:yyyy-MM-dd} → {l.EndDate:yyyy-MM-dd} · {l.Days}")));
         if (kind is null or "Overtime")
             items.AddRange((await repo.ToListAsync(repo.Query<OvertimeRequest>())).Where(Vis).Select(o => ("Overtime", (Approvable)o, "", "", $"{o.Date:yyyy-MM-dd} · {o.Hours}h × {o.Multiplier} · {o.Reason}")));
@@ -51,8 +53,8 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         var requiredComments=await flows.RequiredApprovalCommentsAsync();
         var actions = (await repo.ToListAsync(repo.Query<ApprovalAction>().OrderBy(x => x.At))).ToLookup(x => (x.Kind, x.RequestId));
         var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, i.A.Employee!, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
-                i.A.CreatedAt, i.A.Comment, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)), i.A.AttachmentToken, i.A.AttachmentName,
-                actions[(i.Kind, i.A.Id)].ToList(),i.A.WorkflowRevisionHash,requiredComments.Contains(i.Kind),Assigned(i.A)?.ToEmail))
+                i.A.CreatedAt, CanLeaveEvidence(i.A)?i.A.Comment:null, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)), CanLeaveEvidence(i.A)?i.A.AttachmentToken:null, CanLeaveEvidence(i.A)?i.A.AttachmentName:null,
+                CanLeaveEvidence(i.A)?actions[(i.Kind, i.A.Id)].ToList():[],i.A.WorkflowRevisionHash,requiredComments.Contains(i.Kind),Assigned(i.A)?.ToEmail))
             .Where(r => status == null || r.Status == status)
             .Where(r => !inboxOnly || r.CanAct)
             .OrderByDescending(r => r.CreatedAt).ToList();
