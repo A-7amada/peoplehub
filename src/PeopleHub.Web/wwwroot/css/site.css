@@ -97,7 +97,7 @@ a.person:hover{text-decoration:none}a.person:hover .nm{color:var(--brand)}
 .btn-sm{padding:5px 10px;font-size:.82rem;border-radius:8px}
 .field{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
 .field label{font-size:.82rem;font-weight:600;color:var(--ink2)}
-input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],input[type=time],input[type=search],select,textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid #d9dde8;border-radius:10px;padding:9px 12px;width:100%;transition:.15s;min-height:40px}
+input:not([type]),input[type=text],input[type=email],input[type=password],input[type=number],input[type=date],input[type=time],input[type=search],select,textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid #d9dde8;border-radius:10px;padding:9px 12px;width:100%;transition:.15s;min-height:40px}
 textarea{min-height:80px;resize:vertical}
 input:focus,select:focus,textarea:focus{outline:0;border-color:var(--brand);box-shadow:0 0 0 4px rgba(91,91,214,.14)}
 .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0 18px}.form-grid .full{grid-column:1/-1}
