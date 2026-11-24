@@ -1045,6 +1045,74 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("EmployeeSalaryComponent");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmploymentChange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("AppliedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("BasicSalary")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Cancelled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EffectiveOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("JobTitleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "EffectiveOn", "Kind")
+                        .IsUnique();
+
+                    b.ToTable("EmploymentChange");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Feedback360", b =>
                 {
                     b.Property<int>("Id")

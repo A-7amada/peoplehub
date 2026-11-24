@@ -6,7 +6,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, LeaveService leave, AttendanceService att, AppClock clock, ICurrentUser me) : BaseController(loc)
+public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, LeaveService leave, AttendanceService att, AppClock clock, ICurrentUser me, EmploymentTimeline timeline, AccessScope access) : BaseController(loc)
 {
     private async Task Lists()
     {
@@ -27,7 +27,10 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         try
         {
             var eid = id ?? me.EmployeeId ?? throw new DomainException("err.notFound");
+            await timeline.ApplyDueAsync();
             var p = await svc.ProfileAsync(eid);
+            ViewBag.Scheduled=await timeline.ListAsync(eid,access);
+            await Lists();
             ViewBag.Assignments=await svc.AssignmentsAsync(eid);
             ViewBag.Tab = tab; ViewBag.Components = await svc.ComponentsAsync();
             ViewBag.Balances = tab == "leave" ? await leave.BalancesAsync(eid, clock.Today.Year) : [];
@@ -55,6 +58,11 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         try { await svc.SaveAsync(model, reason); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Profile), new { id = model.Id == 0 ? (await svc.SearchAsync(new(model.Email, null, null, null))).FirstOrDefault()?.Id : model.Id }); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; if(!me.Can(Perm.EmpPay)){model.BasicSalary=0;model.Iban="";model.BankName="";} await Lists(); return View(model); }
     }
+
+    [RequirePerm(Perm.EmpManage),HttpPost]
+    public Task<IActionResult> Schedule(EmploymentChange change)=>Do(()=>timeline.ScheduleAsync(change),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=change.EmployeeId,tab="history"}));
+    [RequirePerm(Perm.EmpManage),HttpPost]
+    public Task<IActionResult> CancelSchedule(int id,int employeeId,string reason)=>Do(()=>timeline.CancelAsync(id,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="history"}));
 
     [RequirePerm(Perm.EmpManage), HttpPost]
     public Task<IActionResult> Status(int id, EmployeeStatus to, string? reason) => Do(() => svc.ChangeStatusAsync(id, to, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));

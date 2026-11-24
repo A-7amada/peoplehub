@@ -1096,6 +1096,76 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("EmployeeSalaryComponent");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmploymentChange", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("AppliedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<double>("BasicSalary")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Cancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EffectiveOn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("JobTitleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Status")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "EffectiveOn", "Kind")
+                        .IsUnique();
+
+                    b.ToTable("EmploymentChange");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Feedback360", b =>
                 {
                     b.Property<int>("Id")

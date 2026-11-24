@@ -96,6 +96,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         }
 
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == model.Id)) ?? throw new DomainException("err.notFound");
+        if(await repo.AnyAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==e.Id && x.Kind=="Assignment" && !x.Cancelled && x.AppliedAt==null))) throw new DomainException("err.pendingSchedule");
         var assignmentChanged=e.BasicSalary!=model.BasicSalary || e.DepartmentId!=model.DepartmentId || e.BranchId!=model.BranchId || e.JobTitleId!=model.JobTitleId || e.ManagerId!=model.ManagerId || e.ShiftId!=model.ShiftId;
         var prior=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==e.Id).OrderBy(x=>x.EffectiveFrom));
         if (assignmentChanged && string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
@@ -135,6 +136,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         RequireHr();
         if (to is EmployeeStatus.Terminated or EmployeeStatus.Resigned or EmployeeStatus.Suspended && string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
         var e = await GetAsync(id) ?? throw new DomainException("err.notFound");
+        if(await repo.AnyAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==e.Id && !x.Cancelled && x.AppliedAt==null))) throw new DomainException("err.pendingSchedule");
         var from = e.Status;
         repo.Add(e.ChangeStatus(to, me.Email, reason, clock.UtcNow));
         audit.Log("StatusChange", "Employee", e.Code, $"{from} -> {to}; {reason}");

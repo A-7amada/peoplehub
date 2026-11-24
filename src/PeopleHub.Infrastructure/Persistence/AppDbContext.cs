@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<EmploymentChange>().HasIndex(x=>new{x.EmployeeId,x.EffectiveOn,x.Kind}).IsUnique();
         b.Entity<AttendanceEvidence>().HasIndex(x=>new{x.EmployeeId,x.Date});
         b.Entity<DevicePunch>().HasIndex(x=>x.IdempotencyKey).IsUnique();
         b.Entity<PayrollCalculationSnapshot>().HasIndex(x => new { x.RunId, x.Version }).IsUnique();

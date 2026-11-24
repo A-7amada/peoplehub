@@ -61,3 +61,24 @@ public class AttendanceEvidence
  public int? CorrectionId { get; set; }
  public static AttendanceEvidence Capture(AttendanceRecord r,string action,string actor,DateTime at,string reason="",DateTime? beforeIn=null,DateTime? beforeOut=null,int? correction=null) => new() { EmployeeId=r.EmployeeId,Date=r.Date,Event=action,Actor=actor,At=at,Reason=reason,BeforeIn=beforeIn,BeforeOut=beforeOut,AfterIn=r.CheckIn,AfterOut=r.CheckOut,CorrectionId=correction };
 }
+
+/// <summary>Future organizational assignment or status change. Applied history is never rescheduled.</summary>
+public class EmploymentChange
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public DateTime EffectiveOn {get;set;}
+ public string Kind {get;set;}="Assignment";
+ public int DepartmentId {get;set;}
+ public int BranchId {get;set;}
+ public int JobTitleId {get;set;}
+ public int? ManagerId {get;set;}
+ public int? ShiftId {get;set;}
+ public decimal BasicSalary {get;set;}
+ public EmployeeStatus? Status {get;set;}
+ public string Reason {get;set;}="";
+ public string Actor {get;set;}="";
+ public DateTime CreatedAt {get;set;}
+ public DateTime? AppliedAt {get;set;}
+ public bool Cancelled {get;set;}
+}

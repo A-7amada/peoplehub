@@ -7,10 +7,10 @@
 | EMP-001 | Employee onboarding and offboarding checklists | P1 | Open |
 | EMP-002 | Document repository and expiry alerts | P1 | Open |
 | EMP-003 | Dependents | P1 | Open |
-| EMP-004 | Effective-dated employee status transitions | P0 | Open |
-| EMP-005 | Historical department, title, manager, shift and salary assignments | P0 | Partial: current-change history; future/backdated scheduling and historical allocations open |
+| EMP-004 | Effective-dated employee status transitions | P0 | Partial: future dated status schedule, cancellation and recorded effective date; broader transition policy and missed-run handling under review |
+| EMP-005 | Historical department, title, manager, shift and salary assignments | P0 | Partial: current history plus future assignment scheduling/cancellation; backdating and full historical payroll allocations remain open |
 | EMP-006 | Probation and confirmation | P1 | Open |
-| EMP-007 | Temporary/permanent transfers | P0 | Partial: current transfer history, temporary schedules open |
+| EMP-007 | Temporary/permanent transfers | P0 | Partial: current and future permanent transfer history, temporary return schedule open |
 | EMP-008 | Clearance and asset handover | P1 | Open |
 | EMP-009 | HR custom fields | P1 | Open |
 | ATT-001 | Rotating/multiple shifts | P1 | Open |
@@ -105,3 +105,5 @@ Acceptance is feature-level. A successful deployment of batch1 does not close ba
 Attendance evidence follow-up: 130 tests pass. New tests cover same-batch duplicate, database uniqueness, append-only punch/evidence guards, partial-ingestion rollback, retained original/history, read scope, correction evidence and failed final leave-approval rollback. Both provider migrations generated; local SQLite upgrade and EN/AR attendance evidence inspected. PostgreSQL integration race stress not run.
 
 Privacy/auth follow-up: 138 tests pass. No role grants or reviewer threshold were assumed. Thresholds freeze after first submitted review. Password lockout is a technical demo safeguard (5 failures/15 minutes), not an owner business-policy decision or production security certification. Both provider migrations generated.
+
+Employment scheduling follow-up: 143 tests pass. Future assignment/status schedules preserve the current employee until due, apply once, retain effective history and can be cancelled before due. One pending schedule per employee avoids ambiguous conflicting plans. Backdating, retro-pay, temporary transfer return, full historical allocations and durable multi-instance scheduler are not claimed complete.
