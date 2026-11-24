@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<TrainingCourse>().Property(x=>x.ApprovalStatus).HasDefaultValue("Legacy");b.Entity<JobOpening>().Property(x=>x.ApprovalStatus).HasDefaultValue("Legacy");
         b.Entity<CandidateInterview>().HasIndex(x=>new{x.CandidateId,x.StartsAt});b.Entity<RecruitmentEvent>().HasIndex(x=>x.CandidateId);
         b.Entity<TrainingCertificate>().HasIndex(x=>x.AttachmentToken).IsUnique();b.Entity<TrainingOutcome>().HasIndex(x=>x.EnrollmentId);
         b.Entity<ApprovalAssignment>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex});

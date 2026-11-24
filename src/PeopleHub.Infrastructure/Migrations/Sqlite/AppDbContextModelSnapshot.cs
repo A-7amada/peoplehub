@@ -1676,7 +1676,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.Property<string>("ApprovalStatus")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Legacy");
 
                     b.Property<int?>("ApprovedByUserId")
                         .HasColumnType("INTEGER");
@@ -3086,7 +3088,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.Property<string>("ApprovalStatus")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Legacy");
 
                     b.Property<int?>("CreatedByUserId")
                         .HasColumnType("INTEGER");

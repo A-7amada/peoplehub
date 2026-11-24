@@ -1757,7 +1757,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<string>("ApprovalStatus")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Legacy");
 
                     b.Property<int?>("ApprovedByUserId")
                         .HasColumnType("integer");
@@ -3227,7 +3229,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<string>("ApprovalStatus")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("Legacy");
 
                     b.Property<int?>("CreatedByUserId")
                         .HasColumnType("integer");
