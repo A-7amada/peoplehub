@@ -30,7 +30,7 @@
   <div class="day @cls"><b>@r.Date.Day</b>
    @if (r.HolidayName != null) { <span class="tag tag-b">@T.Name(r.HolidayName, r.HolidayNameAr ?? "")</span> }
    else if (r.Leave != null) { <span class="tag tag-b">@T.Name(r.Leave.LeaveType!.Name, r.Leave.LeaveType.NameAr)</span> }
-   else if (r.Record?.CheckIn != null && r.Record.Status != AttendanceStatus.Absent) { <span dir="ltr" class="tag @(r.Record.Status == AttendanceStatus.Late ? "tag-a" : "tag-g")">@r.Record.CheckIn.Value.ToString("HH:mm")@(r.Record.CheckOut != null ? "–" + r.Record.CheckOut.Value.ToString("HH:mm") : "")</span>
+   else if (r.Record?.CheckIn != null && r.Record.Status != AttendanceStatus.Absent) { <span dir="ltr" class="tag @(r.Record.Status == AttendanceStatus.Late ? "tag-a" : "tag-g")">@r.Record.CheckIn.Value.ToString("HH:mm")@(r.Record.CheckOut != null ? " / " + r.Record.CheckOut.Value.ToString("HH:mm")+(r.Record.CheckOut.Value.Date>r.Date?" (+1)":"") : (T.IsAr?" (خروج مفقود)":" (missing out)"))</span>
      @if (r.Record.LateMinutes > 0) { <span class="faint">+@r.Record.LateMinutes @T["att.min"]</span> } }
    else if (r.IsAbsent) { <span class="tag tag-r">@T["att.absent"]</span> }
    else if (!r.IsWorkingDay) { <span class="faint">@T["att.weekend"]</span> }

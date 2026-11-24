@@ -1299,6 +1299,48 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("EmployeeSalaryComponent");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeShiftDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("ShiftId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeShiftDay");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmploymentChange", b =>
                 {
                     b.Property<int>("Id")

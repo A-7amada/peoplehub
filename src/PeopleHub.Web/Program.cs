@@ -34,6 +34,7 @@ builder.Services.AddScoped<OrgService>();
 builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<EmployeeLifecycle>();
 builder.Services.AddScoped<EmployeeDocuments>();
+builder.Services.AddScoped<ShiftSchedule>();
 builder.Services.AddScoped<EmploymentTimeline>();
 builder.Services.AddScoped<AttendanceService>();
 builder.Services.AddScoped<LeaveService>();

@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<EmployeeShiftDay>().HasIndex(x=>new{x.EmployeeId,x.Date}).IsUnique();
         b.Entity<EmployeeDocument>().HasIndex(x=>x.AttachmentToken).IsUnique();
         b.Entity<EmployeeDependent>();b.Entity<LifecycleTask>();b.Entity<EmployeeProbation>().HasIndex(x=>x.EmployeeId).IsUnique();b.Entity<HrFieldDefinition>().HasIndex(x=>x.Label).IsUnique();b.Entity<EmployeeFieldValue>().HasIndex(x=>new{x.EmployeeId,x.FieldId}).IsUnique();
         b.Entity<AttendancePeriodLock>().HasIndex(x=>new{x.EmployeeId,x.Year,x.Month}).IsUnique();

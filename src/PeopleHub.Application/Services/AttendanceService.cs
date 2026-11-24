@@ -37,10 +37,13 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var start=new DateTime(year,month,1);var end=start.AddMonths(1);
         return await repo.ToListAsync(repo.Query<AttendanceEvidence>().Where(x=>x.EmployeeId==employeeId && x.Date>=start && x.Date<end).OrderByDescending(x=>x.Id));
     }
-    public async Task<Shift> ShiftOfAsync(Employee e)
+    public async Task<Shift> ShiftOfAsync(Employee e,DateTime? day=null)
     {
         var shifts = await repo.ToListAsync(repo.Query<Shift>().OrderBy(s => s.Id));
-        return shifts.FirstOrDefault(s => s.Id == e.ShiftId) ?? shifts.FirstOrDefault() ?? new Shift { Name = "Default", Start = new(9, 0, 0), End = new(17, 0, 0) };
+        var history=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==e.Id));
+        var overrides=await repo.ToListAsync(repo.Query<EmployeeShiftDay>().Where(x=>x.EmployeeId==e.Id));
+        var shiftId=ShiftCalendar.ShiftId(e,day??clock.Today,history,overrides);
+        return shifts.FirstOrDefault(s => s.Id == shiftId) ?? shifts.FirstOrDefault() ?? new Shift { Name = "Default", Start = new(9, 0, 0), End = new(17, 0, 0) };
     }
 
     private async Task<Employee> MeAsync() =>
@@ -50,6 +53,8 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     {
         var e = await MeAsync();
         var d = clock.Today;
+        var prev=d.AddDays(-1);var shift=await ShiftOfAsync(e,prev);
+        if(shift.IsNight && clock.Now.TimeOfDay<=shift.End){var night=await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r=>r.EmployeeId==e.Id&&r.Date==prev&&r.CheckIn!=null));if(night!=null)return night;}
         return await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == d));
     }
 
@@ -59,14 +64,14 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         if (SettingsService.DeviceMode) throw new DomainException("err.deviceMode");
         var e = await MeAsync();
         if (!e.IsWorking) throw new DomainException("err.terminated");
-        var today = clock.Today;
+        var today = ShiftCalendar.WorkDate(clock.Now,await ShiftOfAsync(e,clock.Today.AddDays(-1)));
         await RequireUnlockedAsync(e.Id,today);
         if (await repo.AnyAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == today && r.CheckIn != null)))
             throw new DomainException("err.duplicateCheckIn");
         var existing = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == today));
         var rec = existing ?? new AttendanceRecord { EmployeeId = e.Id, Date = today };
         rec.CheckIn = clock.Now; rec.Source = AttendanceSource.MobileApp;
-        rec.Recompute(await ShiftOfAsync(e));
+        rec.Recompute(await ShiftOfAsync(e,rec.Date));
         if (existing == null) repo.Add(rec);
         repo.Add(AttendanceEvidence.Capture(rec,"CheckIn",me.Email,clock.UtcNow));
         await repo.SaveAsync();
@@ -78,13 +83,13 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         if (SettingsService.DeviceMode) throw new DomainException("err.deviceMode");
         var e = await MeAsync();
         var rec = await TodayRecordAsync();
-        await RequireUnlockedAsync(e.Id,clock.Today);
+        await RequireUnlockedAsync(e.Id,rec?.Date??clock.Today);
         if (rec?.CheckIn == null) throw new DomainException("err.noCheckIn");
         if (rec.CheckOut != null) throw new DomainException("err.duplicateCheckOut");
         var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
         rec.CheckOut = clock.Now;
         if (rec.CheckOut <= rec.CheckIn) rec.CheckOut = rec.CheckIn.Value.AddMinutes(1);
-        rec.Recompute(await ShiftOfAsync(e));
+        rec.Recompute(await ShiftOfAsync(e,rec.Date));
         repo.Add(AttendanceEvidence.Capture(rec,"CheckOut",me.Email,clock.UtcNow,"",beforeIn,beforeOut));
         await repo.SaveAsync();
     }
@@ -102,8 +107,10 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         if (rec is { CheckIn: not null }) throw new DomainException("err.duplicateCheckIn");
         var isNew = rec == null;
         rec ??= new AttendanceRecord { EmployeeId = employeeId, Date = date.Date };
+        var manualShift=await ShiftOfAsync(e,date);
+        checkOut=ShiftCalendar.OvernightOut(date,checkIn,checkOut,manualShift);
         rec.CheckIn = checkIn; rec.CheckOut = checkOut; rec.Source = AttendanceSource.Manual; rec.IsExcused = false; rec.ExcuseNote = null;
-        rec.Recompute(await ShiftOfAsync(e));
+        rec.Recompute(await ShiftOfAsync(e,rec.Date));
         if (isNew) repo.Add(rec);
         repo.Add(AttendanceEvidence.Capture(rec,"ManualEntry",me.Email,clock.UtcNow,reason.Trim()));
         audit.Log("Create", "Attendance", $"{e.Code}/{date:yyyy-MM-dd}", $"{source} in={checkIn:HH:mm} out={checkOut:HH:mm}");
@@ -216,6 +223,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var e = await MeAsync();
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == date.Date));
         await RequireUnlockedAsync(e.Id,date);
+        newOut=ShiftCalendar.OvernightOut(date,newIn,newOut,await ShiftOfAsync(e,date));
         var c = AttendanceCorrection.Create(e, date, rec?.CheckIn, rec?.CheckOut, newIn, newOut, reason, clock.Today);
         c.Route = await flows.RouteForAsync("Correction", e, 0);
         c.Employee = e; c.AttachmentToken = attToken; c.AttachmentName = attName;

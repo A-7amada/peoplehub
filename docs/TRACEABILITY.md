@@ -13,9 +13,9 @@
 | EMP-007 | Temporary/permanent transfers | P0 | Partial: current and future permanent transfer history, temporary return schedule open |
 | EMP-008 | Clearance and asset handover | P1 | Partial: clearance tasks with completion evidence; asset inventory/handover records remain open |
 | EMP-009 | HR custom fields | P1 | Implemented HR-only typed text/date/number fields, validation and audit |
-| ATT-001 | Rotating/multiple shifts | P1 | Open |
-| ATT-002 | Overnight shifts | P1 | Partial: calculator supports, UI pairing open |
-| ATT-003 | Missing punch exceptions | P1 | Open |
+| ATT-001 | Rotating/multiple shifts | P1 | Implemented dated employee shift assignments and configurable shift definitions; repeating rotation generator open |
+| ATT-002 | Overnight shifts | P1 | Implemented cross-midnight device pairing, manual/correction checkout normalization and previous-night self checkout; post-shift delayed punches beyond end remain exceptions |
+| ATT-003 | Missing punch exceptions | P1 | Partial: missing checkout displayed without invented time; exception inbox/reprocessing open |
 | ATT-004 | Raw punch ledger and idempotent processing | P0 | Implemented: append-only punches, normalized batch/retry dedupe and unique idempotency key; concurrent losing request may require retry |
 | ATT-005 | Flexible hours | P1 | Open |
 | ATT-006 | Remote attendance/geofencing | P2 | Open |
@@ -111,3 +111,5 @@ Employment scheduling follow-up: 143 tests pass. Future assignment/status schedu
 Attendance lock follow-up: manual entries now require a reason. Completed months can be approved/locked with an append-only lock record. Pending corrections block locking. Locked summaries reject manual/excuse/correction changes; delayed device punches remain raw without rewriting the locked projection. Employee revision contention protects cross-request locking races; PostgreSQL parallel stress remains unverified.
 
 Lifecycle follow-up: 152 tests pass. Employee lifecycle screen inspected in EN/AR. No default checklist, probation length, benefits eligibility or automatic termination/payment is assumed. Document repository/expiry, asset inventory and broader operational modules remain open.
+
+Shift follow-up: 160 tests pass including private document and overnight tests. Dated shift override takes precedence over effective employment history, then current shift fallback. Raw timestamps stay unchanged. Shift pattern and grace/late limits are explicit configuration. No break deductions or flexible-hours formula was invented.

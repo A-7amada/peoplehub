@@ -1238,6 +1238,46 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("EmployeeSalaryComponent");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeShiftDay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("ShiftId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeShiftDay");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmploymentChange", b =>
                 {
                     b.Property<int>("Id")

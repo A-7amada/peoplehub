@@ -99,8 +99,13 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
     /// <summary>First punch of the day is the check-in, the last (at least a minute later) the check-out. Records already approved by hand are not overwritten.</summary>
     private async Task RebuildAsync(List<Employee> emps)
     {
-        var punches = (await repo.ToListAsync(repo.Query<DevicePunch>())).Where(p => p.EmployeeId != null).GroupBy(p => (p.EmployeeId!.Value, p.Time.Date));
+        var raw=await repo.ToListAsync(repo.Query<DevicePunch>());
+        var assignments=await repo.ToListAsync(repo.Query<EmployeeAssignment>());
+        var overrides=await repo.ToListAsync(repo.Query<EmployeeShiftDay>());
         var shifts = await repo.ToListAsync(repo.Query<Shift>().OrderBy(s => s.Id));
+        Shift For(Employee e,DateTime d)=>shifts.FirstOrDefault(s=>s.Id==ShiftCalendar.ShiftId(e,d,assignments,overrides))??shifts.FirstOrDefault()??new Shift{Start=new(9,0,0),End=new(17,0,0)};
+        DateTime Day(DevicePunch p){var e=emps.First(e=>e.Id==p.EmployeeId);var previous=For(e,p.Time.Date.AddDays(-1));return ShiftCalendar.WorkDate(p.Time,previous);}
+        var punches=raw.Where(p=>p.EmployeeId!=null && emps.Any(e=>e.Id==p.EmployeeId)).GroupBy(p=>(p.EmployeeId!.Value,Day(p)));
         var recs = await repo.ToListAsync(repo.Query<AttendanceRecord>());
         var locks=await repo.ToListAsync(repo.Query<AttendancePeriodLock>());
         foreach (var g in punches)
@@ -113,7 +118,7 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
             var isNew = rec == null; rec ??= new AttendanceRecord { EmployeeId = eid, Date = day };
             var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
             rec.CheckIn = times[0]; rec.CheckOut = times.Count > 1 && times[^1] > times[0].AddMinutes(1) ? times[^1] : null; rec.Source = AttendanceSource.Fingerprint;
-            rec.Recompute(shifts.FirstOrDefault(s => s.Id == emp.ShiftId) ?? shifts.FirstOrDefault() ?? new Shift { Name = "Default", Start = new(9, 0, 0), End = new(17, 0, 0) });
+            rec.Recompute(For(emp,day));
             if (isNew) { repo.Add(rec); recs.Add(rec); }
             if(isNew || beforeIn!=rec.CheckIn || beforeOut!=rec.CheckOut) repo.Add(AttendanceEvidence.Capture(rec,"DeviceProjection",me.Email,clock.UtcNow,"Derived from retained device punches",beforeIn,beforeOut));
         }

@@ -122,7 +122,8 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
                 c.Employee!.LeaveRequestStamp=Guid.NewGuid().ToString("N");
                 if(await repo.AnyAsync(repo.Query<AttendancePeriodLock>().Where(x=>x.EmployeeId==c.EmployeeId && x.Year==c.Date.Year && x.Month==c.Date.Month))) throw new DomainException("err.attendanceLocked");
                 var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == c.EmployeeId && r.Date == c.Date));
-                var shift = (await repo.ToListAsync(repo.Query<Shift>())).FirstOrDefault(s => s.Id == c.Employee!.ShiftId) ?? (await repo.ToListAsync(repo.Query<Shift>())).First();
+                var history=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==c.EmployeeId));var overrides=await repo.ToListAsync(repo.Query<EmployeeShiftDay>().Where(x=>x.EmployeeId==c.EmployeeId));var shiftId=ShiftCalendar.ShiftId(c.Employee!,c.Date,history,overrides);
+                var shift = (await repo.ToListAsync(repo.Query<Shift>())).FirstOrDefault(s => s.Id == shiftId) ?? (await repo.ToListAsync(repo.Query<Shift>())).First();
                 var isNew = rec == null;
                 rec ??= new AttendanceRecord { EmployeeId = c.EmployeeId, Date = c.Date };
                 var before = $"{rec.CheckIn:HH:mm}-{rec.CheckOut:HH:mm}";

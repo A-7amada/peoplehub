@@ -154,3 +154,14 @@ public class EmployeeDocument
  public DateTime At {get;set;}
  public DateTime? LastAlertDate {get;set;}
 }
+
+public class EmployeeShiftDay
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public DateTime Date {get;set;}
+ public int ShiftId {get;set;}
+ public string Reason {get;set;}="";
+ public string Actor {get;set;}="";
+ public DateTime At {get;set;}
+}
