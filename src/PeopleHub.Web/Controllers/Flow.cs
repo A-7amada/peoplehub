@@ -91,7 +91,7 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
     }
 }
 
-public class ReportsController(Loc loc, ReportService svc, AppClock clock, ICurrentUser me) : BaseController(loc)
+public class ReportsController(Loc loc, ReportService svc, AppClock clock, ICurrentUser me, ReportBuilderService builder, OrgService org) : BaseController(loc)
 {
     public async Task<IActionResult> Index(string key = "employees", int? year = null, int? month = null)
     {
@@ -100,6 +100,21 @@ public class ReportsController(Loc loc, ReportService svc, AppClock clock, ICurr
         ViewBag.Key = key; ViewBag.Year = y; ViewBag.Month = m;
         try { return View(await svc.BuildAsync(key, y, m)); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }
+    }
+
+    public async Task<IActionResult> Builder(string dataset = "employees", string[]? cols = null, int? dept = null, bool run = false)
+    {
+        if (!me.Can(Perm.Reports)) return Forbidden();
+        ViewBag.Dataset = dataset; ViewBag.Cols = cols ?? ReportBuilderService.Columns[dataset]; ViewBag.Dept = dept; ViewBag.Depts = await org.DepartmentsAsync();
+        try { return View(run ? await builder.RunAsync(dataset, cols, dept) : null); }
+        catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }
+    }
+
+    public async Task<IActionResult> BuilderFile(string dataset, string[]? cols, int? dept, string format = "xlsx")
+    {
+        var t = await builder.RunAsync(dataset, cols, dept);
+        return format == "csv" ? File(System.Text.Encoding.UTF8.GetBytes(ReportService.ToCsv(t)), "text/csv", $"{t.Key}.csv")
+            : File(XlsxWriter.Build(t.Key, t.Columns, t.Rows), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"{t.Key}.xlsx");
     }
 
     public async Task<IActionResult> Xlsx(string key, int? year, int? month)

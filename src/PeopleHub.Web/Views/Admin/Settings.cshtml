@@ -1,0 +1,36 @@
+@model Dictionary<string, string>
+@{ ViewData["Title"] = T.IsAr ? "إعدادات النظام" : "System settings"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en;
+   var punches = (List<DevicePunch>)ViewBag.Punches; var outbox = (List<EmailOutbox>)ViewBag.Outbox; bool dev = Model["att.mode"] == "Device"; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Choose where attendance comes from and how the system sends email. Changes apply immediately.", "اختر مصدر الحضور وطريقة إرسال البريد. التغييرات تسري فورًا.")</div></div></div>
+<form method="post" action="/Admin/SaveSettings" asp-antiforgery="true">
+<div class="grid g2">
+ <div class="card"><div class="card-h"><h2>@X("Attendance source", "مصدر الحضور")</h2>@Ui.Chip(dev ? X("ZKTeco device", "ماكينة ZKTeco") : X("In the system", "من النظام"), dev ? "violet" : "green")</div><div class="card-b">
+  <label class="check" style="display:block;margin-bottom:8px"><input type="radio" name="att.mode" value="System" checked="@(!dev)"> <b>@X("System check-in/out", "تسجيل من النظام")</b><div class="faint small">@X("Employees press Check in / Check out on their attendance page.", "الموظف يضغط حضور / انصراف من صفحة الحضور.")</div></label>
+  <label class="check" style="display:block;margin-bottom:14px"><input type="radio" name="att.mode" value="Device" checked="@dev"> <b>@X("ZKTeco fingerprint device", "ماكينة بصمة ZKTeco")</b><div class="faint small">@X("Punches come from the machine. The check-in buttons are turned off for everyone. Device user ID = employee code (for example PH-001).", "البصمات تأتي من الماكينة وتُعطَّل أزرار الحضور للجميع. رقم المستخدم على الماكينة = كود الموظف (مثل PH-001).")</div></label>
+  <div class="grid g2"><div class="field"><label>@X("Device IP address", "عنوان IP للماكينة")</label><input name="zk.ip" value="@Model["zk.ip"]" dir="ltr"></div><div class="field"><label>@X("Port", "المنفذ")</label><input name="zk.port" value="@Model["zk.port"]" dir="ltr"></div></div>
+  <div class="field"><label>@X("Device bridge key (header X-Device-Key)", "مفتاح جسر الماكينة (الهيدر X-Device-Key)")</label><input name="zk.apiKey" value="@Model["zk.apiKey"]" dir="ltr"></div>
+  <label class="check"><input type="checkbox" name="zk.simulate" value="true" checked="@(Model["zk.simulate"] == "true")"> @X("Simulate the device (demo)", "محاكاة الماكينة (للعرض)")</label>
+  <div class="faint small" style="margin-top:6px">@X("A cloud server cannot reach a private LAN address. For a real machine, a small bridge on the same network reads it and posts punches to POST /api/device/punches with the key above. In this demo the simulator stands in for the machine.", "السيرفر السحابي لا يصل لعنوان داخلي. مع ماكينة حقيقية يقرأ جسر صغير على نفس الشبكة البصمات ويرسلها إلى POST /api/device/punches بالمفتاح أعلاه. في العرض يحل المحاكي محل الماكينة.")</div>
+ </div></div>
+ <div class="card"><div class="card-h"><h2>@X("Email and policies", "البريد والسياسات")</h2></div><div class="card-b">
+  <label class="check"><input type="checkbox" name="email.notify" value="true" checked="@(Model["email.notify"] == "true")"> @X("Send an email for each notification", "إرسال بريد لكل إشعار")</label>
+  <div class="grid g2" style="margin-top:10px"><div class="field"><label>SMTP host</label><input name="smtp.host" value="@Model["smtp.host"]" dir="ltr" placeholder="smtp.example.com"></div><div class="field"><label>SMTP port</label><input name="smtp.port" value="@Model["smtp.port"]" dir="ltr"></div>
+   <div class="field"><label>SMTP user</label><input name="smtp.user" value="@Model["smtp.user"]" dir="ltr"></div><div class="field"><label>@X("From address", "عنوان المرسل")</label><input name="smtp.from" value="@Model["smtp.from"]" dir="ltr"></div></div>
+  <div class="faint small">@X("The SMTP password is read from the SMTP_PASSWORD environment variable, never stored here. Without a host, mail stays in the outbox below.", "كلمة مرور SMTP تُقرأ من متغير البيئة SMTP_PASSWORD ولا تُخزَّن هنا. بدون خادم يبقى البريد في صندوق الصادر أدناه.")</div>
+  <div class="grid g2" style="margin-top:10px"><div class="field"><label>@X("End-of-service gratuity (days of salary per year)", "مكافأة نهاية الخدمة (أيام راتب عن كل سنة)")</label><input name="eosb.days" value="@Model["eosb.days"]" dir="ltr"></div><div class="field"><label>@X("Minimum password length", "أقل طول لكلمة المرور")</label><input name="pwd.minLength" value="@Model["pwd.minLength"]" dir="ltr"></div></div>
+ </div></div>
+</div>
+<div style="margin:16px 0"><button class="btn btn-primary">@T["common.save"]</button></div>
+</form>
+<div class="grid g2">
+ <div class="card"><div class="card-h"><h2>@X("Device", "الماكينة")</h2><div style="display:flex;gap:8px">
+   <form method="post" action="/Admin/TestDevice" asp-antiforgery="true" style="margin:0"><button class="btn btn-sm">@X("Test connection", "اختبار الاتصال")</button></form>
+   <form method="post" action="/Admin/SyncDevice" asp-antiforgery="true" style="margin:0"><button class="btn btn-sm btn-primary" disabled="@(!dev)">@X("Sync now", "مزامنة الآن")</button></form></div></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("Device user", "مستخدم الماكينة")</th><th>@X("Time", "الوقت")</th><th>@X("Matched", "مطابق")</th></tr></thead><tbody>
+  @foreach (var p in punches) { <tr><td dir="ltr">@p.DeviceUserId</td><td class="num">@p.Time.ToString("yyyy-MM-dd HH:mm")</td><td>@(p.Matched ? Ui.Chip(X("Employee", "موظف"), "green") : Ui.Chip(X("Unknown ID", "رقم غير معروف"), "rose"))</td></tr> }
+  @if (punches.Count == 0) { <tr><td colspan="3" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>
+ <div class="card"><div class="card-h"><h2>@X("Email outbox", "صندوق البريد الصادر")</h2><form method="post" action="/Admin/FlushMail" asp-antiforgery="true" style="margin:0"><button class="btn btn-sm">@X("Send queued", "إرسال المعلّق")</button></form></div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("To", "إلى")</th><th>@X("Subject", "الموضوع")</th><th>@T["common.status"]</th></tr></thead><tbody>
+  @foreach (var m in outbox.Take(12)) { <tr><td dir="ltr" style="text-align:start">@m.To</td><td>@m.Subject</td><td>@(m.Sent ? Ui.Chip(X("Sent", "أُرسل"), "green") : Ui.Chip(X("Queued", "معلّق"), "amber"))</td></tr> }
+  @if (outbox.Count == 0) { <tr><td colspan="3" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>
+</div>

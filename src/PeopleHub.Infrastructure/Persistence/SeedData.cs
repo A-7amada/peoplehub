@@ -280,6 +280,25 @@ public static class SeedData
             db.Add(new ApprovalAction { Kind = "Payroll", RequestId = run.Id, Actor = "ceo@peoplehub.local", Action = "Finalized", At = run.CreatedAt.AddDays(2) });
             if (status == PayrollStatus.Paid) db.Add(new ApprovalAction { Kind = "Payroll", RequestId = run.Id, Actor = "payroll@peoplehub.local", Action = "Paid", At = run.PaidAt!.Value });
         }
+        // talent: fictional openings, candidates, reviews and courses
+        var depList = await db.Set<Department>().ToListAsync();
+        Department? Dp(string n) => depList.FirstOrDefault(x => x.Name.Contains(n));
+        var j1 = new JobOpening { Title = "Senior .NET Developer", TitleAr = "مطور .NET أول", DepartmentId = Dp("Engineering")?.Id, Positions = 2, CreatedAt = DateTime.UtcNow.AddDays(-12) };
+        var j2 = new JobOpening { Title = "HR Specialist", TitleAr = "أخصائي موارد بشرية", DepartmentId = Dp("Human")?.Id, Positions = 1, CreatedAt = DateTime.UtcNow.AddDays(-6) };
+        var j3 = new JobOpening { Title = "Sales Executive", TitleAr = "مسؤول مبيعات", DepartmentId = Dp("Sales")?.Id, Positions = 3, CreatedAt = DateTime.UtcNow.AddDays(-20), IsOpen = false };
+        db.AddRange(j1, j2, j3); await db.SaveChangesAsync();
+        db.AddRange(
+            new Candidate { JobOpeningId = j1.Id, Name = "Sample Candidate A", Email = "candidate.a@example.test", Stage = CandidateStage.Interview, Note = "Strong on clean architecture", CreatedAt = DateTime.UtcNow.AddDays(-8) },
+            new Candidate { JobOpeningId = j1.Id, Name = "Sample Candidate B", Email = "candidate.b@example.test", Stage = CandidateStage.Screening, CreatedAt = DateTime.UtcNow.AddDays(-5) },
+            new Candidate { JobOpeningId = j1.Id, Name = "Sample Candidate C", Email = "candidate.c@example.test", Stage = CandidateStage.Applied, CreatedAt = DateTime.UtcNow.AddDays(-2) },
+            new Candidate { JobOpeningId = j2.Id, Name = "Sample Candidate D", Email = "candidate.d@example.test", Stage = CandidateStage.Offer, CreatedAt = DateTime.UtcNow.AddDays(-4) },
+            new Candidate { JobOpeningId = j3.Id, Name = "Sample Candidate E", Email = "candidate.e@example.test", Stage = CandidateStage.Hired, CreatedAt = DateTime.UtcNow.AddDays(-18) });
+        var c1 = new TrainingCourse { Title = "Time Management", TitleAr = "إدارة الوقت", Hours = 6, Date = today.AddDays(14) };
+        var c2 = new TrainingCourse { Title = "Workplace Safety Basics", TitleAr = "أساسيات السلامة في العمل", Hours = 4, Date = today.AddDays(-10) };
+        db.AddRange(c1, c2); await db.SaveChangesAsync();
+        var some = emps.Values.Where(e => e.IsWorking).Take(6).ToList();
+        foreach (var e in some) db.Add(new TrainingEnrollment { CourseId = c2.Id, EmployeeId = e.Id, Completed = e.Id % 2 == 0 });
+        foreach (var e in some.Take(3)) db.Add(new PerformanceReview { EmployeeId = e.Id, Period = $"{today.Year - 1} H2", Goals = "Deliver quarterly targets; mentor a junior colleague", Comment = "Reliable and proactive.", Score = 3 + (e.Id % 3), Reviewer = "manager@peoplehub.local", CreatedAt = DateTime.UtcNow.AddDays(-30) });
         // welcome notifications + sample audit entries
         var users = await db.Set<AppUser>().ToListAsync();
         foreach (var u in users)

@@ -34,14 +34,20 @@ else {
     <a class="@On("Leave")" href="@(User.Claims.Any(c => c.Type == "emp") ? "/Leave" : "/Leave/Team")">@Ui.Icon("calendar") @T["nav.leave"]</a>
     <a class="@On("Requests")" href="/Requests?scope=@(inbox > 0 ? "inbox" : "mine")">@Ui.Icon("inbox") @T["nav.requests"] @if (inbox > 0) { <span class="badge">@inbox</span> }</a>
     <a class="@On("Requests") nav-sub" href="/Requests/Delegations">@Ui.Icon("users") @T["nav.deleg"]</a>
+    <div class="nav-label">@(T.IsAr ? "المواهب" : "Talent")</div>
+    @if (Can(Perm.TalentManage)) { <a class="@On("Talent")" href="/Talent/Recruitment">@Ui.Icon("users") @(T.IsAr ? "التوظيف" : "Recruitment")</a> }
+    <a href="/Talent/Performance">@Ui.Icon("chart") @(T.IsAr ? "تقييم الأداء" : "Performance")</a>
+    <a href="/Talent/Training">@Ui.Icon("clock") @(T.IsAr ? "التدريب" : "Training")</a>
     <div class="nav-label">@T["nav.finance"]</div>
     <a class="@On("Payroll")" href="/Payroll">@Ui.Icon("wallet") @T["nav.payroll"]</a>
-    @if (Can(Perm.Reports)) { <a class="@On("Reports")" href="/Reports">@Ui.Icon("chart") @T["nav.reports"]</a> }
-    @if (Can(Perm.Audit) || Can(Perm.AdmUsers) || Can(Perm.AdmRoles) || Can(Perm.AdmFlows)) {
+    @if (Can(Perm.Reports)) { <a class="@On("Reports")" href="/Reports">@Ui.Icon("chart") @T["nav.reports"]</a> <a class="nav-sub" href="/Reports/Builder">@Ui.Icon("chart") @(T.IsAr ? "منشئ التقارير" : "Report builder")</a> }
+    @if (Can(Perm.EmpPay)) { <a class="nav-sub" href="/Talent/Settlement">@Ui.Icon("wallet") @(T.IsAr ? "نهاية الخدمة" : "End of service")</a> }
+    @if (Can(Perm.Audit) || Can(Perm.AdmUsers) || Can(Perm.AdmRoles) || Can(Perm.AdmFlows) || Can(Perm.AdmSettings)) {
       <div class="nav-label">@T["nav.admin"]</div>
       @if (Can(Perm.Audit)) { <a class="@On("System")" href="/System/Audit">@Ui.Icon("shield") @T["nav.audit"]</a> }
       @if (Can(Perm.AdmUsers)) { <a class="@On("Users")" href="/Admin/Users">@Ui.Icon("key") @T["nav.users"]</a> }
       @if (Can(Perm.AdmRoles)) { <a class="@On("Roles")" href="/Admin/Roles">@Ui.Icon("shield") @T["nav.roles"]</a> }
+      @if (Can(Perm.AdmSettings)) { <a class="@On("Settings")" href="/Admin/Settings">@Ui.Icon("shield") @(T.IsAr ? "الإعدادات" : "Settings")</a> }
       @if (Can(Perm.AdmFlows)) { <a class="@On("Workflows")" href="/Admin/Workflows">@Ui.Icon("inbox") @T["nav.workflows"]</a> }
     }
   </nav>
@@ -56,7 +62,7 @@ else {
       <span class="avatar" style="width:32px;height:32px;background:#eef0ff;color:#5b5bd6;font-size:13px">@User.Identity!.Name![..2].ToUpper()</span>
       <div><div class="nm">@User.Identity.Name</div><div class="rl">@T.RoleName(mainRole)</div></div>
     </div>
-    <form method="post" action="/Account/Logout" asp-antiforgery="true" style="margin:0"><button class="icon-btn" title="@T["nav.logout"]">@Ui.Icon("logout")</button></form>
+    <a class="icon-btn" href="/Account/Security" title="Security">@Ui.Icon("key")</a><form method="post" action="/Account/Logout" asp-antiforgery="true" style="margin:0"><button class="icon-btn" title="@T["nav.logout"]">@Ui.Icon("logout")</button></form>
   </header>
   <main class="content">
     <div class="demo-banner">@Ui.Icon("info", 16) <span>@T["demo.banner"]</span></div>

@@ -31,6 +31,8 @@ public class AppUser
     public string RoleList { get; set; } = Roles.Employee;
     public int? EmployeeId { get; set; }
     public bool IsActive { get; set; } = true;
+    public string? TotpSecret { get; set; }
+    public bool TotpEnabled { get; set; }
     public string[] RoleArray => RoleList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
 

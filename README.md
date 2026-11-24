@@ -62,7 +62,7 @@ tests/
   PeopleHub.Tests           xUnit tests for the domain rules
 ```
 
-- Business rules live in the domain layer and are unit tested (49 tests: attendance calculation, leave rules, approval routing, configurable cycles and role-driven permissions, advances, contracts, status changes, payroll calculation and workflow, password hashing).
+- Business rules live in the domain layer and are unit tested (58 tests: attendance calculation, leave rules, approval routing, configurable cycles and role-driven permissions, advances, contracts, status changes, payroll calculation and workflow, password hashing).
 - Cookie authentication, PBKDF2 password hashing, antiforgery on every POST, permission checks in the application layer (role-to-permission map loaded from the database).
 - English and Arabic UI with a language switch and a right-to-left layout built with CSS logical properties.
 - The Egyptian weekend (Friday and Saturday) and public holidays are excluded from working days.
@@ -84,8 +84,10 @@ A `Dockerfile` is included (used for the Render free tier). Set `HR_SEED_PASSWOR
 
 ## Limits
 
-- Demo project with fictional data. Tax and insurance rates are illustrative, not legal advice or Egyptian law.
-- Uploaded attachments (2 MB, PDF/JPG/PNG) are stored in the demo database, which resets on restart. PDF export uses the browser print dialog. No email or SMS, no external integrations. See BRD.md section 4B for an honest benchmark against ZenHR and Odoo.
+- Demo project with fictional data. Payroll uses the 2026 Egyptian insurance (11%, floor 2,700, cap 16,700), income tax brackets, 20,000 personal exemption and 0.05% martyrs fund from public sources. It has not been reviewed by a specialist and is not legal advice.
+- Attendance can come from the system or a ZKTeco device (Admin > Settings). A cloud server cannot reach a private LAN IP, so a real machine needs a bridge posting to /api/device/punches; the demo uses a simulator. Not tested against a physical device.
+- Email goes to an outbox and is sent only if SMTP is configured. 2FA is TOTP. No SSO, SMS, mobile app or GPS attendance.
+- Uploaded attachments (2 MB, PDF/JPG/PNG) are stored in the demo database, which resets on restart. PDF export uses the browser print dialog. No external integrations. See BRD.md sections 4B and 4C for an honest benchmark against ZenHR and Odoo.
 
 ## Documentation
 

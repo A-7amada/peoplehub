@@ -1,0 +1,9 @@
+@{ ViewData["Title"] = T.IsAr ? "كلمة مرور جديدة" : "New password"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; }
+<div class="login-wrap"><section class="login-form" style="grid-column:1/-1"><div class="login-card">
+ <h1 style="font-size:1.6rem;margin-bottom:6px">@ViewData["Title"]</h1>
+ @if (ViewBag.Error is string e) { <div class="flash err">@e</div> }
+ @if (ViewBag.Valid == true) {
+ <form method="post" action="/Account/Reset" asp-antiforgery="true"><input type="hidden" name="token" value="@ViewBag.Token"><div class="field"><label>@X("New password", "كلمة المرور الجديدة")</label><input type="password" name="password" required dir="ltr"></div><button class="btn btn-primary" style="width:100%;justify-content:center">@T["common.save"]</button></form>
+ } else { <div class="flash err">@T["err.badToken"]</div> }
+ <p style="margin-top:16px"><a href="/Account/Login">@X("Back to sign in", "العودة لتسجيل الدخول")</a></p>
+</div></section></div>

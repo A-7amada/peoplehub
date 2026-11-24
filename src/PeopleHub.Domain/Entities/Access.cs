@@ -29,7 +29,7 @@ public static class Perm
         PayView = "payroll.view", PayPrepare = "payroll.prepare", PayHr = "payroll.hrReview", PayFinance = "payroll.financeApprove",
         PayFinalize = "payroll.finalize", PayReopen = "payroll.reopen", PaySendBack = "payroll.sendBack", PayExport = "payroll.export", PaySlips = "payroll.slips",
         Reports = "reports.view", ReportsFin = "reports.financial", Audit = "audit.view",
-        AdmUsers = "admin.users", AdmRoles = "admin.roles", AdmFlows = "admin.workflows";
+        AdmUsers = "admin.users", AdmRoles = "admin.roles", AdmFlows = "admin.workflows", AdmSettings = "admin.settings", TalentManage = "talent.manage";
 
     public static readonly PermDef[] Catalog =
     [
@@ -57,14 +57,16 @@ public static class Perm
         new(Audit, "Administration", "Audit log", "سجل التدقيق"),
         new(AdmUsers, "Administration", "Manage users", "إدارة المستخدمين"),
         new(AdmRoles, "Administration", "Manage roles and permissions", "إدارة الأدوار والصلاحيات"),
+        new(AdmSettings, "Administration", "System settings (attendance source, device, email, policies)", "إعدادات النظام (مصدر الحضور والجهاز والبريد والسياسات)"),
+        new(TalentManage, "Talent", "Manage recruitment, performance reviews and training", "إدارة التوظيف وتقييم الأداء والتدريب"),
         new(AdmFlows, "Administration", "Configure approval workflows", "ضبط مسارات الموافقات"),
     ];
 
     /// <summary>Starting permissions of the built-in roles. Admins can change all of these in the UI.</summary>
     public static readonly Dictionary<string, string[]> Defaults = new()
     {
-        [Roles.HRManager] = [ScopeCompany, EmpManage, EmpPay, EmpSalary, OrgManage, AttManage, AttTeam, LeaveAdmin, PayView, PayHr, PaySendBack, PaySlips, Reports, ReportsFin, Audit],
-        [Roles.HRSpecialist] = [ScopeCompany, EmpManage, OrgManage, AttManage, AttTeam, LeaveAdmin, Reports],
+        [Roles.HRManager] = [ScopeCompany, EmpManage, EmpPay, EmpSalary, OrgManage, AttManage, AttTeam, LeaveAdmin, PayView, PayHr, PaySendBack, PaySlips, Reports, ReportsFin, Audit, TalentManage],
+        [Roles.HRSpecialist] = [ScopeCompany, EmpManage, OrgManage, AttManage, AttTeam, LeaveAdmin, Reports, TalentManage],
         [Roles.AttendanceOfficer] = [ScopeCompany, AttManage, AttTeam, Reports],
         [Roles.PayrollOfficer] = [ScopeCompany, EmpPay, EmpSalary, AdvManage, PayView, PayPrepare, PayExport, PaySlips, Reports, ReportsFin],
         [Roles.FinanceManager] = [ScopeCompany, EmpSalary, AdvManage, PayView, PayFinance, PaySendBack, PayExport, PaySlips, Reports, ReportsFin],

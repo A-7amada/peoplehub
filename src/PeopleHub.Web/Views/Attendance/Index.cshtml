@@ -8,7 +8,9 @@
 }
 <div class="page-head"><div><h1>@(own ? T["nav.attendance"] : T.Name(e.FullName, e.FullNameAr))</h1><div class="sub">@first.ToString("MMMM yyyy", System.Globalization.CultureInfo.CurrentUICulture)</div></div>
  <div class="actions"><a class="btn" href="/Attendance/Daily">@Ui.Icon("users", 16) @T["att.daily"]</a><div class="seg"><a href="?year=@prev.Year&month=@prev.Month@idq">‹</a><a class="on">@first.ToString("MMM yyyy", System.Globalization.CultureInfo.CurrentUICulture)</a><a href="?year=@next.Year&month=@next.Month@idq">›</a></div></div></div>
-@if (own) {
+@if (own && SettingsService.DeviceMode) {
+<div class="card" style="margin-bottom:18px"><div class="card-b" style="display:flex;gap:14px;align-items:center"><span class="avatar" style="width:52px;height:52px;background:#efeaff;color:#6b4ee6">@Ui.Icon("clock", 24)</span><div><b style="font-size:1.05rem">@(T.IsAr ? "الحضور من ماكينة البصمة" : "Attendance comes from the fingerprint device")</b><div class="muted">@(T.IsAr ? "سجّل حضورك وانصرافك على الماكينة. تظهر البصمات هنا بعد المزامنة." : "Punch in and out on the machine. Punches show here after the device syncs.") @(today?.CheckIn != null ? (T.IsAr ? "اليوم: " : "Today: ") + today.CheckIn.Value.ToString("HH:mm") + (today.CheckOut != null ? " - " + today.CheckOut.Value.ToString("HH:mm") : "") : "")</div></div></div></div>
+} else if (own) {
 <div class="card" style="margin-bottom:18px"><div class="card-b" style="display:flex;gap:20px;align-items:center;flex-wrap:wrap">
  <span class="avatar" style="width:52px;height:52px;background:#e7f8f0;color:#0b7f57">@Ui.Icon("clock", 24)</span>
  <div><b style="font-size:1.1rem">@T["att.today"]</b><div class="muted">@(today?.CheckIn == null ? T["att.notCheckedIn"] : T["att.in"] + " " + today.CheckIn.Value.ToString("HH:mm") + (today.CheckOut != null ? " · " + T["att.out"] + " " + today.CheckOut.Value.ToString("HH:mm") : ""))</div></div>

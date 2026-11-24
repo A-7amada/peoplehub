@@ -1,0 +1,13 @@
+@model ReportTable
+@{ ViewData["Title"] = T.IsAr ? "منشئ التقارير" : "Report builder"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; string ds = ViewBag.Dataset; var cols = (string[])ViewBag.Cols; var depts = (List<Department>)ViewBag.Depts; int? dept = ViewBag.Dept;
+  var dsName = new Dictionary<string, string> { ["employees"] = X("Employees", "الموظفون"), ["leave"] = X("Leave requests", "طلبات الإجازة"), ["reviews"] = X("Performance reviews", "تقييمات الأداء"), ["training"] = X("Training", "التدريب") };
+  string q = $"dataset={ds}&dept={dept}" + string.Concat(cols.Select(c => "&cols=" + c)); }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Pick a dataset, tick the columns and filter by department. Export the result to Excel or CSV.", "اختر البيانات والأعمدة وصفّ بالإدارة ثم صدّر النتيجة إلى Excel أو CSV.")</div></div>
+ @if (Model != null) { <div class="actions"><a class="btn" href="/Reports/BuilderFile?@q&format=csv">@Ui.Icon("download", 16) CSV</a> <a class="btn btn-primary" href="/Reports/BuilderFile?@q&format=xlsx">@Ui.Icon("download", 16) Excel</a></div> }</div>
+<div class="card" style="margin-bottom:18px"><div class="card-b"><form method="get" action="/Reports/Builder"><input type="hidden" name="run" value="true">
+ <div class="seg" style="margin-bottom:12px">@foreach (var d in ReportBuilderService.Datasets) { <a class="@(d == ds ? "on" : "")" href="/Reports/Builder?dataset=@d">@dsName[d]</a> }</div><input type="hidden" name="dataset" value="@ds">
+ <div style="display:flex;gap:14px;flex-wrap:wrap;margin-bottom:12px">@foreach (var c in ReportBuilderService.Columns[ds]) { <label class="check"><input type="checkbox" name="cols" value="@c" checked="@cols.Contains(c)"> @c</label> }</div>
+ <div style="display:flex;gap:12px;align-items:end"><div class="field" style="margin:0"><label>@T["emp.department"]</label><select name="dept"><option value="">@T["common.all"]</option>@foreach (var d in depts) { <option value="@d.Id" selected="@(dept == d.Id)">@T.Name(d.Name, d.NameAr)</option> }</select></div><button class="btn btn-primary">@X("Run", "تشغيل")</button></div></form></div></div>
+@if (Model != null) { <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr>@foreach (var c in Model.Columns) { <th>@c</th> }</tr></thead><tbody>
+ @foreach (var r in Model.Rows.Take(200)) { <tr>@foreach (var c in r) { <td>@c</td> }</tr> }
+ @if (Model.Rows.Count == 0) { <tr><td colspan="@Model.Columns.Count" class="empty">@T["common.none"]</td></tr> }</tbody></table></div><div class="card-b faint small">@Model.Rows.Count @X("rows", "صف")</div></div> }

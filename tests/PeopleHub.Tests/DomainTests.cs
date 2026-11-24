@@ -102,8 +102,8 @@ public class PayrollTests
     [Fact] public void Net_EqualsGrossMinusDeductions() { var l = Calc(20000, 1000, 500, 1, 30, 4, 200, 150); Assert.Equal(l.Gross - l.TotalDeductions, l.Net); }
     [Fact] public void Absence_UsesDailyRate() => Assert.Equal(2000m, Calc(30000, absent: 2).AbsenceDeduction);
     [Fact] public void Overtime_UsesHourlyRate() => Assert.Equal(500m, Calc(24000, ot: 5).Overtime); // 24000/30/8 = 100 per hour
-    [Fact] public void Insurance_IsCapped() => Assert.Equal(1595m, Calc(60000).Insurance);
-    [Fact] public void Tax_IsProgressive() { Assert.Equal(0m, PayrollCalculator.Tax(4000)); Assert.Equal(500m, PayrollCalculator.Tax(10000)); Assert.Equal(1250m, PayrollCalculator.Tax(15000)); }
+    [Fact] public void Insurance_IsCapped() => Assert.Equal(1837m, Calc(60000).Insurance);
+    [Fact] public void Tax_IsProgressive() { Assert.Equal(0m, PayrollCalculator.Tax(3000)); Assert.Equal(187.5m, PayrollCalculator.Tax(5000)); Assert.Equal(PayrollCalculator.Round(PayrollCalculator.AnnualTax(120000)/12m), PayrollCalculator.Tax(10000)); }
     [Fact] public void Late_DeductsPerMinute() => Assert.Equal(125m, Calc(30000, late: 60).LateDeduction); // hourly 125
     [Fact] public void Workflow_FollowsStages()
     {

@@ -1,0 +1,10 @@
+@{ ViewData["Title"] = T.IsAr ? "استرجاع كلمة المرور" : "Reset password"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; }
+<div class="login-wrap"><section class="login-form" style="grid-column:1/-1"><div class="login-card">
+ <h1 style="font-size:1.6rem;margin-bottom:6px">@ViewData["Title"]</h1>
+ @if (ViewBag.Done == true) {
+  <div class="flash ok">@X("If the account exists, a reset link was sent by email.", "لو الحساب موجود تم إرسال رابط الاسترجاع بالبريد.")</div>
+  @if (ViewBag.DemoLink is string l) { <div class="demo-list">@X("Demo only: email is not configured, so the link is shown here.", "للعرض فقط: البريد غير مُفعّل فيظهر الرابط هنا.")<br><a href="@l">@l.Substring(0, 34)…</a></div> }
+ } else {
+ <form method="post" action="/Account/Forgot" asp-antiforgery="true"><div class="field"><label>@T["login.email"]</label><input type="email" name="email" required dir="ltr"></div><button class="btn btn-primary" style="width:100%;justify-content:center">@X("Send reset link", "إرسال رابط الاسترجاع")</button></form> }
+ <p style="margin-top:16px"><a href="/Account/Login">@X("Back to sign in", "العودة لتسجيل الدخول")</a></p>
+</div></section></div>

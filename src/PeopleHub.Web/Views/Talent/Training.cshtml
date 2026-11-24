@@ -1,0 +1,15 @@
+@model List<TrainingCourse>
+@{ ViewData["Title"] = T.IsAr ? "التدريب" : "Training"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var en = (List<TrainingEnrollment>)ViewBag.Enrollments; bool mgr = Context.User.Claims.Any() && PermissionCache.Has(Context.User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value), Perm.TalentManage); }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Course catalogue, enrolment and completion tracking.", "كتالوج الدورات والتسجيل ومتابعة الإتمام.")</div></div></div>
+<div class="grid g2">
+@foreach (var c in Model) { var mine = en.Where(e => e.CourseId == c.Id).ToList();
+ <div class="card"><div class="card-h"><h2>@(T.IsAr && c.TitleAr != "" ? c.TitleAr : c.Title)</h2><span class="faint small">@c.Hours @X("hours", "ساعات") · @c.Date.ToString("yyyy-MM-dd")</span></div>
+  <div class="card-b"><div class="small muted" style="margin-bottom:8px">@mine.Count @X("enrolled", "مسجل") · @mine.Count(m => m.Completed) @X("completed", "أتم")</div>
+  @foreach (var m in mine) { <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0"><span>@T.Name(m.Employee!.FullName, m.Employee.FullNameAr)</span>
+   @if (m.Completed) { @Ui.Chip(X("Completed", "مكتمل"), "green") } else if (mgr) { <form method="post" action="/Talent/Complete" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@m.Id"><button class="btn btn-sm">@X("Mark complete", "تم الإتمام")</button></form> } else { @Ui.Chip(X("In progress", "جارٍ"), "amber") } </div> }
+  <form method="post" action="/Talent/Enroll" asp-antiforgery="true" style="margin-top:10px"><input type="hidden" name="courseId" value="@c.Id"><button class="btn btn-sm btn-primary">@X("Enrol me", "سجّلني")</button></form></div></div> }
+</div>
+@if (mgr) { <div class="card" style="margin-top:18px"><div class="card-h"><h2>@X("New course", "دورة جديدة")</h2></div><div class="card-b"><form method="post" action="/Talent/AddCourse" asp-antiforgery="true" class="grid g2">
+ <div class="field"><label>@X("Title", "العنوان")</label><input name="title" required></div><div class="field"><label>@X("Title (Arabic)", "العنوان بالعربية")</label><input name="titleAr"></div>
+ <div class="field"><label>@X("Hours", "الساعات")</label><input type="number" name="hours" min="1" value="4"></div><div class="field"><label>@X("Date", "التاريخ")</label><input type="date" name="date" value="@DateTime.Today.AddDays(14):yyyy-MM-dd"></div>
+ <div><button class="btn btn-primary">@T["common.add"]</button></div></form></div></div> }

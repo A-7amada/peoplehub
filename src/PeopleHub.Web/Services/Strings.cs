@@ -215,6 +215,13 @@ public partial class Loc
         A("deleg.hint", "The delegate gets exactly the approval steps you hold (direct manager of your team, or your roles). Nobody can approve their own request, even as a delegate. You can revoke at any time.", "يحصل المفوَّض على نفس خطوات الموافقة التي تملكها (مدير مباشر لفريقك أو أدوارك). لا يستطيع أحد الموافقة على طلبه حتى كمفوَّض. يمكنك الإلغاء في أي وقت.");
         A("common.period", "Period", "الفترة"); A("org.chart", "Org chart", "الهيكل التنظيمي (شجرة)");
         // errors
+        A("err.deviceMode", "Attendance is read from the ZKTeco device. Check in and out on the machine.", "الحضور يُقرأ من ماكينة ZKTeco. سجّل حضورك وانصرافك على الماكينة.");
+        A("err.notDeviceMode", "Attendance source is set to System. Switch it to Device first.", "مصدر الحضور مضبوط على النظام. غيّره إلى الماكينة أولاً.");
+        A("err.deviceDown", "The device did not respond.", "الماكينة لا تستجيب."); A("err.badIp", "Enter a valid device IP address.", "أدخل عنوان IP صحيح للماكينة."); A("err.badPort", "Enter a valid port (1 to 65535).", "أدخل منفذاً صحيحاً (1 إلى 65535).");
+        A("err.weakPassword", "Use at least 8 characters with letters and numbers.", "استخدم 8 أحرف على الأقل من حروف وأرقام."); A("err.wrongPassword", "Current password is wrong.", "كلمة المرور الحالية غير صحيحة.");
+        A("err.badCode", "The code is not valid.", "الكود غير صحيح."); A("err.badToken", "This reset link is invalid or expired.", "رابط الاسترجاع غير صالح أو منتهي.");
+        A("err.selfReview", "You cannot review yourself.", "لا يمكنك تقييم نفسك."); A("err.alreadyEnrolled", "Already enrolled.", "مسجل بالفعل."); A("err.required", "Please fill the required fields.", "من فضلك أكمل الحقول المطلوبة.");
+        A("notif.review", "You have a new performance review", "لديك تقييم أداء جديد");
         foreach (var (k, en, ar) in new[] {
             ("roleRequired", "Pick at least one role for a role step.", "اختر دوراً واحداً على الأقل لخطوة الدور."), ("maxSteps", "A cycle can have at most 6 steps.", "المسار يقبل 6 خطوات كحد أقصى."),
             ("dupManager", "This cycle already has a direct-manager step.", "المسار يحتوي بالفعل على خطوة المدير المباشر."), ("minSteps", "A cycle needs at least one step.", "المسار يحتاج خطوة واحدة على الأقل."),

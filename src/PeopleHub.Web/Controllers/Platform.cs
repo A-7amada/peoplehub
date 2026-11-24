@@ -1,0 +1,69 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using PeopleHub.Application.Services;
+using PeopleHub.Domain.Entities;
+using PeopleHub.Web.Services;
+
+namespace PeopleHub.Web.Controllers;
+
+/// <summary>Push endpoint for a device bridge. A ZKTeco machine on a private LAN cannot be reached from the cloud, so a small bridge on that LAN reads the punches and posts them here with the device key.</summary>
+[AllowAnonymous, IgnoreAntiforgeryToken, Route("api/device")]
+public class DeviceApiController(DeviceService device, SettingsService settings) : Controller
+{
+    public record PunchDto(string UserId, DateTime Time);
+
+    [HttpPost("punches")]
+    public async Task<IActionResult> Punches([FromBody] List<PunchDto>? punches)
+    {
+        await settings.LoadAsync();
+        var key = Request.Headers["X-Device-Key"].ToString(); var real = SettingsService.Get("zk.apiKey");
+        if (string.IsNullOrEmpty(real) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Text.Encoding.UTF8.GetBytes(key), System.Text.Encoding.UTF8.GetBytes(real))) return Unauthorized(new { error = "bad device key" });
+        if (!SettingsService.DeviceMode) return Conflict(new { error = "attendance source is set to System, device punches are ignored" });
+        if (punches == null || punches.Count == 0 || punches.Count > 5000) return BadRequest(new { error = "send 1 to 5000 punches" });
+        var n = await device.IngestAsync(punches.Where(p => !string.IsNullOrWhiteSpace(p.UserId)).Select(p => new DeviceService.PunchIn(p.UserId.Trim(), p.Time)));
+        return Ok(new { accepted = n });
+    }
+}
+
+public class TalentController(Loc loc, TalentService svc, OrgService org, EmployeeService emps, ICurrentUser me, AppClock clock, AccessScope scope) : BaseController(loc)
+{
+    public async Task<IActionResult> Recruitment()
+    {
+        if (!me.Can(Perm.TalentManage)) return Forbidden();
+        ViewBag.Jobs = await svc.JobsAsync(); ViewBag.Depts = await org.DepartmentsAsync();
+        return View(await svc.CandidatesAsync());
+    }
+    [HttpPost] public Task<IActionResult> AddJob(string title, string? titleAr, int? dept, int positions) => Do(() => svc.AddJobAsync(title, titleAr, dept, positions), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public Task<IActionResult> ToggleJob(int id) => Do(() => svc.CloseJobAsync(id), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public Task<IActionResult> AddCandidate(int jobId, string name, string? email, string? note) => Do(() => svc.AddCandidateAsync(jobId, name, email, note), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public Task<IActionResult> Move(int id, bool reject) => Do(() => svc.MoveCandidateAsync(id, reject), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
+
+    public async Task<IActionResult> Performance()
+    {
+        ViewBag.Reviewable = (me.Can(Perm.TalentManage) || me.Can(Perm.ScopeTeam)) ? (await emps.ManagerCandidatesAsync()).Where(e => e.Id != me.EmployeeId).ToList() : new List<Employee>();
+        return View(await svc.ReviewsAsync());
+    }
+    [HttpPost] public Task<IActionResult> AddReview(int employeeId, string period, string? goals, string? comment, int score) => Do(() => svc.AddReviewAsync(employeeId, period, goals, comment, score), "msg.saved", () => RedirectToAction(nameof(Performance)));
+
+    public async Task<IActionResult> Training()
+    {
+        ViewBag.Enrollments = await svc.EnrollmentsAsync();
+        return View(await svc.CoursesAsync());
+    }
+    [HttpPost] public Task<IActionResult> AddCourse(string title, string? titleAr, int hours, DateTime date) => Do(() => svc.AddCourseAsync(title, titleAr, hours, date), "msg.saved", () => RedirectToAction(nameof(Training)));
+    [HttpPost] public Task<IActionResult> Enroll(int courseId, int? employeeId) => Do(() => svc.EnrollAsync(courseId, employeeId ?? me.EmployeeId ?? 0), "msg.saved", () => RedirectToAction(nameof(Training)));
+    [HttpPost] public Task<IActionResult> Complete(int id) => Do(() => svc.CompleteAsync(id), "msg.saved", () => RedirectToAction(nameof(Training)));
+
+    [RequirePerm(Perm.EmpPay)]
+    public async Task<IActionResult> Settlement(int? id, DateTime? lastDay, decimal leaveDays = 0)
+    {
+        ViewBag.Employees = await emps.ManagerCandidatesAsync();
+        if (id != null)
+        {
+            var e = await emps.GetAsync(id.Value); ViewBag.Emp = e;
+            ViewBag.Last = (lastDay ?? clock.Today).Date; ViewBag.LeaveDays = leaveDays;
+            ViewBag.Result = PeopleHub.Domain.Entities.Settlement.Calculate(e.BasicSalary, e.HireDate, (lastDay ?? clock.Today).Date, leaveDays, decimal.TryParse(SettingsService.Get("eosb.days"), out var d) ? d : 15);
+        }
+        return View();
+    }
+}

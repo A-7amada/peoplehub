@@ -115,6 +115,7 @@ public class PayrollLine
     public decimal AbsenceDeduction { get; set; }
     public decimal Insurance { get; set; }
     public decimal Tax { get; set; }
+    public decimal Martyrs { get; set; }
     public decimal AdvanceInstallment { get; set; }
     public decimal OtherDeduction { get; set; }
     public decimal TotalDeductions { get; set; }
@@ -128,30 +129,38 @@ public class PayrollLine
 public record PayrollInput(decimal Basic, decimal Allowances, decimal OvertimeValueBase, decimal Bonus, int AbsentDays,
     int LateMinutes, decimal OvertimeWeightedHours, decimal AdvanceInstallment, decimal OtherDeduction);
 
-/// <summary>Demo payroll rules. Rates are illustrative, not a statement of Egyptian law.</summary>
+/// <summary>Payroll rules using the 2026 Egyptian parameters as published by Deloitte, PwC and Law 91/2005 as amended. A demo: verify with a specialist before real use.</summary>
 public static class PayrollCalculator
 {
     public const decimal DaysPerMonth = 30m;
     public const decimal HoursPerDay = 8m;
-    public const decimal InsuranceRate = 0.11m;
-    public const decimal InsuranceCap = 14500m;
-    public const decimal MonthlyExemption = 1667m;
+    public const decimal InsuranceRate = 0.11m;       // employee share, Law 148/2019
+    public const decimal InsuranceMin = 2700m;        // insurable wage floor, 2026
+    public const decimal InsuranceCap = 16700m;       // insurable wage ceiling, 2026
+    public const decimal AnnualExemption = 20000m;    // personal exemption
+    public const decimal MonthlyExemption = AnnualExemption / 12m;
+    public const decimal MartyrsRate = 0.0005m;       // Martyrs and Victims Fund, on gross
 
     public static decimal Round(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
 
-    /// <summary>Progressive monthly tax on the taxable amount (illustrative slabs).</summary>
-    public static decimal Tax(decimal taxable)
+    /// <summary>Annual brackets: 0-40k 0%, 40-55k 10%, 55-70k 15%, 70-200k 20%, 200-400k 22.5%, 400-600k 25%, above 27.5%.</summary>
+    public static decimal AnnualTax(decimal annualTaxable)
     {
-        if (taxable <= 0) return 0;
-        (decimal upTo, decimal rate)[] slabs = [(5000, 0m), (10000, 0.10m), (20000, 0.15m), (decimal.MaxValue, 0.20m)];
+        if (annualTaxable <= 0) return 0;
+        (decimal upTo, decimal rate)[] slabs = [(40000, 0m), (55000, 0.10m), (70000, 0.15m), (200000, 0.20m), (400000, 0.225m), (600000, 0.25m), (decimal.MaxValue, 0.275m)];
         decimal tax = 0, prev = 0;
         foreach (var (upTo, rate) in slabs)
         {
-            if (taxable > prev) tax += (Math.Min(taxable, upTo) - prev) * rate;
+            if (annualTaxable > prev) tax += (Math.Min(annualTaxable, upTo) - prev) * rate;
             prev = upTo;
         }
-        return Round(tax);
+        return tax;
     }
+
+    /// <summary>Monthly tax for a monthly taxable amount (already net of the personal exemption).</summary>
+    public static decimal Tax(decimal monthlyTaxable) => monthlyTaxable <= 0 ? 0 : Round(AnnualTax(monthlyTaxable * 12m) / 12m);
+
+    public static decimal InsuranceOf(decimal insurableWage) => Round(Math.Min(Math.Max(insurableWage, InsuranceMin), InsuranceCap) * InsuranceRate);
 
     public static void Apply(PayrollLine l, PayrollInput i)
     {
@@ -166,12 +175,13 @@ public static class PayrollCalculator
         l.LateMinutes = i.LateMinutes;
         l.AbsenceDeduction = Round(i.AbsentDays * daily);
         l.LateDeduction = Round(i.LateMinutes * (hourly / 60m));
-        l.Insurance = Round(Math.Min(i.Basic, InsuranceCap) * InsuranceRate);
+        l.Insurance = InsuranceOf(i.Basic + i.Allowances);
+        l.Martyrs = Round(l.Gross * MartyrsRate);
         var taxable = l.Gross - l.AbsenceDeduction - l.LateDeduction - l.Insurance - MonthlyExemption;
         l.Tax = Tax(taxable);
         l.AdvanceInstallment = Round(i.AdvanceInstallment);
         l.OtherDeduction = Round(i.OtherDeduction);
-        l.TotalDeductions = l.LateDeduction + l.AbsenceDeduction + l.Insurance + l.Tax + l.AdvanceInstallment + l.OtherDeduction;
+        l.TotalDeductions = l.LateDeduction + l.AbsenceDeduction + l.Insurance + l.Martyrs + l.Tax + l.AdvanceInstallment + l.OtherDeduction;
         l.Net = l.Gross - l.TotalDeductions;
     }
 }

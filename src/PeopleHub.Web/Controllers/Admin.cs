@@ -5,8 +5,29 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class AdminController(Loc loc, AdminService admin, WorkflowService flows, EmployeeService emps) : BaseController(loc)
+public class AdminController(Loc loc, AdminService admin, WorkflowService flows, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail) : BaseController(loc)
 {
+    // ---- system settings (attendance source, device, email, policies)
+    [RequirePerm(Perm.AdmSettings)]
+    public async Task<IActionResult> Settings()
+    {
+        ViewBag.Punches = await device.RecentAsync(); ViewBag.Outbox = await mail.OutboxAsync();
+        return View(await settings.AllAsync());
+    }
+
+    [RequirePerm(Perm.AdmSettings), HttpPost]
+    public Task<IActionResult> SaveSettings(IFormCollection f) =>
+        Do(() => settings.SaveAsync(SettingsService.Defaults.Keys.Where(k => f.ContainsKey(k) || k == "email.notify").ToDictionary(k => k, k => k == "email.notify" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : k == "zk.simulate" ? (f.ContainsKey(k) && f[k].Contains("true") ? "true" : "false") : f[k].ToString().Trim())), "msg.saved", () => RedirectToAction(nameof(Settings)));
+
+    [RequirePerm(Perm.AdmSettings), HttpPost]
+    public async Task<IActionResult> TestDevice() { await settings.LoadAsync(); var (ok, msg) = await device.PingAsync(); if (ok) TempData["ok"] = msg; else TempData["err"] = msg; return RedirectToAction(nameof(Settings)); }
+
+    [RequirePerm(Perm.AdmSettings), HttpPost]
+    public async Task<IActionResult> SyncDevice() { try { var n = await device.SyncAsync(); TempData["ok"] = (L.IsAr ? "تمت المزامنة: " : "Synced: ") + n + (L.IsAr ? " بصمة جديدة" : " new punches"); } catch (DomainException ex) { TempData["err"] = L[ex.Message]; } return RedirectToAction(nameof(Settings)); }
+
+    [RequirePerm(Perm.AdmSettings), HttpPost]
+    public async Task<IActionResult> FlushMail() { await mail.FlushAsync(); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Settings)); }
+
     // ---- roles and page permissions
     [RequirePerm(Perm.AdmRoles)]
     public async Task<IActionResult> Roles()

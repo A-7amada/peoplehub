@@ -13,11 +13,17 @@
     <h1 style="font-size:1.7rem;margin-bottom:6px">@T["login.title"]</h1>
     <p class="muted" style="margin:0 0 22px">@T["login.sub"]</p>
     @if (ViewBag.Error is string e) { <div class="flash err">@e</div> }
+    @if (ViewBag.Pending is string pend) {
+    <form method="post" action="/Account/Verify" asp-antiforgery="true"><input type="hidden" name="pending" value="@pend">
+      <div class="field"><label>@(ar ? "كود المصادقة (6 أرقام)" : "Authenticator code (6 digits)")</label><input name="code" inputmode="numeric" maxlength="6" required autofocus dir="ltr"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">@T["login.submit"]</button></form>
+    } else {
     <form method="post" action="/Account/Login" asp-antiforgery="true">
       <div class="field"><label>@T["login.email"]</label><input type="email" name="email" required autofocus dir="ltr" placeholder="name@peoplehub.local"></div>
       <div class="field"><label>@T["login.password"]</label><input type="password" name="password" required dir="ltr"></div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">@T["login.submit"]</button>
     </form>
+    <div style="margin-top:10px;text-align:center"><a href="/Account/Forgot" class="small">@(ar ? "نسيت كلمة المرور؟" : "Forgot password?")</a></div> }
     <div class="demo-list"><b>@T["login.demo"]</b>
       <table dir="ltr">
         <tr><td><code>employee@peoplehub.local</code></td><td>@T["role.Employee"]</td></tr>

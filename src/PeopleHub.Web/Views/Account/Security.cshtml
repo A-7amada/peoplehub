@@ -1,0 +1,21 @@
+@{ ViewData["Title"] = T.IsAr ? "الأمان" : "Security"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var u = (AppUser)ViewBag.User; bool setup = ViewBag.Setup == true && u.TotpSecret != null && !u.TotpEnabled; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@u.Email</div></div></div>
+<div class="grid g2">
+ <div class="card"><div class="card-h"><h2>@X("Change password", "تغيير كلمة المرور")</h2></div><div class="card-b"><form method="post" action="/Account/ChangePassword" asp-antiforgery="true">
+  <div class="field"><label>@X("Current password", "كلمة المرور الحالية")</label><input type="password" name="current" required dir="ltr"></div>
+  <div class="field"><label>@X("New password (8+ characters, letters and numbers)", "كلمة المرور الجديدة (8 أحرف أو أكثر، حروف وأرقام)")</label><input type="password" name="next" required dir="ltr"></div>
+  <button class="btn btn-primary">@T["common.save"]</button></form></div></div>
+ <div class="card"><div class="card-h"><h2>@X("Two-factor authentication", "المصادقة الثنائية")</h2>@Ui.Chip(u.TotpEnabled ? X("On", "مفعّلة") : X("Off", "متوقفة"), u.TotpEnabled ? "green" : "amber")</div><div class="card-b">
+  @if (u.TotpEnabled) {
+   <p class="muted">@X("Sign in needs a 6-digit code from your authenticator app.", "تسجيل الدخول يطلب كود من 6 أرقام من تطبيق المصادقة.")</p>
+   <form method="post" action="/Account/DisableTotp" asp-antiforgery="true"><div class="field"><label>@X("Confirm with your password", "أكد بكلمة المرور")</label><input type="password" name="password" required dir="ltr"></div><button class="btn">@X("Turn off", "إيقاف")</button></form>
+  } else if (setup) {
+   <p class="muted">@X("Add this key in Google Authenticator, Microsoft Authenticator or similar (time-based), then enter the code it shows.", "أضف هذا المفتاح في Google Authenticator أو Microsoft Authenticator (زمني) ثم اكتب الكود الظاهر.")</p>
+   <div class="demo-list" dir="ltr" style="font-size:1.05rem;letter-spacing:.08em"><b>@u.TotpSecret</b></div>
+   <div class="faint small" dir="ltr" style="word-break:break-all;margin:6px 0 12px">otpauth://totp/PeopleHub:@u.Email?secret=@u.TotpSecret&amp;issuer=PeopleHub</div>
+   <form method="post" action="/Account/EnableTotp" asp-antiforgery="true"><div class="field"><label>@X("6-digit code", "كود من 6 أرقام")</label><input name="code" inputmode="numeric" maxlength="6" required dir="ltr"></div><button class="btn btn-primary">@X("Verify and turn on", "تحقق وتفعيل")</button></form>
+  } else {
+   <p class="muted">@X("Add a second step to sign in with a code from an authenticator app.", "أضف خطوة ثانية لتسجيل الدخول بكود من تطبيق المصادقة.")</p>
+   <form method="post" action="/Account/BeginTotp" asp-antiforgery="true"><button class="btn btn-primary">@X("Set up", "إعداد")</button></form> }
+ </div></div>
+</div>

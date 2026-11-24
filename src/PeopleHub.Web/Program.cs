@@ -30,6 +30,8 @@ builder.Services.AddScoped<AttachmentService>();
 builder.Services.AddScoped<DelegationService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<ReportService>();
+builder.Services.AddScoped<SettingsService>(); builder.Services.AddScoped<DeviceService>(); builder.Services.AddScoped<EmailService>(); builder.Services.AddScoped<AccountService>(); builder.Services.AddScoped<TalentService>(); builder.Services.AddScoped<ReportBuilderService>();
+builder.Services.AddDataProtection();
 builder.Services.AddSingleton<Loc>();
 builder.Services.AddControllersWithViews(o => o.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -54,6 +56,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     var hrPass = app.Environment.IsDevelopment() ? "Admin123!" : app.Configuration["HR_SEED_PASSWORD"];
     await SeedData.InitializeAsync(db, hrPass, "Demo123!", scope.ServiceProvider.GetRequiredService<AppClock>().Today);
+    await scope.ServiceProvider.GetRequiredService<SettingsService>().LoadAsync();
     await AdminService.ReloadCacheAsync(db);
 }
 if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Home/Error");

@@ -1,0 +1,13 @@
+@{ ViewData["Title"] = T.IsAr ? "تسوية نهاية الخدمة" : "End-of-service settlement"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var emps = (List<Employee>)ViewBag.Employees; var e = ViewBag.Emp as Employee; var r = ViewBag.Result as PeopleHub.Domain.Entities.Settlement.Result;
+   string F(decimal v) => v.ToString("N2", System.Globalization.CultureInfo.InvariantCulture); }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Estimate what a leaver is owed. The gratuity follows the company policy set in Settings, not a statutory formula.", "تقدير مستحقات المغادر. المكافأة تتبع سياسة الشركة في الإعدادات وليست معادلة قانونية.")</div></div></div>
+<div class="grid g2"><div class="card"><div class="card-b"><form method="get" action="/Talent/Settlement">
+ <div class="field"><label>@T["req.employee"]</label><select name="id">@foreach (var x in emps) { <option value="@x.Id" selected="@(e?.Id == x.Id)">@x.Code · @T.Name(x.FullName, x.FullNameAr)</option> }</select></div>
+ <div class="field"><label>@X("Last working day", "آخر يوم عمل")</label><input type="date" name="lastDay" value="@((ViewBag.Last as DateTime?)?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))"></div>
+ <div class="field"><label>@X("Unused leave days", "أيام الإجازة غير المستخدمة")</label><input type="number" step="0.5" min="0" name="leaveDays" value="@ViewBag.LeaveDays" dir="ltr"></div>
+ <button class="btn btn-primary">@X("Calculate", "احسب")</button></form></div></div>
+ @if (r != null && e != null) { <div class="card"><div class="card-h"><h2>@T.Name(e.FullName, e.FullNameAr)</h2><span class="faint small">@r.YearsOfService @X("years of service", "سنة خدمة")</span></div><div class="card-b"><table class="tbl"><tbody>
+  <tr><td>@X("Pro-rated salary", "راتب الأيام المنقضية")</td><td class="num right">@F(r.ProratedSalary)</td></tr><tr><td>@X("Leave encashment", "بدل الإجازات")</td><td class="num right">@F(r.LeaveEncashment)</td></tr>
+  <tr><td>@X("Gratuity (company policy)", "مكافأة نهاية الخدمة (سياسة الشركة)")</td><td class="num right">@F(r.Gratuity)</td></tr><tr><td><b>@X("Total", "الإجمالي")</b></td><td class="num right"><b>@F(r.Total)</b></td></tr></tbody></table>
+  <div class="faint small" style="margin-top:8px">@X("Before tax and insurance adjustments. Not legal advice.", "قبل أي ضرائب أو تسويات تأمينية. ليست استشارة قانونية.")</div></div></div> }
+</div>

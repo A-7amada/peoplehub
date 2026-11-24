@@ -51,20 +51,20 @@ public class NotificationService(IRepository repo, ICurrentUser me, AppClock clo
     public async Task NotifyEmployeeAsync(int employeeId, string titleKey, string details, string? link = null)
     {
         var users = await repo.ToListAsync(repo.Query<AppUser>().Where(u => u.EmployeeId == employeeId && u.IsActive));
-        foreach (var u in users) Add(u.Id, titleKey, details, link);
+        foreach (var u in users) Add(u, titleKey, details, link);
     }
 
     public async Task NotifyRolesAsync(string csvRoles, string titleKey, string details, string? link = null)
     {
         var wanted = csvRoles.Split(',');
         var users = await repo.ToListAsync(repo.Query<AppUser>().Where(u => u.IsActive));
-        foreach (var u in users.Where(u => u.RoleArray.Any(wanted.Contains))) Add(u.Id, titleKey, details, link);
+        foreach (var u in users.Where(u => u.RoleArray.Any(wanted.Contains))) Add(u, titleKey, details, link);
     }
 
     public async Task NotifyPermAsync(string permission, string titleKey, string details, string? link = null)
     {
         var users = await repo.ToListAsync(repo.Query<AppUser>().Where(u => u.IsActive));
-        foreach (var u in users.Where(u => PermissionCache.Has(u.RoleArray, permission))) Add(u.Id, titleKey, details, link);
+        foreach (var u in users.Where(u => PermissionCache.Has(u.RoleArray, permission))) Add(u, titleKey, details, link);
     }
 
     /// <summary>Tells whoever must act on the request's current stage.</summary>
@@ -77,8 +77,16 @@ public class NotificationService(IRepository repo, ICurrentUser me, AppClock clo
         else await NotifyRolesAsync(stage.Replace('|', ','), "notif.pendingApproval", details, "/Requests?scope=inbox");
     }
 
-    private void Add(int userId, string key, string details, string? link) =>
-        repo.Add(new Notification { UserId = userId, TitleKey = key, Details = details, Link = link, CreatedAt = clock.UtcNow });
+    private void Add(AppUser u, string key, string details, string? link)
+    {
+        repo.Add(new Notification { UserId = u.Id, TitleKey = key, Details = details, Link = link, CreatedAt = clock.UtcNow });
+        if (SettingsService.Get("email.notify") == "true")
+        {
+            var email = u.Email;
+            if (!string.IsNullOrEmpty(email)) repo.Add(new EmailOutbox { To = email, Subject = "PeopleHub: " + key, Body = details + (link != null ? "\n" + link : ""), CreatedAt = clock.UtcNow, Note = "SMTP not configured (demo): kept in the outbox" });
+        }
+    }
+
 
     public Task<List<Notification>> ForMeAsync(int take = 50) =>
         repo.ToListAsync(repo.Query<Notification>().Where(n => n.UserId == me.UserId).OrderByDescending(n => n.CreatedAt).Take(take));

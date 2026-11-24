@@ -1,0 +1,25 @@
+@model List<Candidate>
+@{ ViewData["Title"] = T.IsAr ? "التوظيف" : "Recruitment"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var jobs = (List<JobOpening>)ViewBag.Jobs; var depts = (List<Department>)ViewBag.Depts;
+   var stages = new[] { CandidateStage.Applied, CandidateStage.Screening, CandidateStage.Interview, CandidateStage.Offer, CandidateStage.Hired, CandidateStage.Rejected };
+   var stageAr = new Dictionary<CandidateStage, string> { [CandidateStage.Applied] = "تقدّم", [CandidateStage.Screening] = "فرز", [CandidateStage.Interview] = "مقابلة", [CandidateStage.Offer] = "عرض", [CandidateStage.Hired] = "تم التعيين", [CandidateStage.Rejected] = "مرفوض" }; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Job openings and a candidate pipeline. Candidates here are fictional.", "الوظائف الشاغرة ومسار المرشحين. المرشحون هنا وهميون.")</div></div></div>
+<div class="kanban">
+@foreach (var st in stages) { var list = Model.Where(c => c.Stage == st).ToList();
+ <div class="kcol"><div class="kh">@(T.IsAr ? stageAr[st] : st.ToString()) <span class="kn">@list.Count</span></div>
+ @foreach (var c in list) { <div class="kcard"><b>@c.Name</b><div class="faint small">@(T.IsAr && !string.IsNullOrEmpty(c.Job?.TitleAr) ? c.Job.TitleAr : c.Job?.Title)</div>@if (!string.IsNullOrEmpty(c.Note)) { <div class="small muted">@c.Note</div> }
+  @if (Candidate.Next(c.Stage) is { } nx) { <div style="display:flex;gap:6px;margin-top:8px"><form method="post" action="/Talent/Move" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@c.Id"><button class="btn btn-sm btn-primary">@X("Advance", "تقدّم")</button></form>
+   <form method="post" action="/Talent/Move" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@c.Id"><input type="hidden" name="reject" value="true"><button class="btn btn-sm">@X("Reject", "رفض")</button></form></div> }</div> }
+ </div> }
+</div>
+<div class="grid g2" style="margin-top:18px">
+ <div class="card"><div class="card-h"><h2>@X("Openings", "الوظائف")</h2></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("Title", "المسمى")</th><th>@T["emp.department"]</th><th>@X("Positions", "العدد")</th><th></th></tr></thead><tbody>
+  @foreach (var j in jobs) { <tr><td>@(T.IsAr && j.TitleAr != "" ? j.TitleAr : j.Title)</td><td>@(j.Department == null ? "-" : T.Name(j.Department.Name, j.Department.NameAr))</td><td class="num">@j.Positions</td>
+   <td class="right"><form method="post" action="/Talent/ToggleJob" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@j.Id"><button class="btn btn-sm">@(j.IsOpen ? X("Close", "إغلاق") : X("Reopen", "إعادة فتح"))</button></form></td></tr> }</tbody></table></div>
+  <div class="card-b"><form method="post" action="/Talent/AddJob" asp-antiforgery="true" class="grid g2"><div class="field"><label>@X("Title", "المسمى")</label><input name="title" required></div><div class="field"><label>@X("Title (Arabic)", "المسمى بالعربية")</label><input name="titleAr"></div>
+   <div class="field"><label>@T["emp.department"]</label><select name="dept"><option value="">-</option>@foreach (var d in depts) { <option value="@d.Id">@T.Name(d.Name, d.NameAr)</option> }</select></div><div class="field"><label>@X("Positions", "العدد")</label><input type="number" name="positions" value="1" min="1"></div>
+   <div><button class="btn btn-primary">@X("Add opening", "إضافة وظيفة")</button></div></form></div></div>
+ <div class="card"><div class="card-h"><h2>@X("Add candidate", "إضافة مرشح")</h2></div><div class="card-b"><form method="post" action="/Talent/AddCandidate" asp-antiforgery="true">
+  <div class="field"><label>@X("Opening", "الوظيفة")</label><select name="jobId">@foreach (var j in jobs.Where(j => j.IsOpen)) { <option value="@j.Id">@(T.IsAr && j.TitleAr != "" ? j.TitleAr : j.Title)</option> }</select></div>
+  <div class="field"><label>@T["common.name"]</label><input name="name" required></div><div class="field"><label>@T["login.email"]</label><input type="email" name="email" dir="ltr"></div><div class="field"><label>@X("Note", "ملاحظة")</label><input name="note"></div>
+  <button class="btn btn-primary">@T["common.add"]</button></form></div></div>
+</div>

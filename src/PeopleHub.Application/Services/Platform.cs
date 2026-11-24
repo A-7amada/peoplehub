@@ -1,0 +1,314 @@
+using System.Collections.Concurrent;
+using System.Net.Sockets;
+using PeopleHub.Domain.Entities;
+using PeopleHub.Domain.Interfaces;
+using PeopleHub.Domain.Security;
+
+namespace PeopleHub.Application.Services;
+
+/// <summary>Key/value settings stored in the database, with a process-wide cache for synchronous reads.</summary>
+public class SettingsService(IRepository repo, ICurrentUser me, AuditService audit)
+{
+    public static readonly ConcurrentDictionary<string, string> Cache = new();
+    public static readonly Dictionary<string, string> Defaults = new()
+    {
+        ["att.mode"] = "System", ["zk.ip"] = "192.168.1.201", ["zk.port"] = "4370", ["zk.simulate"] = "true", ["zk.apiKey"] = "demo-device-key",
+        ["email.notify"] = "true", ["smtp.host"] = "", ["smtp.port"] = "587", ["smtp.user"] = "", ["smtp.from"] = "hr@peoplehub.local",
+        ["eosb.days"] = "15", ["pwd.minLength"] = "8"
+    };
+    public static string Get(string key) => Cache.TryGetValue(key, out var v) ? v : Defaults.GetValueOrDefault(key, "");
+    public static bool DeviceMode => Get("att.mode") == "Device";
+
+    public async Task LoadAsync()
+    {
+        foreach (var s in await repo.ToListAsync(repo.Query<AppSetting>())) Cache[s.Key] = s.Value;
+    }
+
+    public async Task<Dictionary<string, string>> AllAsync()
+    {
+        await LoadAsync();
+        return Defaults.ToDictionary(d => d.Key, d => Get(d.Key));
+    }
+
+    public async Task SaveAsync(Dictionary<string, string> values)
+    {
+        if (!me.Can(Perm.AdmSettings)) throw new DomainException("err.forbidden");
+        var mode = values.GetValueOrDefault("att.mode", "System"); if (mode is not ("System" or "Device")) throw new DomainException("err.generic");
+        if (mode == "Device")
+        {
+            if (!System.Net.IPAddress.TryParse(values.GetValueOrDefault("zk.ip", ""), out _) && Uri.CheckHostName(values.GetValueOrDefault("zk.ip", "")) == UriHostNameType.Unknown) throw new DomainException("err.badIp");
+            if (!int.TryParse(values.GetValueOrDefault("zk.port", ""), out var p) || p is < 1 or > 65535) throw new DomainException("err.badPort");
+        }
+        var rows = await repo.ToListAsync(repo.Query<AppSetting>());
+        foreach (var (k, v) in values)
+        {
+            if (!Defaults.ContainsKey(k)) continue;
+            var row = rows.FirstOrDefault(r => r.Key == k);
+            if (row == null) repo.Add(new AppSetting { Key = k, Value = v }); else row.Value = v;
+            Cache[k] = v;
+        }
+        audit.Log("Update", "Settings", "attendance/email/payroll", $"att.mode={mode}");
+        await repo.SaveAsync();
+    }
+}
+
+/// <summary>ZKTeco attendance device integration. The Render demo cannot reach a private LAN address, so the real path is a bridge that pushes punches to the API; a simulator stands in for the device in the demo.</summary>
+public class DeviceService(IRepository repo, AppClock clock, AuditService audit, ICurrentUser me)
+{
+    public record PunchIn(string UserId, DateTime Time);
+
+    public async Task<(bool Ok, string Message)> PingAsync()
+    {
+        var ip = SettingsService.Get("zk.ip"); int.TryParse(SettingsService.Get("zk.port"), out var port);
+        if (SettingsService.Get("zk.simulate") == "true") return (true, $"simulated device at {ip}:{port}");
+        try
+        {
+            using var c = new TcpClient(); var t = c.ConnectAsync(ip, port); 
+            if (await Task.WhenAny(t, Task.Delay(2500)) != t || !c.Connected) return (false, $"no response from {ip}:{port} within 2.5s");
+            return (true, $"{ip}:{port} accepted a TCP connection");
+        }
+        catch (Exception ex) { return (false, ex.Message); }
+    }
+
+    /// <summary>Stores punches (from the push API or the simulator), then turns them into attendance records.</summary>
+    public async Task<int> IngestAsync(IEnumerable<PunchIn> punches)
+    {
+        var emps = await repo.ToListAsync(repo.Query<Employee>());
+        var byCode = emps.ToDictionary(e => e.Code, StringComparer.OrdinalIgnoreCase);
+        var existing = (await repo.ToListAsync(repo.Query<DevicePunch>())).Select(p => (p.DeviceUserId, p.Time)).ToHashSet();
+        var added = 0;
+        foreach (var p in punches)
+        {
+            if (existing.Contains((p.UserId, p.Time))) continue;
+            var emp = byCode.GetValueOrDefault(p.UserId);
+            repo.Add(new DevicePunch { DeviceUserId = p.UserId, Time = p.Time, EmployeeId = emp?.Id, Matched = emp != null }); added++;
+        }
+        await repo.SaveAsync();
+        await RebuildAsync(emps);
+        return added;
+    }
+
+    /// <summary>First punch of the day is the check-in, the last (at least a minute later) the check-out. Records already approved by hand are not overwritten.</summary>
+    private async Task RebuildAsync(List<Employee> emps)
+    {
+        var punches = (await repo.ToListAsync(repo.Query<DevicePunch>())).Where(p => p.EmployeeId != null).GroupBy(p => (p.EmployeeId!.Value, p.Time.Date));
+        var shifts = await repo.ToListAsync(repo.Query<Shift>().OrderBy(s => s.Id));
+        var recs = await repo.ToListAsync(repo.Query<AttendanceRecord>());
+        foreach (var g in punches)
+        {
+            var (eid, day) = g.Key; var times = g.Select(p => p.Time).OrderBy(t => t).ToList();
+            var rec = recs.FirstOrDefault(r => r.EmployeeId == eid && r.Date == day);
+            if (rec != null && rec.Source == AttendanceSource.Manual && rec.CheckIn != null) continue;
+            var emp = emps.First(e => e.Id == eid);
+            var isNew = rec == null; rec ??= new AttendanceRecord { EmployeeId = eid, Date = day };
+            rec.CheckIn = times[0]; rec.CheckOut = times.Count > 1 && times[^1] > times[0].AddMinutes(1) ? times[^1] : null; rec.Source = AttendanceSource.Fingerprint;
+            rec.Recompute(shifts.FirstOrDefault(s => s.Id == emp.ShiftId) ?? shifts.FirstOrDefault() ?? new Shift { Name = "Default", Start = new(9, 0, 0), End = new(17, 0, 0) });
+            if (isNew) { repo.Add(rec); recs.Add(rec); }
+        }
+        await repo.SaveAsync();
+    }
+
+    /// <summary>Demo-only: pretends the machine holds today's punches for the working employees.</summary>
+    public async Task<int> SyncAsync()
+    {
+        if (!me.Can(Perm.AdmSettings) && !me.Can(Perm.AttManage)) throw new DomainException("err.forbidden");
+        if (!SettingsService.DeviceMode) throw new DomainException("err.notDeviceMode");
+        var (ok, msg) = await PingAsync(); if (!ok) throw new DomainException("err.deviceDown");
+        if (SettingsService.Get("zk.simulate") != "true") return 0; // real devices push through /api/device/punches
+        var today = clock.Today; var rnd = new Random(today.DayOfYear);
+        var emps = (await repo.ToListAsync(repo.Query<Employee>())).Where(e => e.IsWorking && e.HireDate <= today && !AttendanceCalculator.IsWeekend(today)).ToList();
+        var list = new List<PunchIn>();
+        foreach (var e in emps.Where(e => rnd.NextDouble() < 0.9))
+        {
+            var start = today + new TimeSpan(9, 0, 0) + TimeSpan.FromMinutes(rnd.Next(-15, 25)); if (start > clock.Now) continue;
+            list.Add(new(e.Code, start)); list.Add(new(e.Code, start.AddSeconds(40))); // duplicate scan, as real machines do
+            var end = today + new TimeSpan(17, 0, 0) + TimeSpan.FromMinutes(rnd.Next(-5, 40)); if (end < clock.Now) list.Add(new(e.Code, end));
+        }
+        var n = await IngestAsync(list);
+        audit.Log("Sync", "Device", SettingsService.Get("zk.ip"), $"{n} punches");
+        return n;
+    }
+
+    public async Task<List<DevicePunch>> RecentAsync() => await repo.ToListAsync(repo.Query<DevicePunch>().OrderByDescending(p => p.Time).Take(40));
+}
+
+public class EmailService(IRepository repo, AppClock clock)
+{
+    public void Queue(string to, string subject, string body)
+    {
+        var m = new EmailOutbox { To = to, Subject = subject, Body = body, CreatedAt = clock.UtcNow, Sent = false, Note = "SMTP not configured (demo): kept in the outbox" };
+        repo.Add(m);
+    }
+
+    /// <summary>Sends queued mail through SMTP when a host is configured; otherwise leaves it in the outbox.</summary>
+    public async Task FlushAsync()
+    {
+        var host = SettingsService.Get("smtp.host"); if (string.IsNullOrWhiteSpace(host)) return;
+        foreach (var m in await repo.ToListAsync(repo.Query<EmailOutbox>().Where(x => !x.Sent).Take(20)))
+        {
+            try
+            {
+                int.TryParse(SettingsService.Get("smtp.port"), out var port);
+                using var c = new System.Net.Mail.SmtpClient(host, port == 0 ? 587 : port) { EnableSsl = true, Timeout = 8000 };
+                var pass = Environment.GetEnvironmentVariable("SMTP_PASSWORD"); if (!string.IsNullOrEmpty(pass)) c.Credentials = new System.Net.NetworkCredential(SettingsService.Get("smtp.user"), pass);
+                await c.SendMailAsync(new System.Net.Mail.MailMessage(SettingsService.Get("smtp.from"), m.To, m.Subject, m.Body)); m.Sent = true; m.Note = null;
+            }
+            catch (Exception ex) { m.Note = ex.Message.Length > 150 ? ex.Message[..150] : ex.Message; }
+        }
+        await repo.SaveAsync();
+    }
+
+    public Task<List<EmailOutbox>> OutboxAsync() => repo.ToListAsync(repo.Query<EmailOutbox>().OrderByDescending(m => m.CreatedAt).Take(50));
+}
+
+public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, EmailService mail, AuditService audit)
+{
+    private static void CheckPolicy(string pw)
+    {
+        int.TryParse(SettingsService.Get("pwd.minLength"), out var min); if (min < 6) min = 8;
+        if (pw.Length < min || !pw.Any(char.IsLetter) || !pw.Any(char.IsDigit)) throw new DomainException("err.weakPassword");
+    }
+
+    public async Task ChangePasswordAsync(string current, string next)
+    {
+        var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
+        if (!PasswordHasher.Verify(current ?? "", u.PasswordHash)) throw new DomainException("err.wrongPassword");
+        CheckPolicy(next ?? ""); u.PasswordHash = PasswordHasher.Hash(next!);
+        audit.Log("Update", "Password", u.Email, "changed by user"); await repo.SaveAsync();
+    }
+
+    /// <summary>Creates a one-hour reset token. Returns the token only so the demo can show the link; production would only email it.</summary>
+    public async Task<string?> RequestResetAsync(string email, string baseUrl)
+    {
+        email = (email ?? "").Trim().ToLowerInvariant();
+        var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Email == email && x.IsActive)); if (u == null) return null;
+        var token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
+        repo.Add(new PasswordReset { UserId = u.Id, Token = token, Expires = clock.UtcNow.AddHours(1) });
+        mail.Queue(u.Email, "Reset your PeopleHub password", $"Use this link within one hour: {baseUrl}/Account/Reset?token={token}");
+        await repo.SaveAsync(); return token;
+    }
+
+    public async Task<bool> ResetAsync(string token, string next)
+    {
+        var r = await repo.FirstOrDefaultAsync(repo.Query<PasswordReset>().Where(x => x.Token == token && !x.Used));
+        if (r == null || r.Expires < clock.UtcNow) return false;
+        CheckPolicy(next ?? "");
+        var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == r.UserId)) ?? throw new DomainException("err.forbidden");
+        u.PasswordHash = PasswordHasher.Hash(next!); r.Used = true; audit.Log("Update", "Password", u.Email, "reset by token"); await repo.SaveAsync(); return true;
+    }
+
+    public async Task<bool> TokenValidAsync(string token) => await repo.AnyAsync(repo.Query<PasswordReset>().Where(x => x.Token == token && !x.Used && x.Expires > clock.UtcNow));
+
+    public async Task<(AppUser User, string Secret)> BeginTotpAsync()
+    {
+        var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
+        u.TotpSecret = Totp.NewSecret(); u.TotpEnabled = false; await repo.SaveAsync(); return (u, u.TotpSecret);
+    }
+    public async Task EnableTotpAsync(string code)
+    {
+        var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
+        if (u.TotpSecret == null || !Totp.Verify(u.TotpSecret, code, clock.UtcNow)) throw new DomainException("err.badCode");
+        u.TotpEnabled = true; audit.Log("Update", "2FA", u.Email, "enabled"); await repo.SaveAsync();
+    }
+    public async Task DisableTotpAsync(string password)
+    {
+        var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
+        if (!PasswordHasher.Verify(password ?? "", u.PasswordHash)) throw new DomainException("err.wrongPassword");
+        u.TotpEnabled = false; u.TotpSecret = null; audit.Log("Update", "2FA", u.Email, "disabled"); await repo.SaveAsync();
+    }
+    public Task<AppUser?> CurrentAsync() => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId));
+    public Task<AppUser?> ByIdAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == id && x.IsActive));
+}
+
+public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope, AppClock clock, AuditService audit, NotificationService notify)
+{
+    private void Need() { if (!me.Can(Perm.TalentManage)) throw new DomainException("err.forbidden"); }
+
+    public Task<List<JobOpening>> JobsAsync() => repo.ToListAsync(repo.Query<JobOpening>().OrderByDescending(j => j.IsOpen).ThenByDescending(j => j.CreatedAt));
+    public Task<List<Candidate>> CandidatesAsync() => repo.ToListAsync(repo.Query<Candidate>().OrderBy(c => c.Stage).ThenByDescending(c => c.CreatedAt));
+    public async Task AddJobAsync(string title, string? titleAr, int? dept, int positions)
+    {
+        Need(); if (string.IsNullOrWhiteSpace(title)) throw new DomainException("err.required");
+        repo.Add(new JobOpening { Title = title.Trim(), TitleAr = titleAr?.Trim() ?? "", DepartmentId = dept, Positions = Math.Max(1, positions), CreatedAt = clock.UtcNow });
+        audit.Log("Create", "Job", title, ""); await repo.SaveAsync();
+    }
+    public async Task CloseJobAsync(int id) { Need(); var j = await repo.FirstOrDefaultAsync(repo.Query<JobOpening>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound"); j.IsOpen = !j.IsOpen; await repo.SaveAsync(); }
+    public async Task AddCandidateAsync(int jobId, string name, string? email, string? note)
+    {
+        Need(); if (string.IsNullOrWhiteSpace(name)) throw new DomainException("err.required");
+        repo.Add(new Candidate { JobOpeningId = jobId, Name = name.Trim(), Email = email?.Trim() ?? "", Note = note?.Trim() ?? "", CreatedAt = clock.UtcNow });
+        await repo.SaveAsync();
+    }
+    public async Task MoveCandidateAsync(int id, bool reject)
+    {
+        Need(); var c = await repo.FirstOrDefaultAsync(repo.Query<Candidate>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
+        if (reject) c.Stage = CandidateStage.Rejected; else c.Stage = Candidate.Next(c.Stage) ?? c.Stage;
+        audit.Log("Update", "Candidate", c.Name, c.Stage.ToString()); await repo.SaveAsync();
+    }
+
+    public async Task<List<PerformanceReview>> ReviewsAsync()
+    {
+        var ids = await scope.VisibleEmployeeIdsAsync();
+        var q = repo.Query<PerformanceReview>().OrderByDescending(r => r.CreatedAt);
+        var all = await repo.ToListAsync(q);
+        return all.Where(r => ids == null || ids.Contains(r.EmployeeId)).ToList();
+    }
+    public async Task AddReviewAsync(int employeeId, string period, string? goals, string? comment, int score)
+    {
+        if (!me.Can(Perm.TalentManage) && !me.Can(Perm.ScopeTeam)) throw new DomainException("err.forbidden");
+        var ids = await scope.VisibleEmployeeIdsAsync(); if (ids != null && !ids.Contains(employeeId)) throw new DomainException("err.forbidden");
+        if (employeeId == me.EmployeeId) throw new DomainException("err.selfReview");
+        if (!PerformanceReview.ValidScore(score) || string.IsNullOrWhiteSpace(period)) throw new DomainException("err.required");
+        repo.Add(new PerformanceReview { EmployeeId = employeeId, Period = period.Trim(), Goals = goals?.Trim() ?? "", Comment = comment?.Trim() ?? "", Score = score, Reviewer = me.Email, CreatedAt = clock.UtcNow });
+        await notify.NotifyEmployeeAsync(employeeId, "notif.review", period, "/Talent/Performance");
+        audit.Log("Create", "Review", employeeId.ToString(), $"score {score}"); await repo.SaveAsync();
+    }
+
+    public Task<List<TrainingCourse>> CoursesAsync() => repo.ToListAsync(repo.Query<TrainingCourse>().OrderBy(c => c.Date));
+    public Task<List<TrainingEnrollment>> EnrollmentsAsync() => repo.ToListAsync(repo.Query<TrainingEnrollment>());
+    public async Task AddCourseAsync(string title, string? titleAr, int hours, DateTime date)
+    { Need(); if (string.IsNullOrWhiteSpace(title) || hours <= 0) throw new DomainException("err.required"); repo.Add(new TrainingCourse { Title = title.Trim(), TitleAr = titleAr?.Trim() ?? "", Hours = hours, Date = date }); await repo.SaveAsync(); }
+    public async Task EnrollAsync(int courseId, int employeeId)
+    {
+        if (employeeId != me.EmployeeId) Need();
+        if (await repo.AnyAsync(repo.Query<TrainingEnrollment>().Where(x => x.CourseId == courseId && x.EmployeeId == employeeId))) throw new DomainException("err.alreadyEnrolled");
+        repo.Add(new TrainingEnrollment { CourseId = courseId, EmployeeId = employeeId }); await repo.SaveAsync();
+    }
+    public async Task CompleteAsync(int id) { Need(); var e = await repo.FirstOrDefaultAsync(repo.Query<TrainingEnrollment>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound"); e.Completed = true; await repo.SaveAsync(); }
+}
+
+/// <summary>Custom report builder: pick a dataset, tick columns, filter by department.</summary>
+public class ReportBuilderService(IRepository repo, AccessScope scope, ICurrentUser me)
+{
+    public static readonly string[] Datasets = ["employees", "leave", "reviews", "training"];
+    public static readonly Dictionary<string, string[]> Columns = new()
+    {
+        ["employees"] = ["code", "name", "nameAr", "department", "jobTitle", "status", "hireDate", "type", "phone", "email", "salary"],
+        ["leave"] = ["code", "name", "department", "type", "from", "to", "days", "status"],
+        ["reviews"] = ["name", "department", "period", "score", "reviewer"],
+        ["training"] = ["name", "department", "course", "hours", "completed"],
+    };
+
+    public async Task<ReportTable> RunAsync(string dataset, string[]? cols, int? dept)
+    {
+        if (!me.Can(Perm.Reports) || !Columns.ContainsKey(dataset)) throw new DomainException("err.forbidden");
+        var chosen = (cols is { Length: > 0 } ? cols : Columns[dataset]).Where(Columns[dataset].Contains).ToList();
+        if (!me.Can(Perm.EmpSalary)) chosen.Remove("salary");
+        var ids = await scope.VisibleEmployeeIdsAsync();
+        var emps = (await repo.ToListAsync(repo.Query<Employee>())).Where(e => (ids == null || ids.Contains(e.Id)) && (dept == null || e.DepartmentId == dept)).ToDictionary(e => e.Id);
+        var rows = new List<Dictionary<string, string>>();
+        string D(Employee e) => e.Department?.Name ?? "";
+        switch (dataset)
+        {
+            case "employees":
+                rows = emps.Values.OrderBy(e => e.Code).Select(e => new Dictionary<string, string> { ["code"] = e.Code, ["name"] = e.FullName, ["nameAr"] = e.FullNameAr, ["department"] = D(e), ["jobTitle"] = e.JobTitle?.Name ?? "", ["status"] = e.Status.ToString(), ["hireDate"] = e.HireDate.ToString("yyyy-MM-dd"), ["type"] = e.EmploymentType.ToString(), ["phone"] = e.Phone, ["email"] = e.Email, ["salary"] = e.BasicSalary.ToString("N2", System.Globalization.CultureInfo.InvariantCulture) }).ToList(); break;
+            case "leave":
+                rows = (await repo.ToListAsync(repo.Query<LeaveRequest>().OrderByDescending(l => l.StartDate))).Where(l => emps.ContainsKey(l.EmployeeId)).Select(l => { var e = emps[l.EmployeeId]; return new Dictionary<string, string> { ["code"] = e.Code, ["name"] = e.FullName, ["department"] = D(e), ["type"] = l.LeaveType?.Name ?? "", ["from"] = l.StartDate.ToString("yyyy-MM-dd"), ["to"] = l.EndDate.ToString("yyyy-MM-dd"), ["days"] = l.Days.ToString("0.#"), ["status"] = l.Status.ToString() }; }).ToList(); break;
+            case "reviews":
+                rows = (await repo.ToListAsync(repo.Query<PerformanceReview>().OrderByDescending(r => r.CreatedAt))).Where(r => emps.ContainsKey(r.EmployeeId)).Select(r => new Dictionary<string, string> { ["name"] = emps[r.EmployeeId].FullName, ["department"] = D(emps[r.EmployeeId]), ["period"] = r.Period, ["score"] = r.Score.ToString(), ["reviewer"] = r.Reviewer }).ToList(); break;
+            case "training":
+                rows = (await repo.ToListAsync(repo.Query<TrainingEnrollment>())).Where(t => emps.ContainsKey(t.EmployeeId)).Select(t => new Dictionary<string, string> { ["name"] = emps[t.EmployeeId].FullName, ["department"] = D(emps[t.EmployeeId]), ["course"] = t.Course?.Title ?? "", ["hours"] = (t.Course?.Hours ?? 0).ToString(), ["completed"] = t.Completed ? "yes" : "no" }).ToList(); break;
+        }
+        return new ReportTable("custom-" + dataset, chosen, rows.Select(r => chosen.Select(c => r.GetValueOrDefault(c, "")).ToList()).ToList());
+    }
+}

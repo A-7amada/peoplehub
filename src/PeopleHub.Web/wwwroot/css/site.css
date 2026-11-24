@@ -199,3 +199,7 @@ bdi{unicode-bidi:isolate}
 .oc-box.off{opacity:.55}.oc-av{width:30px;height:30px;background:#eef0ff;color:#5b5bd6;margin:0 auto 6px}
 .oc-t{font-weight:700;font-size:.9rem}.oc-m{font-size:.78rem;color:var(--ink2);margin-top:2px}.oc-n{margin-top:6px;font-size:.72rem;font-weight:700;color:#5b5bd6;background:#eef0ff;border-radius:99px;display:inline-block;padding:1px 9px}
 @media print{.sidebar,.topbar,.demo-banner,.actions,.seg{display:none!important}.main{margin:0!important}}
+
+.kanban{display:grid;grid-template-columns:repeat(6,minmax(170px,1fr));gap:12px;overflow-x:auto}
+.kcol{background:#f4f5fb;border-radius:14px;padding:10px;min-height:120px}.kh{font-weight:700;font-size:.82rem;margin-bottom:8px;display:flex;justify-content:space-between}
+.kn{background:#e3e6f7;border-radius:99px;padding:0 8px;font-size:.72rem}.kcard{background:#fff;border:1px solid #e3e6f2;border-radius:12px;padding:10px;margin-bottom:8px;box-shadow:0 2px 8px rgba(60,70,140,.06)}

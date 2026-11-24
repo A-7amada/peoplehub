@@ -34,6 +34,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
 
     public async Task CheckInAsync()
     {
+        if (SettingsService.DeviceMode) throw new DomainException("err.deviceMode");
         var e = await MeAsync();
         if (!e.IsWorking) throw new DomainException("err.terminated");
         var today = clock.Today;
@@ -49,6 +50,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
 
     public async Task CheckOutAsync()
     {
+        if (SettingsService.DeviceMode) throw new DomainException("err.deviceMode");
         var e = await MeAsync();
         var rec = await TodayRecordAsync();
         if (rec?.CheckIn == null) throw new DomainException("err.noCheckIn");
