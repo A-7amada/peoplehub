@@ -1,0 +1,16 @@
+@model PeopleHub.Application.Services.DashboardStats
+@{ var me = ViewBag.Me as Employee; var max = Math.Max(1, Model.ByDepartment.Max(d => d.Count)); }
+<h1>@T["dash.welcome"]@(me != null ? ", " + T.Name(me.FullName, me.FullNameAr) : "")</h1>
+<div class="grid stats">
+    <div class="card stat"><span>@T["dash.headcount"]</span><b>@Model.Headcount</b></div>
+    <div class="card stat"><span>@T["dash.onLeave"]</span><b>@Model.OnLeave</b></div>
+    <div class="card stat"><span>@T["dash.pending"]</span><b>@Model.PendingLeaves</b></div>
+    @if (User.IsInRole(Roles.HR)) { <div class="card stat"><span>@T["dash.payroll"]</span><b class="sm">@T.Money(Model.MonthlyPayroll)</b></div> }
+</div>
+<section class="card">
+    <h2>@T["dash.byDept"]</h2>
+    @foreach (var d in Model.ByDepartment)
+    {
+        <div class="bar"><span>@T.Name(d.Dept, d.DeptAr)</span><div class="track"><i style="width:@(d.Count * 100 / max)%"></i></div><em>@d.Count</em></div>
+    }
+</section>

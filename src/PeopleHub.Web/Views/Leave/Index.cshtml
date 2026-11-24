@@ -1,0 +1,44 @@
+@model List<LeaveRequest>
+@{ var me = ViewBag.Me as Employee; bool hr = ViewBag.IsHr; }
+<h1>@T["nav.leave"]</h1>
+@if (me != null)
+{
+<section class="card">
+    <h2>@T["leave.new"] <span class="muted small">· @T["leave.mybalance"]: <b>@me.AnnualLeaveBalance</b> @T["emp.days"]</span></h2>
+    <form method="post" asp-antiforgery="true" action="/Leave/Request" class="inline">
+        <label>@T["leave.type"]<select name="type">@foreach (var x in Enum.GetValues<LeaveType>()) { <option value="@x">@T["type." + x]</option> }</select></label>
+        <label>@T["leave.from"]<input type="date" name="from" required /></label>
+        <label>@T["leave.to"]<input type="date" name="to" required /></label>
+        <label class="grow">@T["leave.reason"]<input name="reason" maxlength="200" /></label>
+        <button class="btn" type="submit">@T["leave.submit"]</button>
+    </form>
+    <p class="muted small">@T["leave.note"]</p>
+</section>
+}
+<div class="card tablewrap">
+@if (Model.Count == 0) { <p class="muted">@T["leave.empty"]</p> } else {
+<table>
+    <thead><tr>@if (hr) { <th>@T["leave.employee"]</th> }<th>@T["leave.type"]</th><th>@T["leave.from"]</th><th>@T["leave.to"]</th><th>@T["leave.days"]</th><th>@T["leave.reason"]</th><th>@T["emp.status"]</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var l in Model)
+    {
+        <tr>
+            @if (hr) { <td><strong>@T.Name(l.Employee!.FullName, l.Employee.FullNameAr)</strong><br /><span class="muted small">@l.Employee.AnnualLeaveBalance @T["emp.days"]</span></td> }
+            <td>@T["type." + l.Type]</td><td>@T.Date(l.StartDate)</td><td>@T.Date(l.EndDate)</td><td>@l.Days</td><td>@l.Reason</td>
+            <td><span class="pill @l.Status">@T["status." + l.Status]</span></td>
+            <td class="actions">
+                @if (l.Status == LeaveStatus.Pending && hr)
+                {
+                    <form method="post" asp-antiforgery="true" action="/Leave/Approve/@l.Id"><button class="btn sm">@T["leave.approve"]</button></form>
+                    <form method="post" asp-antiforgery="true" action="/Leave/Reject/@l.Id"><button class="btn danger sm">@T["leave.reject"]</button></form>
+                }
+                @if (l.Status is LeaveStatus.Pending or LeaveStatus.Approved)
+                {
+                    <form method="post" asp-antiforgery="true" action="/Leave/Cancel/@l.Id"><button class="btn ghost sm">@T["leave.cancel"]</button></form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>}
+</div>

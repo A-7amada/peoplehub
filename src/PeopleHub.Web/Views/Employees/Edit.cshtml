@@ -1,0 +1,19 @@
+@model Employee
+@{ var depts = (List<Department>)ViewBag.Departments; }
+<h1>@(Model.Id == 0 ? T["emp.add"] : T["emp.edit"])</h1>
+<section class="card narrow wide">
+    @if (ViewBag.Error is string er) { <div class="flash err">@er</div> }
+    <form method="post" asp-antiforgery="true" class="formgrid">
+        <input type="hidden" name="Id" value="@Model.Id" />
+        <label>@T["emp.name"]<input name="FullName" value="@Model.FullName" required /></label>
+        <label>@T["emp.nameAr"]<input name="FullNameAr" value="@Model.FullNameAr" dir="rtl" /></label>
+        <label>@T["emp.email"]<input name="Email" type="email" value="@Model.Email" required /></label>
+        <label>@T["emp.title"]<input name="JobTitle" value="@Model.JobTitle" /></label>
+        <label>@T["emp.dept"]<select name="DepartmentId">@foreach (var d in depts) { <option value="@d.Id" selected="@(d.Id == Model.DepartmentId)">@T.Name(d.Name, d.NameAr)</option> }</select></label>
+        <label>@T["emp.hired"]<input name="HireDate" type="date" value="@Model.HireDate.ToString("yyyy-MM-dd")" /></label>
+        <label>@T["emp.salary"]<input name="MonthlySalary" type="number" min="0" step="0.01" value="@Model.MonthlySalary.ToString(System.Globalization.CultureInfo.InvariantCulture)" /></label>
+        <label>@T["emp.balance"]<input name="AnnualLeaveBalance" type="number" min="0" max="60" value="@Model.AnnualLeaveBalance" /></label>
+        <label>@T["emp.status"]<select name="Status">@foreach (var s in new[] { EmployeeStatus.Active, EmployeeStatus.OnLeave }) { <option value="@s" selected="@(s == Model.Status)">@T["status." + s]</option> }</select></label>
+        <div class="full"><button class="btn" type="submit">@T["emp.save"]</button> <a class="btn ghost" href="/Employees">&larr;</a></div>
+    </form>
+</section>

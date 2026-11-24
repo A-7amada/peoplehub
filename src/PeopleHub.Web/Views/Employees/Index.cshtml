@@ -1,0 +1,39 @@
+@model List<Employee>
+@{ var depts = (List<Department>)ViewBag.Departments; }
+<div class="row between"><h1>@T["nav.employees"]</h1><a class="btn" href="/Employees/Edit">@T["emp.add"]</a></div>
+<form method="get" class="filters">
+    <input name="q" value="@ViewBag.Q" placeholder="@T["emp.search"]" />
+    <select name="dept"><option value="">@T["emp.dept"]: @T["emp.all"]</option>
+        @foreach (var d in depts) { <option value="@d.Id" selected="@(ViewBag.Dept == d.Id)">@T.Name(d.Name, d.NameAr)</option> }
+    </select>
+    <select name="status"><option value="">@T["emp.status"]: @T["emp.all"]</option>
+        @foreach (var s in Enum.GetValues<EmployeeStatus>()) { <option value="@s" selected="@(ViewBag.Status == s)">@T["status." + s]</option> }
+    </select>
+    <button class="btn ghost" type="submit">OK</button>
+</form>
+<div class="card tablewrap">
+@if (Model.Count == 0) { <p class="muted">@T["emp.empty"]</p> } else {
+<table>
+    <thead><tr><th>@T["emp.name"]</th><th>@T["emp.title"]</th><th>@T["emp.dept"]</th><th>@T["emp.salary"]</th><th>@T["emp.balance"]</th><th>@T["emp.status"]</th><th></th></tr></thead>
+    <tbody>
+    @foreach (var e in Model)
+    {
+        <tr>
+            <td><strong>@T.Name(e.FullName, e.FullNameAr)</strong><br /><span class="muted small">@e.Email</span></td>
+            <td>@e.JobTitle</td>
+            <td>@T.Name(e.Department!.Name, e.Department.NameAr)</td>
+            <td>@T.Money(e.MonthlySalary)</td>
+            <td>@e.AnnualLeaveBalance @T["emp.days"]</td>
+            <td><span class="pill @e.Status">@T["status." + e.Status]</span></td>
+            <td class="actions">
+                <a class="btn ghost sm" href="/Employees/Edit/@e.Id">@T["emp.edit"]</a>
+                @if (e.Status != EmployeeStatus.Terminated)
+                {
+                    <form method="post" asp-antiforgery="true" action="/Employees/Terminate/@e.Id" onsubmit="return confirm('@T["emp.terminate"]?')"><button class="btn danger sm">@T["emp.terminate"]</button></form>
+                }
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>}
+</div>

@@ -1,0 +1,10 @@
+<section class="card narrow">
+    <h1>@T["login.title"]</h1>
+    @if (ViewBag.Error == true) { <div class="flash err">@T["login.invalid"]</div> }
+    <form method="post" asp-antiforgery="true">
+        <label>@T["login.email"]<input name="email" type="email" autocomplete="username" required /></label>
+        <label>@T["login.password"]<input name="password" type="password" autocomplete="current-password" required /></label>
+        <button class="btn" type="submit">@T["login.submit"]</button>
+    </form>
+    <p class="muted small"><strong>@T["login.demo"]</strong><br />@T["login.demoNote"]</p>
+</section>

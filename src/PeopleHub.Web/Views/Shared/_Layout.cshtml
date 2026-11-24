@@ -1,0 +1,44 @@
+@{
+    var ar = T.IsAr;
+    var path = Context.Request.Path.Value ?? "/";
+    string Act(string p) => path.StartsWith(p, StringComparison.OrdinalIgnoreCase) ? "active" : "";
+}
+<!DOCTYPE html>
+<html lang="@(ar ? "ar" : "en")" dir="@(ar ? "rtl" : "ltr")">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@T["app.name"]</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+<header class="top">
+    <a class="brand" href="/"><span class="logo">P</span><span>@T["app.name"]</span></a>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav>
+            <a class="@(path == "/" ? "active" : "")" href="/">@T["nav.dashboard"]</a>
+            @if (User.IsInRole(Roles.HR)) { <a class="@Act("/Employees")" href="/Employees">@T["nav.employees"]</a> }
+            <a class="@Act("/Leave")" href="/Leave">@T["nav.leave"]</a>
+        </nav>
+    }
+    <div class="tools">
+        <form method="post" asp-antiforgery="true" action="/Account/Culture">
+            <input type="hidden" name="culture" value="@(ar ? "en" : "ar")" />
+            <input type="hidden" name="returnUrl" value="@(Context.Request.Path + Context.Request.QueryString)" />
+            <button class="link" type="submit">@T["nav.lang"]</button>
+        </form>
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <form method="post" asp-antiforgery="true" action="/Account/Logout"><button class="link" type="submit">@T["nav.logout"]</button></form>
+        }
+    </div>
+</header>
+<main>
+    @if (TempData["ok"] is string ok) { <div class="flash ok">@ok</div> }
+    @if (TempData["err"] is string err) { <div class="flash err">@err</div> }
+    @RenderBody()
+</main>
+<footer>@T["footer"]</footer>
+</body>
+</html>
