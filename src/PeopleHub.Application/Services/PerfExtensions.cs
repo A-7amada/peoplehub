@@ -79,23 +79,31 @@ public partial class PerfService
         var ts = await repo.ToListAsync(repo.Query<CompetencyTemplate>()); var items = await repo.ToListAsync(repo.Query<CompetencyItem>());
         return ts.Select(t => (t, items.Where(i => i.TemplateId == t.Id).ToList())).ToList();
     }
-    public async Task AddTemplateAsync(string name)
-    { if (!Hr) throw new DomainException("err.forbidden"); if (string.IsNullOrWhiteSpace(name)) throw new DomainException("err.required"); repo.Add(new CompetencyTemplate { Name = name.Trim() }); await repo.SaveAsync(); }
-    public async Task AddCompetencyAsync(int templateId, string title, string? behaviour, int weight)
+    public async Task AddTemplateAsync(string name,int? jobGrade=null)
+    { if (!Hr) throw new DomainException("err.forbidden"); if (string.IsNullOrWhiteSpace(name)||name.Length>150||jobGrade is <0 or >1000) throw new DomainException("err.required"); repo.Add(new CompetencyTemplate { Name = name.Trim(),JobGrade=jobGrade });audit.Log("Create","CompetencyTemplate",name.Trim(),$"Grade {jobGrade?.ToString()??"unrestricted"}; no score scale change"); await repo.SaveAsync(); }
+    public Task AddCompetencyAsync(int templateId, string title, string? behaviour, int weight)=>repo.AtomicAsync(async()=>
     {
         if (!Hr) throw new DomainException("err.forbidden");
-        if (string.IsNullOrWhiteSpace(title) || weight is < 1 or > 100 || !await repo.AnyAsync(repo.Query<CompetencyTemplate>().Where(t => t.Id == templateId))) throw new DomainException("err.required");
+        if (string.IsNullOrWhiteSpace(title)||title.Length>200||string.IsNullOrWhiteSpace(behaviour)||behaviour.Length>2000 || weight is < 1 or > 100)throw new DomainException("err.required");
+        var template=await repo.FirstOrDefaultAsync(repo.Query<CompetencyTemplate>().Where(t=>t.Id==templateId))??throw new DomainException("err.notFound");
         var items = await repo.ToListAsync(repo.Query<CompetencyItem>().Where(i => i.TemplateId == templateId)); if (items.Sum(i => i.Weight) + weight > 100) throw new DomainException("err.weights");
-        repo.Add(new CompetencyItem { TemplateId = templateId, Title = title.Trim(), Behaviour = behaviour?.Trim() ?? "", Weight = weight }); await repo.SaveAsync();
-    }
-    public async Task ApplyTemplateAsync(int id, int templateId)
+        template.ChangeStamp=Guid.NewGuid().ToString("N");
+        repo.Add(new CompetencyItem { TemplateId = templateId, Title = title.Trim(), Behaviour = behaviour.Trim(), Weight = weight });audit.Log("Add","CompetencyItem",templateId,title.Trim()); await repo.SaveAsync();
+    });
+    public Task ApplyTemplateAsync(int id, int templateId)=>repo.AtomicAsync(async()=>
     {
         var v = await GetAsync(id); if (!v.CanManage || v.A.ManagerDone || v.Goals.Count > 0) throw new DomainException("err.emptyGoals");
-        var items = await repo.ToListAsync(repo.Query<CompetencyItem>().Where(i => i.TemplateId == templateId));
+        var template=await repo.FirstOrDefaultAsync(repo.Query<CompetencyTemplate>().Where(t=>t.Id==templateId))??throw new DomainException("err.notFound");
+        if(template.JobGrade!=null&&v.A.Employee?.JobTitle?.Grade!=template.JobGrade)throw new DomainException("err.forbidden");
+        var items = await repo.ToListAsync(repo.Query<CompetencyItem>().Where(i => i.TemplateId == templateId).OrderBy(i=>i.Id));
         if (items.Sum(i => i.Weight) != 100) throw new DomainException("err.weights100");
+        v.A.ResponseStamp=Guid.NewGuid().ToString("N");template.ChangeStamp=Guid.NewGuid().ToString("N");
         foreach (var i in items) repo.Add(new PerfGoal { AppraisalId = id, Title = i.Title, Target = i.Behaviour, Weight = i.Weight, IsCompetency = true });
+        var content=System.Text.Json.JsonSerializer.Serialize(new{template.Id,template.Name,template.JobGrade,Items=items.Select(i=>new{i.Title,i.Behaviour,i.Weight})});
+        repo.Add(new CompetencyApplication{AppraisalId=id,TemplateId=template.Id,TemplateName=template.Name,JobGrade=template.JobGrade,Content=content,Sha256=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(content))),Actor=me.Email,At=clock.UtcNow});
         audit.Log("Template", "Appraisal", id, $"template {templateId}"); await repo.SaveAsync();
-    }
+    });
+    public async Task<CompetencyApplication?> CompetencyEvidenceAsync(int id){await GetAsync(id);return await repo.FirstOrDefaultAsync(repo.Query<CompetencyApplication>().Where(x=>x.AppraisalId==id));}
 
     public Task LinkCourseAsync(int id, int courseId)=>repo.AtomicAsync(async()=>
     {

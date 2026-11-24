@@ -16,7 +16,7 @@ public class PerfController(Loc loc, PerfService svc, ICurrentUser me, PayrollSe
     }
     public async Task<IActionResult> Appraisal(int id)
     {
-        try { await svc.MaintainAsync(); ViewBag.Tools = await svc.ToolsAsync(id);ViewBag.Pip=await svc.PipAsync(id);ViewBag.Trends=await svc.TrendsAsync(id);ViewBag.Responses=await svc.ResponsesAsync(id); return View(await svc.GetAsync(id)); } catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/Perf"); }
+        try { await svc.MaintainAsync(); ViewBag.Tools = await svc.ToolsAsync(id);ViewBag.CompetencyEvidence=await svc.CompetencyEvidenceAsync(id);ViewBag.Pip=await svc.PipAsync(id);ViewBag.Trends=await svc.TrendsAsync(id);ViewBag.Responses=await svc.ResponsesAsync(id); return View(await svc.GetAsync(id)); } catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/Perf"); }
     }
     [HttpPost]public Task<IActionResult> AddMilestone(int id,string title,string measure,DateTime dueOn,string reason)=>Do(()=>svc.AddMilestoneAsync(id,title,measure,dueOn,reason),"msg.saved",()=>Ap(id));
     [HttpPost]public Task<IActionResult> UpdateMilestone(int id,int milestoneId,int progress,string note,string action)=>Do(()=>svc.UpdateMilestoneAsync(milestoneId,progress,note,action),"msg.saved",()=>Ap(id));
@@ -44,7 +44,7 @@ public class PerfController(Loc loc, PerfService svc, ICurrentUser me, PayrollSe
     [HttpPost] public Task<IActionResult> SubmitFeedback(int id, int score, string? comment) => Do(() => svc.FeedbackAsync(id, score, comment), "msg.saved", () => Redirect("/Perf/Feedback"));
     [HttpPost] public Task<IActionResult> Nominate(int id, int reviewerEmployeeId) => Do(() => svc.NominateAsync(id, reviewerEmployeeId), "msg.saved", () => Ap(id));
     public async Task<IActionResult> Templates() { try { return View(await svc.TemplatesAsync()); } catch (DomainException) { return Forbidden(); } }
-    [HttpPost] public Task<IActionResult> AddTemplate(string name) => Do(() => svc.AddTemplateAsync(name), "msg.saved", () => Redirect("/Perf/Templates"));
+    [HttpPost] public Task<IActionResult> AddTemplate(string name,int? jobGrade) => Do(() => svc.AddTemplateAsync(name,jobGrade), "msg.saved", () => Redirect("/Perf/Templates"));
     [HttpPost] public Task<IActionResult> AddCompetency(int templateId, string title, string? behaviour, int weight) => Do(() => svc.AddCompetencyAsync(templateId, title, behaviour, weight), "msg.saved", () => Redirect("/Perf/Templates"));
     [HttpPost] public Task<IActionResult> ApplyTemplate(int id, int templateId) => Do(() => svc.ApplyTemplateAsync(id, templateId), "msg.saved", () => Ap(id));
     [HttpPost] public Task<IActionResult> LinkCourse(int id, int courseId) => Do(() => svc.LinkCourseAsync(id, courseId), "msg.saved", () => Ap(id));

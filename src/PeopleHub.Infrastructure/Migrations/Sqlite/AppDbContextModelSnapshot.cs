@@ -910,6 +910,54 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("CompanyAsset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.CompetencyApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AppraisalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("JobGrade")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppraisalId")
+                        .IsUnique();
+
+                    b.ToTable("CompetencyApplication");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.CompetencyItem", b =>
                 {
                     b.Property<int>("Id")
@@ -945,6 +993,13 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ChangeStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("JobGrade")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")

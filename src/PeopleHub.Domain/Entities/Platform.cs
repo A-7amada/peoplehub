@@ -136,7 +136,7 @@ public class Feedback360
     public Employee? Reviewer { get; set; } public int? Score { get; set; } public string Comment { get; set; } = "";
     public DateTime? SubmittedAt { get; set; }
 }
-public class CompetencyTemplate { public int Id { get; set; } public string Name { get; set; } = ""; }
+public class CompetencyTemplate { public int? JobGrade {get;set;} public string ChangeStamp {get;set;}=""; public int Id { get; set; } public string Name { get; set; } = ""; }
 public class CompetencyItem { public int Id { get; set; } public int TemplateId { get; set; } public string Title { get; set; } = ""; public string Behaviour { get; set; } = ""; public int Weight { get; set; } }
 public class PerfReminder { public int Id { get; set; } public int CycleId { get; set; } public int EmployeeId { get; set; } public string Kind { get; set; } = ""; public DateTime Day { get; set; } }
 public class PerfBonus

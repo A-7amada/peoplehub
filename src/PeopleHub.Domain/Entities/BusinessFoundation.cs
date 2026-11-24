@@ -274,3 +274,9 @@ public class TrainingCertificateAlert
 {
  public int Id {get;set;}public int CertificateId {get;set;}public DateTime OnDate {get;set;}public DateTime At {get;set;}
 }
+
+/// <summary>Immutable observed competency framework copied into an appraisal.</summary>
+public class CompetencyApplication
+{
+ public int Id {get;set;}public int AppraisalId {get;set;}public int TemplateId {get;set;}public int? JobGrade {get;set;}public string TemplateName {get;set;}="";public string Content {get;set;}="";public string Sha256 {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}

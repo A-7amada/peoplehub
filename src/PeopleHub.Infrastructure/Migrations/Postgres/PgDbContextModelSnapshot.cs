@@ -953,6 +953,56 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("CompanyAsset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.CompetencyApplication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("AppraisalId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("JobGrade")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppraisalId")
+                        .IsUnique();
+
+                    b.ToTable("CompetencyApplication");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.CompetencyItem", b =>
                 {
                     b.Property<int>("Id")
@@ -993,6 +1043,13 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ChangeStamp")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("JobGrade")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
