@@ -43,7 +43,8 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == (me.EmployeeId ?? -1))) ?? throw new DomainException("err.forbidden");
         var type = await repo.FirstOrDefaultAsync(repo.Query<LeaveType>().Where(t => t.Id == typeId)) ?? throw new DomainException("err.notFound");
         var balance = (await BalancesAsync(e.Id, start.Year)).FirstOrDefault(b => b.LeaveTypeId == typeId);
-        var holidays = (await repo.ToListAsync(repo.Query<Holiday>())).Select(h => h.Date);
+        var assignments=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==e.Id));
+        var holidays = (await repo.ToListAsync(repo.Query<Holiday>())).Where(h=>HolidayCalendar.Applies(h,e,h.Date,assignments)).Select(h => h.Date);
         var req = LeaveRequest.Create(e, type, balance, start, end, reason, document, clock.Today, holidays);
         req.Route = await flows.RouteForAsync("Leave", e, req.Days, !type.IsPaid);
         var mine = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.EmployeeId == e.Id));

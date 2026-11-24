@@ -64,6 +64,8 @@ public class AuditLog
 
 public class Holiday
 {
+    public int? BranchId {get;set;}
+    public int? DepartmentId {get;set;}
     public int Id { get; set; }
     public DateTime Date { get; set; }
     public string Name { get; set; } = "";

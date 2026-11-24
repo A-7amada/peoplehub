@@ -155,11 +155,12 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var recs = (await repo.ToListAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == employeeId && r.Date >= first && r.Date <= last))).ToDictionary(r => r.Date);
         var leaves = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.EmployeeId == employeeId && l.Status == RequestStatus.Approved && l.StartDate <= last && l.EndDate >= first));
         var emp = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e => e.Id == employeeId));
+        var assignments=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==employeeId));
         var today = clock.Today;
         var rows = new List<DayRow>();
         for (var d = first; d <= last; d = d.AddDays(1))
         {
-            var h = holidays.FirstOrDefault(x => x.Date.Date == d);
+            var h = holidays.FirstOrDefault(x => x.Date.Date == d && emp!=null && HolidayCalendar.Applies(x,emp,d,assignments));
             var working = !AttendanceCalculator.IsWeekend(d) && h == null && emp != null && d >= emp.HireDate.Date;
             recs.TryGetValue(d, out var rec);
             var leave = leaves.FirstOrDefault(l => l.StartDate <= d && l.EndDate >= d);
@@ -177,7 +178,8 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var last = first.AddMonths(1).AddDays(-1);
         var today = clock.Today;
         var ids = employees.Select(e => e.Id).ToList();
-        var holidays = (await repo.ToListAsync(repo.Query<Holiday>().Where(h => h.Date >= first && h.Date <= last))).Select(h => h.Date.Date).ToHashSet();
+        var holidays = await repo.ToListAsync(repo.Query<Holiday>().Where(h => h.Date >= first && h.Date <= last));
+        var assignments=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>ids.Contains(x.EmployeeId)));
         var recs = (await repo.ToListAsync(repo.Query<AttendanceRecord>().Where(r => r.Date >= first && r.Date <= last && ids.Contains(r.EmployeeId)))).ToLookup(r => r.EmployeeId);
         var leaves = (await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.Status == RequestStatus.Approved && l.StartDate <= last && l.EndDate >= first && ids.Contains(l.EmployeeId)))).ToLookup(l => l.EmployeeId);
         var ots = (await repo.ToListAsync(repo.Query<OvertimeRequest>().Where(o => o.Status == RequestStatus.Approved && o.Date >= first && o.Date <= last && ids.Contains(o.EmployeeId)))).ToLookup(o => o.EmployeeId);
@@ -189,7 +191,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
             int working = 0, present = 0, lateCount = 0, lateMin = 0, absent = 0, excused = 0, leaveDays = 0, unpaid = 0;
             for (var d = first; d <= last; d = d.AddDays(1))
             {
-                if (AttendanceCalculator.IsWeekend(d) || holidays.Contains(d) || d < e.HireDate.Date) continue;
+                if (AttendanceCalculator.IsWeekend(d) || holidays.Any(h=>h.Date.Date==d && HolidayCalendar.Applies(h,e,d,assignments)) || d < e.HireDate.Date) continue;
                 working++;
                 var lv = leaves[e.Id].FirstOrDefault(l => l.StartDate <= d && l.EndDate >= d);
                 if (lv != null) { leaveDays++; if (lv.LeaveType is { IsPaid: false }) unpaid++; continue; }

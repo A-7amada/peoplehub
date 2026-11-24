@@ -111,9 +111,12 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         Do(() => leave.AdjustBalanceAsync(id, typeId, clock.Today.Year, entitled, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "leave" }));
 }
 
-public class OrganizationController(Loc loc, OrgService org, EmployeeService emps) : BaseController(loc)
+public class OrganizationController(Loc loc, OrgService org, EmployeeService emps,HolidayService holidays) : BaseController(loc)
 {
-    public async Task<IActionResult> Index() { ViewBag.Managers = await emps.ManagerCandidatesAsync(); return View(await org.GetAsync()); }
+    public async Task<IActionResult> Index() { ViewBag.Managers = await emps.ManagerCandidatesAsync();ViewBag.Holidays=await holidays.ListAsync(); return View(await org.GetAsync()); }
+
+    [RequirePerm(Perm.OrgManage), HttpPost]
+    public Task<IActionResult> AddHoliday(DateTime date,string name,string? nameAr,int? branchId,int? departmentId,string reason)=>Do(()=>holidays.AddAsync(date,name,nameAr,branchId,departmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index)));
 
     [RequirePerm(Perm.OrgManage), HttpPost]
     public Task<IActionResult> AddDepartment(string name, string? nameAr, int? parentId, int? managerId, string? costCenter, int target) =>

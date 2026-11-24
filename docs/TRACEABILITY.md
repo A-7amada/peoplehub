@@ -21,7 +21,7 @@
 | ATT-006 | Remote attendance/geofencing | P2 | Open |
 | ATT-007 | Approved attendance period locking | P1 | Implemented completed-month lock, reason, no reopening, mutation guards and retained late raw punches; broader financial-period coordination remains open |
 | ATT-008 | Reasoned manual corrections with original evidence | P0 | Implemented: approved correction retains before/after, reason and original raw punches |
-| ATT-009 | Branch/group holiday calendars | P1 | Open |
+| ATT-009 | Branch/group holiday calendars | P1 | Implemented future global/branch/department calendars and historical-assignment scope in new leave requests and attendance; arbitrary groups and retroactive recalculation remain open |
 | ATT-010 | Category/shift grace periods | P1 | Partial: shift grace existing, categories open |
 | LEV-001 | Accrual by joining date/month and eligibility rules | P0 | Open: policy decision required |
 | LEV-002 | Half-day and hourly leave | P1 | Open |
@@ -114,4 +114,6 @@ Lifecycle follow-up: 152 tests pass. Employee lifecycle screen inspected in EN/A
 
 Shift follow-up: 160 tests pass including private document and overnight tests. Dated shift override takes precedence over effective employment history, then current shift fallback. Raw timestamps stay unchanged. Shift pattern and grace/late limits are explicit configuration. No break deductions or flexible-hours formula was invented.
 
-Asset follow-up: 164 tests pass (160 regression plus 4 asset tests). Registration, assignment and receipt evidence exercised locally through MVC forms; EN/AR viewport screenshots inspected. HR controls inventory/movements; employee sees only own assigned assets/history. Return validates the holder. No automatic clearance, deduction, valuation or depreciation. PostgreSQL schema generated, live asset migration not yet deployed.
+Asset follow-up: 164 tests pass (160 regression plus 4 asset tests). Registration, assignment and receipt evidence exercised locally through MVC forms; EN/AR viewport screenshots inspected. HR controls inventory/movements; employee sees only own assigned assets/history. Return validates the holder. No automatic clearance, deduction, valuation or depreciation. PostgreSQL schema deployed; live fictional asset registration, assignment and receipt history verified.
+
+Operational follow-up: 169 tests pass (165 regression and 4 scoped-calendar tests). Assigned lifecycle tasks now have a private assignee inbox on the assignee profile, avoiding access to another employee profile. Calendar registration and task inbox inspected locally in EN/AR. Holiday scopes affect new leave duration and attendance totals, with existing approved request duration preserved. Department is the implemented group, not arbitrary employee groups.

@@ -1,7 +1,7 @@
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Application.Services;
-public record LifecycleView(List<LifecycleTask> Tasks,List<EmployeeDependent> Dependents,EmployeeProbation? Probation,List<HrFieldDefinition> Fields,List<EmployeeFieldValue> Values);
+public record LifecycleView(List<LifecycleTask> Tasks,List<EmployeeDependent> Dependents,EmployeeProbation? Probation,List<HrFieldDefinition> Fields,List<EmployeeFieldValue> Values,List<LifecycleTask> AssignedTasks);
 public class EmployeeLifecycle(IRepository repo,ICurrentUser me,AccessScope scope,AppClock clock,AuditService audit,NotificationService notify)
 {
  private void Hr(){if(!me.Can(Perm.EmpManage))throw new DomainException("err.forbidden");}
@@ -10,7 +10,7 @@ public class EmployeeLifecycle(IRepository repo,ICurrentUser me,AccessScope scop
  {
   if(!await scope.CanSeeAsync(employeeId))throw new DomainException("err.forbidden");
   bool privateAccess=me.Can(Perm.EmpManage) || me.EmployeeId==employeeId;
-  return new(await repo.ToListAsync(repo.Query<LifecycleTask>().Where(x=>x.EmployeeId==employeeId).OrderBy(x=>x.DueOn)),privateAccess?await repo.ToListAsync(repo.Query<EmployeeDependent>().Where(x=>x.EmployeeId==employeeId)):[],await repo.FirstOrDefaultAsync(repo.Query<EmployeeProbation>().Where(x=>x.EmployeeId==employeeId)),me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<HrFieldDefinition>()):[],me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<EmployeeFieldValue>().Where(x=>x.EmployeeId==employeeId)):[]);
+  return new(await repo.ToListAsync(repo.Query<LifecycleTask>().Where(x=>x.EmployeeId==employeeId).OrderBy(x=>x.DueOn)),privateAccess?await repo.ToListAsync(repo.Query<EmployeeDependent>().Where(x=>x.EmployeeId==employeeId)):[],await repo.FirstOrDefaultAsync(repo.Query<EmployeeProbation>().Where(x=>x.EmployeeId==employeeId)),me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<HrFieldDefinition>()):[],me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<EmployeeFieldValue>().Where(x=>x.EmployeeId==employeeId)):[],me.EmployeeId==employeeId?await repo.ToListAsync(repo.Query<LifecycleTask>().Where(x=>x.AssignedEmployeeId==employeeId && x.EmployeeId!=employeeId && x.Status=="Open").OrderBy(x=>x.DueOn)):[]);
  }
  public async Task AddDependentAsync(int employeeId,string name,string relationship,DateTime? birthDate)
  {
@@ -24,7 +24,7 @@ public class EmployeeLifecycle(IRepository repo,ICurrentUser me,AccessScope scop
  public Task AddTaskAsync(int employeeId,string process,string title,int? assignedEmployeeId,DateTime dueOn)=>repo.AtomicAsync(async()=>
  {
   Hr();await Exists(employeeId);if(process is not("Onboarding" or "Offboarding" or "Clearance")||string.IsNullOrWhiteSpace(title)||title.Length>250||dueOn.Year<2000||dueOn.Year>9998)throw new DomainException("err.required");if(assignedEmployeeId!=null)await Exists(assignedEmployeeId.Value);
-  var t=new LifecycleTask{EmployeeId=employeeId,Process=process,Title=title.Trim(),AssignedEmployeeId=assignedEmployeeId,DueOn=dueOn.Date};repo.Add(t);audit.Log("AddLifecycleTask","Employee",employeeId,$"{process}: {title.Trim()}");if(assignedEmployeeId!=null)await notify.NotifyEmployeeAsync(assignedEmployeeId.Value,"notif.lifecycle",title.Trim(),$"/Employees/Profile/{employeeId}?tab=lifecycle");await repo.SaveAsync();
+  var t=new LifecycleTask{EmployeeId=employeeId,Process=process,Title=title.Trim(),AssignedEmployeeId=assignedEmployeeId,DueOn=dueOn.Date};repo.Add(t);audit.Log("AddLifecycleTask","Employee",employeeId,$"{process}: {title.Trim()}");if(assignedEmployeeId!=null)await notify.NotifyEmployeeAsync(assignedEmployeeId.Value,"notif.lifecycle",title.Trim(),$"/Employees/Profile/{assignedEmployeeId}?tab=lifecycle");await repo.SaveAsync();
  });
  public async Task CompleteTaskAsync(int id,string note)
  {
