@@ -287,6 +287,7 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
     public async Task MoveCandidateAsync(int id, bool reject)
     {
         Need(); var c = await repo.FirstOrDefaultAsync(repo.Query<Candidate>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
+        if(c.Stage is CandidateStage.Hired or CandidateStage.Rejected)throw new DomainException("err.forbidden");
         if (reject) c.Stage = CandidateStage.Rejected; else c.Stage = Candidate.Next(c.Stage) ?? c.Stage;
         audit.Log("Update", "Candidate", c.Name, c.Stage.ToString()); await repo.SaveAsync();
     }

@@ -42,6 +42,7 @@ public class JobOpening
 }
 public class Candidate
 {
+    public string InterviewStamp {get;set;}="";
     public int Id { get; set; }
     public int JobOpeningId { get; set; } public JobOpening? Job { get; set; }
     public string Name { get; set; } = ""; public string Email { get; set; } = ""; public string Note { get; set; } = "";

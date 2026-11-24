@@ -248,3 +248,13 @@ public class TrainingOutcome
  public int Id {get;set;}public int EnrollmentId {get;set;}public int EmployeeId {get;set;}public string Kind {get;set;}="Participant";
  public string Note {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+
+/// <summary>Internal interview plan, not a calendar invitation.</summary>
+public class CandidateInterview
+{
+ public int Id {get;set;}public int CandidateId {get;set;}public int InterviewerEmployeeId {get;set;}public DateTime StartsAt {get;set;}public int Minutes {get;set;}public string Place {get;set;}="";public string Note {get;set;}="";public string Status {get;set;}="Scheduled";public string Actor {get;set;}="";public DateTime CreatedAt {get;set;}
+}
+public class RecruitmentEvent
+{
+ public int Id {get;set;}public int CandidateId {get;set;}public int? InterviewId {get;set;}public string Kind {get;set;}="";public string Note {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}

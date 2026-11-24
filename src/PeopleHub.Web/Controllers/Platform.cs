@@ -25,14 +25,17 @@ public class DeviceApiController(DeviceService device, SettingsService settings)
     }
 }
 
-public class TalentController(Loc loc, TalentService svc, OrgService org, EmployeeService emps, ICurrentUser me, AppClock clock, AccessScope scope,TrainingEvidence evidence) : BaseController(loc)
+public class TalentController(Loc loc, TalentService svc, OrgService org, EmployeeService emps, ICurrentUser me, AppClock clock, AccessScope scope,TrainingEvidence evidence,RecruitmentInterviews interviews) : BaseController(loc)
 {
     public async Task<IActionResult> Recruitment()
     {
         if (!me.Can(Perm.TalentManage)) return Forbidden();
+        ViewBag.Interviews=await interviews.GetAsync();ViewBag.Interviewers=await emps.ManagerCandidatesAsync();
         ViewBag.Jobs = await svc.JobsAsync(); ViewBag.Depts = await org.DepartmentsAsync();
         return View(await svc.CandidatesAsync());
     }
+    [HttpPost] public Task<IActionResult> ScheduleInterview(int candidateId,int interviewerEmployeeId,DateTime localStart,int minutes,string place,string note)=>Do(()=>interviews.ScheduleAsync(candidateId,interviewerEmployeeId,localStart,minutes,place,note),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public Task<IActionResult> CloseInterview(int interviewId,bool complete,string note)=>Do(()=>interviews.CloseAsync(interviewId,complete,note),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> AddJob(string title, string? titleAr, int? dept, int positions,string justification) => Do(() => svc.AddJobAsync(title, titleAr, dept, positions,justification), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> DecideJob(int id,bool approve,string reason)=>Do(()=>svc.DecideJobAsync(id,approve,reason),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> ToggleJob(int id) => Do(() => svc.CloseJobAsync(id), "msg.saved", () => RedirectToAction(nameof(Recruitment)));

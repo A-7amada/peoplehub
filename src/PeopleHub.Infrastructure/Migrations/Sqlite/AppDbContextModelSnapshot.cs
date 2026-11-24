@@ -656,6 +656,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("InterviewStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("JobOpeningId")
                         .HasColumnType("INTEGER");
 
@@ -681,6 +685,56 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasIndex("JobOpeningId");
 
                     b.ToTable("Candidate");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.CandidateInterview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CandidateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("InterviewerEmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Minutes")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Place")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTime>("StartsAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateId", "StartsAt");
+
+                    b.ToTable("CandidateInterview");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.CareerEvent", b =>
@@ -2763,6 +2817,46 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasIndex("MilestoneId");
 
                     b.ToTable("PipProgress");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.RecruitmentEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CandidateId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("InterviewId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CandidateId");
+
+                    b.ToTable("RecruitmentEvent");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.Role", b =>
