@@ -2,13 +2,34 @@ using PeopleHub.Application.Services;
 namespace PeopleHub.Web.Services;
 public class PerfWorker(IServiceScopeFactory scopes, ILogger<PerfWorker> log) : BackgroundService
 {
+    public static async Task RunJobsAsync(IServiceScopeFactory scopes, IEnumerable<(string Name,Func<IServiceProvider,Task> Run)> jobs, Action<string,Exception> failed,CancellationToken stop)
+    {
+        foreach(var job in jobs)
+        {
+            if(stop.IsCancellationRequested)return;
+            try
+            {
+                // A failed job must not leak tracked changes into another job.
+                using var scope=scopes.CreateScope();
+                await job.Run(scope.ServiceProvider);
+            }
+            catch(OperationCanceledException) when(stop.IsCancellationRequested){return;}
+            catch(Exception ex){failed(job.Name,ex);}
+        }
+    }
     protected override async Task ExecuteAsync(CancellationToken stop)
     {
+        (string Name,Func<IServiceProvider,Task> Run)[] jobs=[
+            ("DocumentExpiry",sp=>sp.GetRequiredService<EmployeeDocuments>().AlertAsync()),
+            ("TrainingExpiry",sp=>sp.GetRequiredService<TrainingExpiry>().AlertAsync()),
+            ("ApprovalReminders",sp=>sp.GetRequiredService<ApprovalReminders>().RunAsync()),
+            ("EmploymentSchedule",sp=>sp.GetRequiredService<EmploymentTimeline>().ApplyDueAsync()),
+            ("PerformanceMaintenance",sp=>sp.GetRequiredService<PerfService>().MaintainAsync())];
         while (!stop.IsCancellationRequested)
         {
-            try { using var scope = scopes.CreateScope(); await scope.ServiceProvider.GetRequiredService<EmployeeDocuments>().AlertAsync(); await scope.ServiceProvider.GetRequiredService<TrainingExpiry>().AlertAsync(); await scope.ServiceProvider.GetRequiredService<ApprovalReminders>().RunAsync(); await scope.ServiceProvider.GetRequiredService<EmploymentTimeline>().ApplyDueAsync(); await scope.ServiceProvider.GetRequiredService<PerfService>().MaintainAsync(); }
-            catch (Exception ex) { log.LogWarning(ex, "Performance maintenance deferred"); }
-            await Task.Delay(TimeSpan.FromMinutes(15), stop);
+            await RunJobsAsync(scopes,jobs,(name,ex)=>log.LogWarning(ex,"Maintenance job {Job} deferred",name),stop);
+            try{await Task.Delay(TimeSpan.FromMinutes(15),stop);}
+            catch(OperationCanceledException) when(stop.IsCancellationRequested){break;}
         }
     }
 }
