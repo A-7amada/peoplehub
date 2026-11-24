@@ -39,6 +39,14 @@ Portfolio demo, fictional people and data. This is a regression pass, not a prod
 
 ## Limits
 
-No finite regression pass proves every possible function/input. Real ZKTeco hardware, real email delivery, load/soak testing, provider outages and exhaustive malicious-input testing are outside this pass. Mail remains inactive pending provider verification. Free hosting sleeps, restart signs sessions out, and PostgreSQL backups are manual. Performance awards remain an explicit draft-payroll handoff, never a real payment. The first smoke attempt selected an award's run with no employee line and correctly refused; successful award application requires a matching draft run.
+No finite regression pass proves every possible function/input. Real ZKTeco hardware, real email delivery, load/soak testing, provider outages and exhaustive malicious-input testing are outside this pass. Mail remains inactive pending provider verification. Free hosting sleeps, restart signs sessions out, and PostgreSQL backups are manual. Performance awards remain an explicit draft-payroll handoff, never a real payment. The first smoke attempt selected a run with no employee line and correctly refused. A later check created a January 2027 draft with the employee line and successfully applied the award.
 
 Live verification and deployment details are reported separately after deployment.
+
+## Live deployment checks
+
+Commit `7f0f970` deployed successfully to Render. Seven public demo roles each loaded nine representative routes after the deploy (63 navigations). These checks verified role sign-in, rendered pages and expected access redirects, not every write action. The first larger crawl overlapped the deploy, lost sessions, and is not counted.
+
+Live fictional actions: employee check-in and check-out; a new bilingual regression course created before the deploy survived it; employee enrolled in that course; a one-day leave request for 14 December 2026 was submitted and its direct-manager step approved. The manager downloaded employee CSV successfully. English and Arabic training screenshots were inspected visually. Live HR reauthentication requires a renewed vault site approval, so remaining admin write verification is pending, not reported as passed.
+
+A final UI review also found an attachment control on the overtime form that was not handled by that endpoint. It was moved to attendance correction, whose endpoint supports it, and the obsolete no-uploads hint was corrected in both languages.

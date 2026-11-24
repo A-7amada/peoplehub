@@ -125,8 +125,8 @@ public partial class Loc
         A("leave.sub", "Balances, requests and approval status.", "الأرصدة والطلبات وحالة الموافقة."); A("leave.team", "Who is away", "من في إجازة");
         A("leave.balances", "Leave balances", "أرصدة الإجازات"); A("leave.entitled", "Entitled", "المستحق"); A("leave.carried", "Carried over", "المرحّل");
         A("leave.used", "Used", "المستخدم"); A("leave.remaining", "Remaining", "المتبقي"); A("leave.myRequests", "My leave requests", "طلبات إجازاتي");
-        A("leave.request", "Request leave", "طلب إجازة"); A("leave.document", "Supporting document (name)", "المستند المؤيد (الاسم)");
-        A("leave.docHint", "Required for sick leave. File upload is not part of this demo.", "مطلوب للإجازة المرضية. رفع الملفات ليس ضمن هذا العرض.");
+        A("leave.request", "Request leave", "طلب إجازة"); A("leave.document", "Supporting document", "المستند المؤيد");
+        A("leave.docHint", "Required for sick leave. PDF, JPG or PNG, up to 2 MB.", "مطلوب للإجازة المرضية. PDF أو JPG أو PNG، حتى 2 ميجابايت.");
         A("leave.routeHint", "Paid leave up to 2 working days goes to your manager only. Longer or unpaid leave also goes to HR. Fridays, Saturdays and public holidays are not counted.", "الإجازة المدفوعة حتى يومين تذهب لمديرك فقط. الأطول أو بدون أجر تذهب أيضاً للموارد البشرية. الجمعة والسبت والعطلات الرسمية لا تُحتسب.");
         A("leave.onLeaveToday", "Approved leave happening today and coming up.", "الإجازات المعتمدة اليوم والقادمة."); A("leave.upcoming", "Approved leave", "إجازات معتمدة");
 
