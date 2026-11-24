@@ -275,6 +275,47 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("ApprovalAssignment");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.ApprovalReminder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("OnDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("StageIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "RequestId", "StageIndex", "UserId", "OnDate")
+                        .IsUnique();
+
+                    b.ToTable("ApprovalReminder");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.AssetMovement", b =>
                 {
                     b.Property<int>("Id")

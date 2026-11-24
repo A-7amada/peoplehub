@@ -19,6 +19,7 @@ public partial class Loc
         A("err.pendingCorrection","Decide pending attendance corrections before locking this month.","يجب البت في التصحيحات المعلقة قبل إغلاق الشهر.");
         A("notif.perfAppeal","Performance appeal received","تم استلام تظلم أداء");
         A("notif.perfAppealDecision","Performance appeal decision recorded","تم تسجيل قرار تظلم الأداء");
+        A("notif.approvalReminder","Pending approval reminder","تذكير بموافقة معلقة");
         A("notif.reassigned","Approval stage assigned to you","تكليفك بمرحلة موافقة");
         A("notif.lifecycle","Employee lifecycle task assigned","تم إسناد مهمة في دورة الموظف");
         A("notif.trainingExpiry","Training certificate expires within 30 days or has expired","شهادة تدريب تنتهي خلال ٣٠ يوماً أو انتهت");

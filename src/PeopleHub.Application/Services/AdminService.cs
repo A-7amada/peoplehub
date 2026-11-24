@@ -46,6 +46,8 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
         if(setting==null){setting=new(){Key=key};repo.Add(setting);}setting.Value=required?"true":"false";audit.Log("ApprovalCommentPolicy","Workflow",kind,required?"Required for approvals, including pending requests":"Optional for approvals; rejection reason remains required");await repo.SaveAsync();
     }
 
+    public async Task<Dictionary<string,int>> ReminderHoursAsync(){var values=await repo.ToListAsync(repo.Query<AppSetting>().Where(x=>x.Key.StartsWith("Workflow.ReminderHours.")));return Kinds.ToDictionary(k=>k,k=>int.TryParse(values.FirstOrDefault(x=>x.Key=="Workflow.ReminderHours."+k)?.Value,out var h)&&h>=1&&h<=8760?h:0);}
+    public async Task SetReminderHoursAsync(string kind,int hours){Require();if(!Kinds.Contains(kind)||hours<0||hours>8760)throw new DomainException("err.required");var key="Workflow.ReminderHours."+kind;var v=await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x=>x.Key==key));if(v==null){v=new(){Key=key};repo.Add(v);}v.Value=hours.ToString(System.Globalization.CultureInfo.InvariantCulture);audit.Log("ReminderPolicy","Workflow",kind,$"{hours} elapsed hours; 0 disables; applies to pending stages; private in-app only");await repo.SaveAsync();}
     private void Require() { if (!me.Can(Perm.AdmFlows)) throw new DomainException("err.forbidden"); }
 
     private async Task<WorkflowDefinition> LoadAsync(string kind) =>

@@ -83,10 +83,11 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     public async Task<IActionResult> Workflows()
     {
         ViewBag.Roles = await admin.RolesAsync();
-        ViewBag.RequiredComments=await flows.RequiredApprovalCommentsAsync();
+        ViewBag.RequiredComments=await flows.RequiredApprovalCommentsAsync();ViewBag.ReminderHours=await flows.ReminderHoursAsync();
         ViewBag.Revisions=await flows.RevisionsAsync();return View(await flows.ListAsync());
     }
 
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> ReminderPolicy(string kind,int hours)=>Do(()=>flows.SetReminderHoursAsync(kind,hours),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
     [RequirePerm(Perm.AdmFlows), HttpPost]
     public Task<IActionResult> ApprovalComment(string kind,bool required) => Do(()=>flows.SetApprovalCommentAsync(kind,required),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
 

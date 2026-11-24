@@ -45,7 +45,7 @@
 | PAY-011 | Cost-centre journals | P2 | Open |
 | PAY-012 | Complete final settlement and approval | P0 | Partial: estimator only |
 | PAY-013 | Single versioned Egyptian policy, legal validation status | P0 | Documented EG-DEMO-2026-v1, not legally validated |
-| WFL-001 | SLA, reminders and escalation | P1 | Open |
+| WFL-001 | SLA, reminders and escalation | P1 | Partial: per-kind explicit elapsed-hour reminder policy (off by default), daily recipient/stage ledger, current approver/reassignment/delegation targeting and minimal private in-app reminders while service is awake. No automatic escalation, working-hours calendar or delivery-time guarantee; durable scheduling and escalation policy remain open |
 | WFL-002 | Parallel approvals and all/one/quorum rules | P1 | Open |
 | WFL-003 | Dynamic hierarchy/department approvers | P1 | Partial: direct manager/role existing |
 | WFL-004 | Explicit workflow versions | P1 | Implemented content-addressed immutable observed definitions linked to new requests plus resolved route snapshot; legacy version unknown, separate draft/publish lifecycle not implemented |
@@ -181,3 +181,5 @@ Employee relations follow-up: five focused tests pass for separate-grant boundar
 Session step-up follow-up: three focused tests cover password lockout, mandatory enabled authenticator, five-minute expiry, per-session binding and revocation. Local MVC verifies a role-creation POST is blocked and not replayed after verification. EN/AR challenge pixels inspected. No new permissions are granted; other sensitive workflows remain under review.
 
 Bank reconciliation follow-up: four tests cover separate grant, locked-run/exact-net validation, paid/return/retry order and immutable evidence. Local MVC result recording and EN/AR inspected. This is manual recorded evidence, not independent confirmation that a bank transferred funds. Legacy lines without identity snapshots are shown by employee ID instead of inventing historical identity.
+
+Approval reminder follow-up: five tests cover disabled defaults, elapsed stage timing, daily dedupe, new-stage clock, reassignment/inactive/subject restrictions, delegation, decisions stopping reminders and immutable markers. Policy saved through local MVC with session step-up; EN/AR workflow settings inspected. Does not email, approve, escalate or change request routes.

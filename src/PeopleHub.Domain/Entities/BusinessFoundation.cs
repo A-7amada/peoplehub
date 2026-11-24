@@ -311,3 +311,9 @@ public class PayrollBankResult
 {
  public int Id {get;set;}public int LineId {get;set;}public int RunId {get;set;}public int Version {get;set;}public string Outcome {get;set;}="";public decimal Amount {get;set;}public string Reference {get;set;}="";public string Note {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+
+/// <summary>Daily recipient/stage reminder ledger. No approval or route change.</summary>
+public class ApprovalReminder
+{
+ public int Id {get;set;}public string Kind {get;set;}="";public int RequestId {get;set;}public int StageIndex {get;set;}public int UserId {get;set;}public DateTime OnDate {get;set;}public DateTime At {get;set;}
+}

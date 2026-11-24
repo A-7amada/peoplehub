@@ -260,6 +260,45 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("ApprovalAssignment");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.ApprovalReminder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OnDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("StageIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "RequestId", "StageIndex", "UserId", "OnDate")
+                        .IsUnique();
+
+                    b.ToTable("ApprovalReminder");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.AssetMovement", b =>
                 {
                     b.Property<int>("Id")
