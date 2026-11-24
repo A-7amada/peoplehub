@@ -10,7 +10,7 @@ public class EmployeeLifecycle(IRepository repo,ICurrentUser me,AccessScope scop
  {
   if(!await scope.CanSeeAsync(employeeId))throw new DomainException("err.forbidden");
   bool privateAccess=me.Can(Perm.EmpManage) || me.EmployeeId==employeeId;
-  return new(await repo.ToListAsync(repo.Query<LifecycleTask>().Where(x=>x.EmployeeId==employeeId&&(privateAccess||x.AssignedEmployeeId==me.EmployeeId)).OrderBy(x=>x.DueOn)),privateAccess?await repo.ToListAsync(repo.Query<EmployeeDependent>().Where(x=>x.EmployeeId==employeeId)):[],privateAccess?await repo.FirstOrDefaultAsync(repo.Query<EmployeeProbation>().Where(x=>x.EmployeeId==employeeId)):null,me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<HrFieldDefinition>()):[],me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<EmployeeFieldValue>().Where(x=>x.EmployeeId==employeeId)):[],me.EmployeeId==employeeId?await repo.ToListAsync(repo.Query<LifecycleTask>().Where(x=>x.AssignedEmployeeId==employeeId && x.EmployeeId!=employeeId && x.Status=="Open").OrderBy(x=>x.DueOn)):[]);
+  return new(await repo.ToListAsync(repo.Query<LifecycleTask>().Where(x=>x.EmployeeId==employeeId&&(privateAccess||(me.EmployeeId!=null&&x.AssignedEmployeeId==me.EmployeeId))).OrderBy(x=>x.DueOn)),privateAccess?await repo.ToListAsync(repo.Query<EmployeeDependent>().Where(x=>x.EmployeeId==employeeId)):[],privateAccess?await repo.FirstOrDefaultAsync(repo.Query<EmployeeProbation>().Where(x=>x.EmployeeId==employeeId)):null,me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<HrFieldDefinition>()):[],me.Can(Perm.EmpManage)?await repo.ToListAsync(repo.Query<EmployeeFieldValue>().Where(x=>x.EmployeeId==employeeId)):[],me.EmployeeId==employeeId?await repo.ToListAsync(repo.Query<LifecycleTask>().Where(x=>x.AssignedEmployeeId==employeeId && x.EmployeeId!=employeeId && x.Status=="Open").OrderBy(x=>x.DueOn)):[]);
  }
  public async Task AddDependentAsync(int employeeId,string name,string relationship,DateTime? birthDate)
  {
@@ -28,7 +28,7 @@ public class EmployeeLifecycle(IRepository repo,ICurrentUser me,AccessScope scop
  });
  public async Task CompleteTaskAsync(int id,string note)
  {
-  var t=await repo.FirstOrDefaultAsync(repo.Query<LifecycleTask>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(!me.Can(Perm.EmpManage) && me.EmployeeId!=t.AssignedEmployeeId)throw new DomainException("err.forbidden");if(t.Status!="Open"||string.IsNullOrWhiteSpace(note))throw new DomainException("err.required");t.Status="Complete";t.CompletionNote=note.Trim();t.CompletedAt=clock.UtcNow;t.CompletedBy=me.Email;audit.Log("CompleteLifecycleTask","Employee",t.EmployeeId,$"task #{id}: {note.Trim()}");await repo.SaveAsync();
+  var t=await repo.FirstOrDefaultAsync(repo.Query<LifecycleTask>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(!me.Can(Perm.EmpManage) && (me.EmployeeId==null || me.EmployeeId!=t.AssignedEmployeeId))throw new DomainException("err.forbidden");if(t.Status!="Open"||string.IsNullOrWhiteSpace(note))throw new DomainException("err.required");t.Status="Complete";t.CompletionNote=note.Trim();t.CompletedAt=clock.UtcNow;t.CompletedBy=me.Email;audit.Log("CompleteLifecycleTask","Employee",t.EmployeeId,$"task #{id}: {note.Trim()}");await repo.SaveAsync();
  }
  public async Task SetProbationAsync(int employeeId,DateTime endsOn,string reason)
  {

@@ -197,3 +197,5 @@ Advance input hardening: explicit cents, calendar month/year bounds, working emp
 Lifecycle privacy follow-up: company/team profile scope no longer exposes other employees' general checklist details or probation reasons. Employee/HR retain their private records; another assignee sees only their assigned tasks. Dedicated scope regression added, EN/AR read-only profile inspected. This is a privacy boundary, not a change to employment or payroll.
 
 Financial step-up coverage follow-up: current-session verification now also guards draft recalculation/manual adjustments, Finance approval and paid-state recording, referenced correction proposal/decision/apply/withdrawal, advance settlement and workflow reassignment. UI rejects without replay before any service call; ordinary functional grants remain required.
+
+Lifecycle privacy review also rejects null employee identity when reading or completing unassigned tasks; unassigned work stays HR-only rather than matching an account with no employee link.
