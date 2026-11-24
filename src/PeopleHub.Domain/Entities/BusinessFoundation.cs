@@ -294,3 +294,13 @@ public class BenefitCancellation
 {
  public int Id {get;set;}public int EnrollmentId {get;set;}public DateTime EffectiveOn {get;set;}public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+
+/// <summary>Confidential internal case record, never a delivered disciplinary notice.</summary>
+public class EmployeeCase
+{
+ public int Id {get;set;}public int EmployeeId {get;set;}public string Kind {get;set;}="Grievance";public string Title {get;set;}="";public string Statement {get;set;}="";public int CreatedByUserId {get;set;}public string Actor {get;set;}="";public DateTime At {get;set;}public string ChangeStamp {get;set;}="";
+}
+public class EmployeeCaseEvent
+{
+ public int Id {get;set;}public int CaseId {get;set;}public string Kind {get;set;}="Investigation";public string Note {get;set;}="";public int ActorUserId {get;set;}public string Actor {get;set;}="";public DateTime At {get;set;}
+}

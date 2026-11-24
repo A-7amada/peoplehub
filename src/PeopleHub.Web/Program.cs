@@ -38,6 +38,7 @@ builder.Services.AddScoped<AssetService>();
 builder.Services.AddScoped<TrainingEvidence>();
 builder.Services.AddScoped<TrainingExpiry>();
 builder.Services.AddScoped<BenefitService>();
+builder.Services.AddScoped<EmployeeRelations>();
 builder.Services.AddScoped<RecruitmentInterviews>();
 builder.Services.AddScoped<RecruitmentOffers>();
 builder.Services.AddScoped<HolidayService>();

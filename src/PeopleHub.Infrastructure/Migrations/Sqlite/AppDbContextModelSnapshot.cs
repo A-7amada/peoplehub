@@ -1557,6 +1557,92 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("EmployeeAssignment");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeCase", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ChangeStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Statement")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmployeeCase");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeCaseEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseId");
+
+                    b.ToTable("EmployeeCaseEvent");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeDependent", b =>
                 {
                     b.Property<int>("Id")

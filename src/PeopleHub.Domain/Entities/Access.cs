@@ -24,6 +24,7 @@ public record PermDef(string Key, string Group, string En, string Ar);
 public static class Perm
 {
     public const string EmpIdentity="emp.identity",EmpBank="emp.bank",EmpBankEdit="emp.bank.edit",LeaveEvidence="leave.evidence";
+    public const string RelationsManage="hr.relations.manage";
     public const string BenefitsManage="hr.benefits.manage";
     public const string FeedbackIdentity="perf.feedback.identity", FeedbackComments="perf.feedback.comments", FeedbackAggregate="perf.feedback.aggregate";
     public const string ScopeCompany = "scope.company", ScopeTeam = "scope.team",
@@ -40,6 +41,7 @@ public static class Perm
         new(EmpBank,"Sensitive fields","View employee bank details","عرض بيانات البنك للموظف"),
         new(EmpBankEdit,"Sensitive fields","Edit employee bank details (employee editing also required)","تعديل بيانات البنك (مع صلاحية تعديل الموظفين)"),
         new(LeaveEvidence,"Sensitive fields","View private leave reasons and supporting documents","عرض أسباب الإجازات الخاصة ومستنداتها"),
+        new(RelationsManage,"Private HR","Manage all confidential employee relations cases","إدارة جميع قضايا علاقات الموظفين السرية"),
         new(BenefitsManage,"Private HR","Manage employee and dependent benefits","إدارة مزايا الموظفين والمعالين"),
         new(FeedbackIdentity,"Performance privacy","View 360 reviewer identity","عرض هوية مقيمي 360"),
         new(FeedbackComments,"Performance privacy","View individual 360 comments and scores","عرض تعليقات ودرجات مقيمي 360"),
