@@ -1,0 +1,14 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Services;
+using PeopleHub.Domain.Entities;
+namespace PeopleHub.Tests;
+public class ShiftRotationTests
+{
+ class User(bool allow=true):ICurrentUser{public string Email=>"rotation@example.local";public int? EmployeeId=>6;public int UserId=>1;public bool IsAuthenticated=>true;public bool IsInRole(string r)=>allow;public bool Can(string p)=>allow;}
+ static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
+ static ShiftSchedule S(AppDbContext d,bool allow=true){var u=new User(allow);var c=new AppClock(TimeProvider.System);return new(d,u,c,new(d,u,c));}
+ [Fact]public async Task ExplicitPatternRepeatsAcrossCalendarDaysAndAudits(){await using var d=await Db();var first=await d.Set<Shift>().FirstAsync();var second=new Shift{Name="Rotation night",Start=new(22,0,0),End=new(6,0,0)};d.Add(second);await d.SaveAsync();var day=new AppClock(TimeProvider.System).Today.AddDays(1);await S(d).RotateAsync(6,day,day.AddDays(5),$"{first.Id},{first.Id},{second.Id}","Fictional rotation");var rows=await d.Set<EmployeeShiftDay>().OrderBy(x=>x.Date).ToListAsync();Assert.Equal(new[]{first.Id,first.Id,second.Id,first.Id,first.Id,second.Id},rows.Select(x=>x.ShiftId));Assert.All(rows,x=>Assert.Equal("Fictional rotation",x.Reason));Assert.Single(await d.Set<AuditLog>().Where(x=>x.Action=="RotateShifts").ToListAsync());}
+ [Fact]public async Task AnyExistingDateBlocksAllAndInvalidPatternWritesNothing(){await using var d=await Db();var day=new AppClock(TimeProvider.System).Today.AddDays(1);var id=(await d.Set<Shift>().FirstAsync()).Id;await S(d).SetAsync(6,day.AddDays(1),id,"Prior");await Assert.ThrowsAsync<DomainException>(()=>S(d).RotateAsync(6,day,day.AddDays(3),id.ToString(),"Test"));Assert.Single(await d.Set<EmployeeShiftDay>().ToListAsync());await Assert.ThrowsAsync<DomainException>(()=>S(d).RotateAsync(7,day,day.AddDays(3),"1,bad","Test"));await Assert.ThrowsAsync<DomainException>(()=>S(d).RotateAsync(7,day,day.AddDays(3),"9999","Test"));Assert.Single(await d.Set<EmployeeShiftDay>().ToListAsync());}
+ [Fact]public async Task PermissionDatesReasonAndRangeAreRequired(){await using var d=await Db();var day=new AppClock(TimeProvider.System).Today.AddDays(1);await Assert.ThrowsAsync<DomainException>(()=>S(d,false).RotateAsync(6,day,day,"1","Test"));await Assert.ThrowsAsync<DomainException>(()=>S(d).RotateAsync(6,day,day.AddDays(93),"1","Test"));await Assert.ThrowsAsync<DomainException>(()=>S(d).RotateAsync(6,day.AddDays(-2),day,"1","Test"));await Assert.ThrowsAsync<DomainException>(()=>S(d).RotateAsync(6,day,day,"1",""));Assert.Empty(await d.Set<EmployeeShiftDay>().ToListAsync());}
+}

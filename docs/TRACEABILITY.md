@@ -13,7 +13,7 @@
 | EMP-007 | Temporary/permanent transfers | P0 | Partial: current and future permanent transfer history, temporary return schedule open |
 | EMP-008 | Clearance and asset handover | P1 | Implemented clearance tasks and separate asset assignment/return with condition and receipt evidence; clearance is not auto-approved |
 | EMP-009 | HR custom fields | P1 | Implemented HR-only typed text/date/number fields, validation and audit |
-| ATT-001 | Rotating/multiple shifts | P1 | Implemented dated employee shift assignments and configurable shift definitions; repeating rotation generator open |
+| ATT-001 | Rotating/multiple shifts | P1 | Implemented dated employee shift assignments, configurable definitions and explicit repeating calendar-day pattern generator; no automatic weekend/pay policy change |
 | ATT-002 | Overnight shifts | P1 | Implemented cross-midnight device pairing, manual/correction checkout normalization and previous-night self checkout; post-shift delayed punches beyond end remain exceptions |
 | ATT-003 | Missing punch exceptions | P1 | Implemented scoped missing-in/out recorded-day inbox after shift end, unmatched raw evidence and explicit idempotent reprocessing; arbitrary unknown-device mapping remains separate |
 | ATT-004 | Raw punch ledger and idempotent processing | P0 | Implemented: append-only punches, normalized batch/retry dedupe and unique idempotency key; concurrent losing request may require retry |
@@ -125,3 +125,5 @@ Session follow-up: 177 tests pass (173 regression plus 4 session tests). Two iso
 Attendance exception follow-up: 181 tests pass (177 regression plus 4 exception tests). Missing punch inbox inspected in EN/AR. Overnight shifts are not flagged before next-day end. No record still uses the absence calendar. Reprocessing keeps manual, excused and locked records, preserves raw evidence and does not invent missing times. Unknown device IDs are visible only to attendance managers and are not silently remapped.
 
 Leave calendar follow-up: 184 tests pass (181 regression plus 3 calendar tests). Month clipping, approved-only visibility, historical departments and scope boundaries verified. EN/AR and 390px viewport inspected. Narrow shell now uses a horizontal navigation strip rather than a full-height sidebar. Existing own/team/company permissions are not broadened.
+
+Rotation follow-up: 187 tests pass (184 regression plus 3 rotation tests). Explicit shift-ID pattern generates at most 93 dated rows atomically, rejects any overlap without replacement, records actor/reason and preserves individual editing. Calendar-day progression includes Friday/Saturday but does not redefine working days. Local MVC save and EN/AR forms inspected.
