@@ -6,9 +6,9 @@ This is an interim evidence log, not the final all-module acceptance report. The
 
 ## Current automated evidence
 
-After referenced corrections and advance validation, 304 automated cases passed: 88 + 90 + 117 existing/current cases and 9 advance validation cases. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
+After referenced corrections and advance validation, 305 automated cases passed: 88 + 90 + 118 existing/current cases and 9 advance validation cases. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
 
-Referenced-correction coverage: separate initially-unset permission, source/target period and state, positive cent amounts, independent non-subject decision, unique decision sequence, review gate, exactly-once draft application, source immutability, deduction safety and preservation on recalculation. Local MVC proposal, separate Finance approval and explicit preparer apply passed; temporary local Finance grant removed. EN/AR viewport screenshots inspected after application.
+Referenced-correction coverage: separate initially-unset permission, source/target period and state, positive cent amounts, independent non-subject decision, unique decision sequence, proposer-only unapplied withdrawal, review gate, exactly-once draft application, source immutability, deduction safety and preservation on recalculation. Local MVC proposal, separate Finance approval and explicit preparer apply passed; temporary local Finance grant removed. EN/AR viewport screenshots inspected after application.
 
 Advance coverage: decimal-cent validation, calendar bounds, non-past start period, working employee, duplicate open request, atomic creation and revision touch. Does not establish cancellation, loan rescheduling or repayment reconciliation.
 

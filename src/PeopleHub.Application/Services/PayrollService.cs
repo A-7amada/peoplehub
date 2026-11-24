@@ -136,7 +136,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         var r = await LoadRunAsync(id);
         var corrections=await repo.ToListAsync(repo.Query<PayrollAdjustment>().Where(x=>x.TargetRunId==id));
         var correctionIds=corrections.Select(x=>x.Id).ToArray();var correctionEvents=await repo.ToListAsync(repo.Query<PayrollAdjustmentEvent>().Where(x=>correctionIds.Contains(x.AdjustmentId)));
-        if(corrections.Any(x=>!correctionEvents.Any(e=>e.AdjustmentId==x.Id&&(e.Action=="Applied"||e.Action=="Rejected"))))throw new DomainException("err.pendingCorrection");
+        if(corrections.Any(x=>!correctionEvents.Any(e=>e.AdjustmentId==x.Id&&(e.Action=="Applied"||e.Action=="Rejected"||e.Action=="Cancelled"))))throw new DomainException("err.pendingCorrection");
         r.Review(); Trail(r, "HRReviewed");
         await notify.NotifyPermAsync(Perm.PayFinance, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
         await repo.SaveAsync();

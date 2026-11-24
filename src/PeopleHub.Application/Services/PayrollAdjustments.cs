@@ -20,6 +20,10 @@ public class PayrollAdjustments(IRepository repo,ICurrentUser me,AppClock clock,
   Need();if(!me.Can(Perm.PayFinance))throw new DomainException("err.forbidden");Validate(reason);var p=await Proposal(id);if(p.ProposedByUserId==me.UserId||p.EmployeeId==me.EmployeeId)throw new DomainException("err.forbidden");var target=await Run(p.TargetRunId);if((await Events(id)).Count!=0||target.Status!=PayrollStatus.Draft)throw new DomainException("err.payrollState");
   target.CorrectionStamp=Guid.NewGuid().ToString("N");AddEvent(p,approve?"Approved":"Rejected",reason);audit.Log("Decide","PayrollAdjustment",id,"Independent correction decision recorded");await repo.SaveAsync();
  });
+ public Task CancelAsync(int id,string reason)=>repo.AtomicAsync(async()=>
+ {
+  Need();Validate(reason);var p=await Proposal(id);if(!me.Can(Perm.PayPrepare)||p.ProposedByUserId!=me.UserId)throw new DomainException("err.forbidden");var target=await Run(p.TargetRunId);var events=await Events(id);if(target.Status!=PayrollStatus.Draft||events.Any(x=>x.Action is "Applied" or "Rejected" or "Cancelled"))throw new DomainException("err.payrollState");target.CorrectionStamp=Guid.NewGuid().ToString("N");repo.Add(new PayrollAdjustmentEvent{AdjustmentId=id,Sequence=events.Count+1,Action="Cancelled",Reason=reason.Trim(),Actor=me.Email,At=clock.UtcNow});audit.Log("Cancel","PayrollAdjustment",id,"Unapplied proposal withdrawn; no payroll change");await repo.SaveAsync();
+ });
  public Task ApplyAsync(int id,string reason)=>repo.AtomicAsync(async()=>
  {
   Need();if(!me.Can(Perm.PayPrepare))throw new DomainException("err.forbidden");Validate(reason);var p=await Proposal(id);var events=await Events(id);if(events.Count!=1||events[0].Action!="Approved")throw new DomainException("err.forbidden");var run=await Run(p.TargetRunId);if(run.Status!=PayrollStatus.Draft)throw new DomainException("err.payrollState");
