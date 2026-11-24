@@ -33,7 +33,7 @@ public class RequestsController(Loc loc, ApprovalService svc, AppClock clock, De
         return View(rows);
     }
 
-    [HttpPost] public Task<IActionResult> Reassign(string kind,int id,int stageIndex,int toUserId,string reason)=>Do(()=>svc.ReassignAsync(kind,id,stageIndex,toUserId,reason),"msg.saved",()=>Back("/Requests"));
+    [RequireStepUp,HttpPost] public Task<IActionResult> Reassign(string kind,int id,int stageIndex,int toUserId,string reason)=>Do(()=>svc.ReassignAsync(kind,id,stageIndex,toUserId,reason),"msg.saved",()=>Back("/Requests"));
 
     [HttpPost] public Task<IActionResult> Approve(string kind, int id, string? comment) => Do(() => svc.ApproveAsync(kind, id, comment), "msg.approved", () => Back("/Requests"));
     [HttpPost] public Task<IActionResult> Reject(string kind, int id, string? comment) => Do(() => svc.RejectAsync(kind, id, comment), "msg.rejected", () => Back("/Requests"));
@@ -45,7 +45,7 @@ public class RequestsController(Loc loc, ApprovalService svc, AppClock clock, De
     public Task<IActionResult> Advance(decimal amount, int installments, int startYear, int startMonth, string? reason) =>
         Do(() => svc.RequestAdvanceAsync(amount, installments, startYear, startMonth, reason), "msg.requestSent", () => RedirectToAction(nameof(Advances)));
 
-    [HttpPost] public Task<IActionResult> Settle(int id) => Do(() => svc.SettleAdvanceAsync(id), "msg.saved", () => RedirectToAction(nameof(Advances)));
+    [RequireStepUp,HttpPost] public Task<IActionResult> Settle(int id) => Do(() => svc.SettleAdvanceAsync(id), "msg.saved", () => RedirectToAction(nameof(Advances)));
 }
 
 public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : BaseController(loc)
@@ -70,12 +70,12 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
     }
 
     private IActionResult Same(int id) => RedirectToAction(nameof(Run), new { id });
-    [HttpPost] public Task<IActionResult> Recalc(int id) => Do(() => svc.RecalculateAsync(id), "msg.saved", () => Same(id));
-    [HttpPost] public Task<IActionResult> Adjust(int id, int lineId, decimal bonus, decimal other, string? note) => Do(() => svc.AdjustLineAsync(lineId, bonus, other, note), "msg.saved", () => Same(id));
+    [RequireStepUp,HttpPost] public Task<IActionResult> Recalc(int id) => Do(() => svc.RecalculateAsync(id), "msg.saved", () => Same(id));
+    [RequireStepUp,HttpPost] public Task<IActionResult> Adjust(int id, int lineId, decimal bonus, decimal other, string? note) => Do(() => svc.AdjustLineAsync(lineId, bonus, other, note), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> Review(int id) => Do(() => svc.ReviewAsync(id), "msg.saved", () => Same(id));
-    [HttpPost] public Task<IActionResult> FinanceApprove(int id) => Do(() => svc.FinanceApproveAsync(id), "msg.saved", () => Same(id));
+    [RequireStepUp,HttpPost] public Task<IActionResult> FinanceApprove(int id) => Do(() => svc.FinanceApproveAsync(id), "msg.saved", () => Same(id));
     [RequireStepUp,HttpPost] public Task<IActionResult> Finalize(int id) => Do(() => svc.FinalizeAsync(id), "msg.saved", () => Same(id));
-    [HttpPost] public Task<IActionResult> Paid(int id) => Do(() => svc.MarkPaidAsync(id), "msg.saved", () => Same(id));
+    [RequireStepUp,HttpPost] public Task<IActionResult> Paid(int id) => Do(() => svc.MarkPaidAsync(id), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> SendBack(int id, string? reason) => Do(() => svc.SendBackAsync(id, reason), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> Reopen(int id, string? reason) => Do(() => svc.ReopenAsync(id, reason), "msg.saved", () => Same(id));
 
@@ -182,8 +182,8 @@ public class PayrollJournalsController(Loc loc,PayrollJournals svc):BaseControll
 public class PayrollAdjustmentsController(Loc loc,PayrollAdjustments svc):BaseController(loc)
 {
  public async Task<IActionResult> Index(int id){Response.Headers.CacheControl="no-store";try{ViewBag.Target=id;ViewBag.Sources=await svc.SourcesAsync(id);return View(await svc.ListAsync(id));}catch(DomainException){return Forbidden();}}
- [HttpPost]public Task<IActionResult> Propose(int id,int sourceLineId,string kind,decimal amount,string reason)=>Do(()=>svc.ProposeAsync(sourceLineId,id,kind,amount,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
- [HttpPost]public Task<IActionResult> Decide(int id,int adjustmentId,bool approve,string reason)=>Do(()=>svc.DecideAsync(adjustmentId,approve,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
- [HttpPost]public Task<IActionResult> Cancel(int id,int adjustmentId,string reason)=>Do(()=>svc.CancelAsync(adjustmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
- [HttpPost]public Task<IActionResult> Apply(int id,int adjustmentId,string reason)=>Do(()=>svc.ApplyAsync(adjustmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+ [RequireStepUp,HttpPost]public Task<IActionResult> Propose(int id,int sourceLineId,string kind,decimal amount,string reason)=>Do(()=>svc.ProposeAsync(sourceLineId,id,kind,amount,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+ [RequireStepUp,HttpPost]public Task<IActionResult> Decide(int id,int adjustmentId,bool approve,string reason)=>Do(()=>svc.DecideAsync(adjustmentId,approve,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+ [RequireStepUp,HttpPost]public Task<IActionResult> Cancel(int id,int adjustmentId,string reason)=>Do(()=>svc.CancelAsync(adjustmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+ [RequireStepUp,HttpPost]public Task<IActionResult> Apply(int id,int adjustmentId,string reason)=>Do(()=>svc.ApplyAsync(adjustmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
 }

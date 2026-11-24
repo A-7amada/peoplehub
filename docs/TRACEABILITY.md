@@ -71,7 +71,7 @@
 | SEC-007 | Retention/deletion/access policies | P0 | Open: owner policy decisions required |
 | SEC-008 | Malware scan, signatures/private attachments | P0 | Partial: private scoped storage, size/extension and file signature checks; malware scanner remains unconnected |
 | SEC-009 | Encrypted backup and controlled restore | P0 | Open: encryption/key custody/restore drill |
-| SEC-010 | Step-up auth for sensitive admin actions | P0 | Partial: five-minute current-session password + enabled TOTP challenge on settings/user/role/workflow writes, manual device/mail operations, database export and payroll finalization/bank/full snapshot exports; action is not replayed. Broader sensitive-action coverage remains under review |
+| SEC-010 | Step-up auth for sensitive admin actions | P0 | Partial: five-minute current-session password + enabled TOTP challenge on settings/user/role/workflow writes, manual device/mail operations, database export, workflow reassignment, advance settlement, payroll manual adjustment/recalculation/Finance approval/paid state, referenced correction mutations and payroll finalization/bank/full snapshot exports; action is not replayed. Broader sensitive-action coverage remains under review |
 | ARC-001 | Modular monolith domain boundaries and policies | P1 | Existing layers; deeper policy extraction open |
 | ARC-002 | PostgreSQL/SQL Server | P0 | PostgreSQL existing |
 | ARC-003 | Explicit business transactions | P0 | Partial: payroll, attendance, device ingestion, final approvals, leave request/adjustment and employee save atomic; remaining service paths under review |
@@ -195,3 +195,5 @@ Referenced payroll correction follow-up: seven focused tests cover proposer-only
 Advance input hardening: explicit cents, calendar month/year bounds, working employee and non-past start month validated. Request creation, route evidence and notifications are atomic; employee revision serializes competing requests. Nine focused tests including service guards; PostgreSQL contention stress remains unverified. This does not implement loan cancellation or rescheduling.
 
 Lifecycle privacy follow-up: company/team profile scope no longer exposes other employees' general checklist details or probation reasons. Employee/HR retain their private records; another assignee sees only their assigned tasks. Dedicated scope regression added, EN/AR read-only profile inspected. This is a privacy boundary, not a change to employment or payroll.
+
+Financial step-up coverage follow-up: current-session verification now also guards draft recalculation/manual adjustments, Finance approval and paid-state recording, referenced correction proposal/decision/apply/withdrawal, advance settlement and workflow reassignment. UI rejects without replay before any service call; ordinary functional grants remain required.

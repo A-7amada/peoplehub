@@ -6,7 +6,7 @@ This is an interim evidence log, not the final all-module acceptance report. The
 
 ## Current automated evidence
 
-After referenced corrections and advance validation, 306 automated cases passed: 88 + 91 + 127 cases including advance validation. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
+After lifecycle privacy and financial session-guard review, 320 automated cases passed: 88 + 91 + 141 cases including advance validation and controller guard tests. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
 
 Referenced-correction coverage: separate initially-unset permission, source/target period and state, positive cent amounts, independent non-subject decision, unique decision sequence, proposer-only unapplied withdrawal, review gate, exactly-once draft application, source immutability, deduction safety and preservation on recalculation. Local MVC proposal, separate Finance approval and explicit preparer apply passed; temporary local Finance grant removed. EN/AR viewport screenshots inspected after application.
 
@@ -24,3 +24,5 @@ Advance coverage: decimal-cent validation, calendar bounds, non-past start perio
 - Verify PostgreSQL concurrency, external email, hardware, bank/accounting adapters, production security and operational targets only when the required environment and authority exist. These are not proven by a successful deployment.
 
 Lifecycle privacy audit found that broad profile scope could read checklist/probation details. The service now returns only employee/HR private data or individually assigned tasks, with a dedicated scope regression and manager EN/AR visual check. Broader privacy review remains unfinished.
+
+Financial session-guard review added 14 controller attribute and reject-before-action cases for correction mutations, payroll draft adjustment/recalculation, Finance/paid-state recording, advance settlement and reassignment. A local MVC proposal without elevation redirected before creating a correction; verification returned to Payroll without replay. EN/AR verification prompt pixels inspected. Existing session tests cover expiry, password lockout and enabled authenticator checks. This is not proof of every authorization path.
