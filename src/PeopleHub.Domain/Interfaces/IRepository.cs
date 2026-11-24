@@ -12,4 +12,5 @@ public interface IRepository
     Task<bool> AnyAsync<T>(IQueryable<T> q);
     Task<int> CountAsync<T>(IQueryable<T> q);
     Task SaveAsync();
+    async Task AtomicAsync(Func<Task> work) => await work();
 }

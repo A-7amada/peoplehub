@@ -20,6 +20,8 @@ public class EmailOutbox
     public string Body { get; set; } = "";
     public DateTime CreatedAt { get; set; }
     public bool Sent { get; set; }
+    public int Attempts { get; set; }
+    public DateTime? NextAttemptAt { get; set; }
     public string? Note { get; set; }
 }
 

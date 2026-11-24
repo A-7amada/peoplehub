@@ -23,8 +23,9 @@ public static class SeedData
     /// <summary>The HR password comes from configuration outside Development; without it the HR account stays locked.</summary>
     public static async Task InitializeAsync(AppDbContext db, string? hrPassword, string demoPassword, DateTime today)
     {
-        await db.Database.EnsureCreatedAsync();
+        // Schema is migrated by the host before first-time seeding.
         if (await db.Set<Branch>().AnyAsync()) return;
+        await using var seedTransaction = await db.Database.BeginTransactionAsync();
         today = today.Date;
 
         var branches = new[] { new Branch { Name = "Cairo HQ", NameAr = "المقر الرئيسي - القاهرة", City = "Cairo" },
@@ -319,6 +320,7 @@ public static class SeedData
         db.Add(new AuditLog { At = DateTime.UtcNow.AddDays(-1), User = HrEmail, Action = "Update", Entity = "Employee", EntityId = "PH-006", Details = "BasicSalary: 31500 -> 34000; reason: annual increase" });
         db.Add(new AuditLog { At = DateTime.UtcNow.AddDays(-2), User = "finance@peoplehub.local", Action = "FinanceApproved", Entity = "PayrollRun", EntityId = $"{prev1.Year}-{prev1.Month:00}", Details = "" });
         await db.SaveChangesAsync();
+        await seedTransaction.CommitAsync();
 
         DateTime NextWorkBack(DateTime d) { while (AttendanceCalculator.IsWeekend(d) || holidays.Contains(d.Date)) d = d.AddDays(-1); return d.Date; }
     }

@@ -36,13 +36,14 @@ public abstract class BaseController(Loc loc) : Controller
     protected IActionResult Forbidden() { TempData["err"] = loc["err.forbidden"]; return Redirect("/"); }
 }
 
-public class AccountController(Loc loc, AuthService auth, AccountService accounts, Microsoft.AspNetCore.DataProtection.IDataProtectionProvider dp, AppClock clock) : Controller
+[Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
+public class AccountController(Loc loc, AuthService auth, AccountService accounts, Microsoft.AspNetCore.DataProtection.IDataProtectionProvider dp, AppClock clock, IConfiguration config) : Controller
 {
     private Microsoft.AspNetCore.DataProtection.IDataProtector Prot => dp.CreateProtector("peoplehub.2fa");
 
     private async Task SignIn(AppUser u)
     {
-        var claims = new List<Claim> { new(ClaimTypes.Name, u.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()) };
+        var claims = new List<Claim> { new(ClaimTypes.Name, u.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp) };
         if (u.EmployeeId != null) claims.Add(new("emp", u.EmployeeId.ToString()!));
         claims.AddRange(u.RoleArray.Select(r => new Claim(ClaimTypes.Role, r)));
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, "cookie")));
@@ -66,9 +67,10 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
     [AllowAnonymous, HttpPost]
     public async Task<IActionResult> Forgot(string email)
     {
-        var token = await accounts.RequestResetAsync(email, $"{Request.Scheme}://{Request.Host}");
-        await Task.CompletedTask;
-        ViewBag.Done = true; ViewBag.DemoLink = token == null ? null : $"/Account/Reset?token={token}"; // demo only: shown because no SMTP is configured
+        var baseUrl = config["PUBLIC_BASE_URL"];
+        if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.Scheme == "https")
+            await accounts.RequestResetAsync(email, baseUrl!.TrimEnd('/'));
+        ViewBag.Done = true;
         return View();
     }
     [AllowAnonymous, HttpGet] public async Task<IActionResult> Reset(string token) { ViewBag.Token = token; ViewBag.Valid = await accounts.TokenValidAsync(token ?? ""); return View(); }

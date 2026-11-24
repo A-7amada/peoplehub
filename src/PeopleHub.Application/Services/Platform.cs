@@ -141,21 +141,38 @@ public class EmailService(IRepository repo, AppClock clock)
     }
 
     /// <summary>Sends queued mail through SMTP when a host is configured; otherwise leaves it in the outbox.</summary>
+    private static readonly SemaphoreSlim SendGate = new(1, 1);
     public async Task FlushAsync()
     {
-        var host = SettingsService.Get("smtp.host"); if (string.IsNullOrWhiteSpace(host)) return;
-        foreach (var m in await repo.ToListAsync(repo.Query<EmailOutbox>().Where(x => !x.Sent).Take(20)))
+        if (!await SendGate.WaitAsync(0)) return;
+        try {
+        var host = Environment.GetEnvironmentVariable("SMTP_HOST") ?? SettingsService.Get("smtp.host");
+        var apiKey = Environment.GetEnvironmentVariable("BREVO_API_KEY");
+        var allowed = (Environment.GetEnvironmentVariable("MAIL_ALLOWED_RECIPIENTS") ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (string.IsNullOrWhiteSpace(host) && string.IsNullOrWhiteSpace(apiKey)) return;
+        foreach (var m in await repo.ToListAsync(repo.Query<EmailOutbox>().Where(x => !x.Sent && x.Attempts < 5 && (x.NextAttemptAt == null || x.NextAttemptAt <= clock.UtcNow)).OrderBy(x => x.Id).Take(20)))
         {
+            if (!allowed.Contains(m.To, StringComparer.OrdinalIgnoreCase) || m.To.EndsWith(".local", StringComparison.OrdinalIgnoreCase)) { m.Note = "Blocked: recipient is not on the explicit delivery allowlist"; continue; }
             try
             {
-                int.TryParse(SettingsService.Get("smtp.port"), out var port);
+                m.Attempts++;
+                if (!string.IsNullOrWhiteSpace(apiKey)) {
+                    using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
+                    http.DefaultRequestHeaders.Add("api-key", apiKey);
+                    var from = Environment.GetEnvironmentVariable("MAIL_FROM") ?? "";
+                    var payload = System.Text.Json.JsonSerializer.Serialize(new { sender = new { email = from, name = "PeopleHub Demo" }, to = new[] { new { email = m.To } }, subject = m.Subject, textContent = m.Body });
+                    using var response = await http.PostAsync("https://api.brevo.com/v3/smtp/email", new StringContent(payload, System.Text.Encoding.UTF8, "application/json"));
+                    response.EnsureSuccessStatusCode(); m.Sent = true; m.Note = "Accepted by provider, not proof of inbox delivery"; continue;
+                }
+                int.TryParse(Environment.GetEnvironmentVariable("SMTP_PORT") ?? SettingsService.Get("smtp.port"), out var port);
                 using var c = new System.Net.Mail.SmtpClient(host, port == 0 ? 587 : port) { EnableSsl = true, Timeout = 8000 };
                 var pass = Environment.GetEnvironmentVariable("SMTP_PASSWORD"); if (!string.IsNullOrEmpty(pass)) c.Credentials = new System.Net.NetworkCredential(SettingsService.Get("smtp.user"), pass);
                 await c.SendMailAsync(new System.Net.Mail.MailMessage(SettingsService.Get("smtp.from"), m.To, m.Subject, m.Body)); m.Sent = true; m.Note = null;
             }
-            catch (Exception ex) { m.Note = ex.Message.Length > 150 ? ex.Message[..150] : ex.Message; }
+            catch (Exception) { m.Note = "Delivery failed; retry pending (maximum 5 attempts)"; m.NextAttemptAt = clock.UtcNow.AddMinutes(Math.Pow(2, m.Attempts)); }
         }
         await repo.SaveAsync();
+        } finally { SendGate.Release(); }
     }
 
     public Task<List<EmailOutbox>> OutboxAsync() => repo.ToListAsync(repo.Query<EmailOutbox>().OrderByDescending(m => m.CreatedAt).Take(50));
@@ -173,35 +190,39 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
     {
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
         if (!PasswordHasher.Verify(current ?? "", u.PasswordHash)) throw new DomainException("err.wrongPassword");
-        CheckPolicy(next ?? ""); u.PasswordHash = PasswordHasher.Hash(next!);
+        CheckPolicy(next ?? ""); u.PasswordHash = PasswordHasher.Hash(next!); u.SecurityStamp = Guid.NewGuid().ToString("N");
         audit.Log("Update", "Password", u.Email, "changed by user"); await repo.SaveAsync();
     }
 
-    /// <summary>Creates a one-hour reset token. Returns the token only so the demo can show the link; production would only email it.</summary>
+    /// <summary>Creates a one-hour token, stores only its hash, and queues delivery.</summary>
     public async Task<string?> RequestResetAsync(string email, string baseUrl)
     {
         email = (email ?? "").Trim().ToLowerInvariant();
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Email == email && x.IsActive)); if (u == null) return null;
         var token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
-        repo.Add(new PasswordReset { UserId = u.Id, Token = token, Expires = clock.UtcNow.AddHours(1) });
+        foreach (var old in await repo.ToListAsync(repo.Query<PasswordReset>().Where(r => r.UserId == u.Id && !r.Used))) old.Used = true;
+        repo.Add(new PasswordReset { UserId = u.Id, Token = HashToken(token), Expires = clock.UtcNow.AddHours(1) });
         mail.Queue(u.Email, "Reset your PeopleHub password", $"Use this link within one hour: {baseUrl}/Account/Reset?token={token}");
         await repo.SaveAsync(); return token;
     }
 
     public async Task<bool> ResetAsync(string token, string next)
     {
+        token = HashToken(token);
         var r = await repo.FirstOrDefaultAsync(repo.Query<PasswordReset>().Where(x => x.Token == token && !x.Used));
         if (r == null || r.Expires < clock.UtcNow) return false;
         CheckPolicy(next ?? "");
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == r.UserId)) ?? throw new DomainException("err.forbidden");
-        u.PasswordHash = PasswordHasher.Hash(next!); r.Used = true; audit.Log("Update", "Password", u.Email, "reset by token"); await repo.SaveAsync(); return true;
+        u.PasswordHash = PasswordHasher.Hash(next!); u.SecurityStamp = Guid.NewGuid().ToString("N"); r.Used = true; audit.Log("Update", "Password", u.Email, "reset by token"); await repo.SaveAsync(); return true;
     }
 
-    public async Task<bool> TokenValidAsync(string token) => await repo.AnyAsync(repo.Query<PasswordReset>().Where(x => x.Token == token && !x.Used && x.Expires > clock.UtcNow));
+    private static string HashToken(string token) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token ?? "")));
+    public async Task<bool> TokenValidAsync(string token) { token = HashToken(token); return await repo.AnyAsync(repo.Query<PasswordReset>().Where(x => x.Token == token && !x.Used && x.Expires > clock.UtcNow)); }
 
     public async Task<(AppUser User, string Secret)> BeginTotpAsync()
     {
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
+        if (u.TotpEnabled) throw new DomainException("err.forbidden");
         u.TotpSecret = Totp.NewSecret(); u.TotpEnabled = false; await repo.SaveAsync(); return (u, u.TotpSecret);
     }
     public async Task EnableTotpAsync(string code)
@@ -214,7 +235,7 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
     {
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
         if (!PasswordHasher.Verify(password ?? "", u.PasswordHash)) throw new DomainException("err.wrongPassword");
-        u.TotpEnabled = false; u.TotpSecret = null; audit.Log("Update", "2FA", u.Email, "disabled"); await repo.SaveAsync();
+        u.TotpEnabled = false; u.TotpSecret = null; u.SecurityStamp = Guid.NewGuid().ToString("N"); audit.Log("Update", "2FA", u.Email, "disabled"); await repo.SaveAsync();
     }
     public Task<AppUser?> CurrentAsync() => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId));
     public Task<AppUser?> ByIdAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == id && x.IsActive));

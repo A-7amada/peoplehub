@@ -2,6 +2,7 @@
 @{ ViewData["Title"] = T.IsAr ? "إعدادات النظام" : "System settings"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en;
    var punches = (List<DevicePunch>)ViewBag.Punches; var outbox = (List<EmailOutbox>)ViewBag.Outbox; bool dev = Model["att.mode"] == "Device"; }
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Choose where attendance comes from and how the system sends email. Changes apply immediately.", "اختر مصدر الحضور وطريقة إرسال البريد. التغييرات تسري فورًا.")</div></div></div>
+<p><a class="btn" href="/Admin/Operations">@X("Operations and backups", "التشغيل والنسخ الاحتياطي")</a></p>
 <form method="post" action="/Admin/SaveSettings" asp-antiforgery="true">
 <div class="grid g2">
  <div class="card"><div class="card-h"><h2>@X("Attendance source", "مصدر الحضور")</h2>@Ui.Chip(dev ? X("ZKTeco device", "ماكينة ZKTeco") : X("In the system", "من النظام"), dev ? "violet" : "green")</div><div class="card-b">

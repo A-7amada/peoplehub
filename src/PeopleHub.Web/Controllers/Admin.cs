@@ -5,7 +5,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class AdminController(Loc loc, AdminService admin, WorkflowService flows, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail) : BaseController(loc)
+public class AdminController(Loc loc, AdminService admin, WorkflowService flows, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail, OperationsService ops) : BaseController(loc)
 {
     // ---- system settings (attendance source, device, email, policies)
     [RequirePerm(Perm.AdmSettings)]
@@ -27,6 +27,16 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
 
     [RequirePerm(Perm.AdmSettings), HttpPost]
     public async Task<IActionResult> FlushMail() { await mail.FlushAsync(); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Settings)); }
+
+    [RequirePerm(Perm.AdmSettings)]
+    public IActionResult Operations() => View(ops);
+
+    [RequirePerm(Perm.AdmSettings), HttpPost]
+    public async Task<IActionResult> ExportDatabase()
+    {
+        Response.Headers.CacheControl = "no-store";
+        return File(await ops.ExportAsync(), "application/octet-stream", $"peoplehub-{DateTime.UtcNow:yyyyMMdd-HHmm}.{(ops.Provider == "SQLite" ? "db" : "zip")}");
+    }
 
     // ---- roles and page permissions
     [RequirePerm(Perm.AdmRoles)]

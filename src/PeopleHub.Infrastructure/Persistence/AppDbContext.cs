@@ -5,7 +5,7 @@ using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Infrastructure.Persistence;
 
 /// <summary>EF Core implementation of the repository port. Navigations are auto-included.</summary>
-public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options), IRepository
+public class AppDbContext(DbContextOptions options) : DbContext(options), IRepository
 {
     public IQueryable<T> Query<T>() where T : class => Set<T>();
     public void Add<T>(T entity) where T : class => Set<T>().Add(entity);
@@ -16,6 +16,20 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public Task<bool> AnyAsync<T>(IQueryable<T> q) => EntityFrameworkQueryableExtensions.AnyAsync(q);
     public Task<int> CountAsync<T>(IQueryable<T> q) => EntityFrameworkQueryableExtensions.CountAsync(q);
     public Task SaveAsync() => SaveChangesAsync();
+
+    public async Task AtomicAsync(Func<Task> work)
+    {
+        await using var tx = await Database.BeginTransactionAsync();
+        try { await work(); await tx.CommitAsync(); }
+        catch { await tx.RollbackAsync(); ChangeTracker.Clear(); throw; }
+    }
+
+    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        foreach (var e in ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified))
+            e.Property("Revision").CurrentValue = Guid.NewGuid().ToString("N");
+        return base.SaveChangesAsync(ct);
+    }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder c)
     {
@@ -55,5 +69,18 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
         b.Entity<ApprovalAction>(); b.Entity<Role>().HasIndex(x => x.Code).IsUnique(); b.Entity<RolePermission>(); b.Entity<Delegation>(); b.Entity<AppSetting>().HasIndex(x => x.Key).IsUnique(); b.Entity<DevicePunch>().HasIndex(x => new { x.DeviceUserId, x.Time }); b.Entity<EmailOutbox>(); b.Entity<PasswordReset>(); b.Entity<JobOpening>().Navigation(x => x.Department).AutoInclude(); b.Entity<Candidate>().Navigation(x => x.Job).AutoInclude(); b.Entity<PerformanceReview>().Navigation(x => x.Employee).AutoInclude(); b.Entity<TrainingCourse>(); b.Entity<PerfCycle>(); b.Entity<Feedback360>().HasOne(x => x.Reviewer).WithMany().HasForeignKey(x => x.ReviewerEmployeeId).OnDelete(DeleteBehavior.Restrict); b.Entity<Feedback360>().Navigation(x => x.Reviewer).AutoInclude(); b.Entity<CompetencyTemplate>(); b.Entity<CompetencyItem>(); b.Entity<PerfReminder>(); b.Entity<PerfBonus>(); b.Entity<PerfGoal>(); b.Entity<DevItem>(); b.Entity<PerfAppraisal>().Navigation(x => x.Employee).AutoInclude(); b.Entity<PerfAppraisal>().Navigation(x => x.Cycle).AutoInclude(); b.Entity<TrainingEnrollment>().Navigation(x => x.Course).AutoInclude(); b.Entity<TrainingEnrollment>().Navigation(x => x.Employee).AutoInclude(); b.Entity<Attachment>().HasIndex(x => x.Token).IsUnique();
         b.Entity<WorkflowDefinition>().Ignore(x => x.Steps); b.Entity<WorkflowStep>().Ignore(x => x.Token); b.Entity<Notification>(); b.Entity<AuditLog>();
         b.Ignore<Approvable>();
+        b.Entity<PerfBonus>().HasIndex(x => x.AppraisalId).IsUnique();
+        b.Entity<PerfAppraisal>().HasIndex(x => x.LegacyReviewId).IsUnique();
+        b.Entity<Feedback360>().HasIndex(x => new { x.AppraisalId, x.ReviewerEmployeeId }).IsUnique();
+        b.Entity<PayrollLine>().HasIndex(x => new { x.RunId, x.EmployeeId }).IsUnique();
+        b.Entity<PasswordReset>().HasIndex(x => x.Token).IsUnique();
+        foreach (var entity in b.Model.GetEntityTypes())
+            b.Entity(entity.ClrType).Property<string>("Revision").HasDefaultValue("").IsConcurrencyToken();
+        if (Database.IsNpgsql())
+            foreach (var prop in b.Model.GetEntityTypes().SelectMany(t => t.GetProperties()).Where(p => p.ClrType == typeof(DateTime) || p.ClrType == typeof(DateTime?)))
+            {
+                prop.SetColumnType("timestamp without time zone");
+                prop.SetValueConverter(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified), v => DateTime.SpecifyKind(v, DateTimeKind.Unspecified)));
+            }
     }
 }

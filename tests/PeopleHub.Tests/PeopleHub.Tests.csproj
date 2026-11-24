@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\PeopleHub.Application\PeopleHub.Application.csproj" />
     <ProjectReference Include="..\..\src\PeopleHub.Domain\PeopleHub.Domain.csproj" />
+    <ProjectReference Include="..\..\src\PeopleHub.Infrastructure\PeopleHub.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

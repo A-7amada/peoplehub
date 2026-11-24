@@ -13,7 +13,7 @@ public partial class Loc
         A("app.name", "PeopleHub", "بيبل هَب");
         A("demo.pill", "Demo project", "مشروع تجريبي");
         A("demo.fictional", "All people and numbers are fictional.", "كل الأسماء والأرقام وهمية.");
-        A("demo.banner", "Portfolio demo with fictional data. Not a real company and not client work. The database resets on every restart.", "عرض تجريبي لمعرض الأعمال ببيانات وهمية. ليس شركة حقيقية ولا عملاً لعميل. تُعاد تهيئة قاعدة البيانات عند كل إعادة تشغيل.");
+        A("demo.banner", "Portfolio demo with fictional data. Not a real company and not client work.", "عرض تجريبي لمعرض الأعمال ببيانات وهمية. ليس شركة حقيقية ولا عملاً لعميل.");
         A("nav.dashboard", "Dashboard", "لوحة التحكم");
         A("nav.people", "People", "الأفراد");
         A("nav.employees", "Employees", "الموظفون");

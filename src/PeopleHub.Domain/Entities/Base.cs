@@ -33,6 +33,7 @@ public class AppUser
     public bool IsActive { get; set; } = true;
     public string? TotpSecret { get; set; }
     public bool TotpEnabled { get; set; }
+    public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
     public string[] RoleArray => RoleList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }
 

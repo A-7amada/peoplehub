@@ -103,6 +103,7 @@ public partial class PerfService
     public async Task ApplyBonusAsync(int bonusId, int runId, PayrollService payroll)
     {
         if (!me.Can(Perm.PayPrepare)) throw new DomainException("err.forbidden");
+        await repo.AtomicAsync(async () => {
         var b = await repo.FirstOrDefaultAsync(repo.Query<PerfBonus>().Where(b => b.Id == bonusId)) ?? throw new DomainException("err.notFound");
         if (b.PayrollLineId != null) throw new DomainException("err.bonusExists");
         var line = await repo.FirstOrDefaultAsync(repo.Query<PayrollLine>().Where(l => l.RunId == runId && l.EmployeeId == b.EmployeeId)) ?? throw new DomainException("err.noPayrollLine");
@@ -111,6 +112,7 @@ public partial class PerfService
         await payroll.AdjustLineAsync(line.Id, line.Bonus + b.Amount, line.OtherDeduction - fixedDed, $"Performance award #{b.Id}: {b.Reason}");
         b.PayrollLineId = line.Id; b.AppliedBy = me.Email; b.AppliedAt = clock.UtcNow;
         audit.Log("ApplyBonus", "Appraisal", b.AppraisalId, $"payroll line {line.Id}"); await repo.SaveAsync();
+        });
     }
 
     public async Task<int> MigrateLegacyAsync()

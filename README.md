@@ -80,14 +80,14 @@ dotnet test
 
 ## Deploy
 
-A `Dockerfile` is included (used for the Render free tier). Set `HR_SEED_PASSWORD` for the HR account. The SQLite database is recreated and re-seeded on every start, so changes made in the demo do not persist.
+A `Dockerfile` is included (used for the Render free tier). Set `HR_SEED_PASSWORD` for the HR account. The host now runs EF migrations without deleting data. Set POSTGRES_CONNECTION for external PostgreSQL persistence; local SQLite still needs a persistent disk. See OPERATIONS.md.
 
 ## Limits
 
 - Demo project with fictional data. Payroll uses the 2026 Egyptian insurance (11%, floor 2,700, cap 16,700), income tax brackets, 20,000 personal exemption and 0.05% martyrs fund from public sources. It has not been reviewed by a specialist and is not legal advice.
 - Attendance can come from the system or a ZKTeco device (Admin > Settings). A cloud server cannot reach a private LAN IP, so a real machine needs a bridge posting to /api/device/punches; the demo uses a simulator. Not tested against a physical device.
 - Email goes to an outbox and is sent only if SMTP is configured. 2FA is TOTP. No SSO, SMS, mobile app or GPS attendance.
-- Uploaded attachments (2 MB, PDF/JPG/PNG) are stored in the demo database, which resets on restart. PDF export uses the browser print dialog. No external integrations. See BRD.md sections 4B and 4C for an honest benchmark against ZenHR and Odoo.
+- Uploaded attachments (2 MB, PDF/JPG/PNG) are stored in the demo database, which persists only when durable storage is configured. PDF export uses the browser print dialog. No external integrations. See BRD.md sections 4B and 4C for an honest benchmark against ZenHR and Odoo.
 
 ## Documentation
 
@@ -100,3 +100,7 @@ A `Dockerfile` is included (used for the Render free tier). Set `HR_SEED_PASSWOR
 ## Performance follow-up (round 6)
 
 Round 6 supersedes the earlier fixed/manual-only limits: per-cycle goals/manager/360 weights, optional Cairo date-driven phases, daily deduplicated reminders, named 360 invitations, competency templates, linked training enrollments/completion, explicit performance award handoff to draft payroll and idempotent import of old reviews. A 15-minute hosted worker runs only while the free service is awake, with catch-up on access. 360 is confidential but not anonymous: managers/HR see names, employees see only the published average. Payroll awards are never automatic payments and follow the normal payroll approval chain. See BRD section 4E for remaining limits.
+
+## Hardening (round 7)
+
+PostgreSQL/SQLite migrations, optimistic concurrency, transactional performance awards, hashed reset tokens without UI disclosure, cookie invalidation, account rate limiting, automatic allowlisted mail delivery, and consistent archive export with tested empty-database restore. See [OPERATIONS.md](OPERATIONS.md). Free hosting still sleeps; provider setup and scheduled off-host backups are separate operational requirements.
