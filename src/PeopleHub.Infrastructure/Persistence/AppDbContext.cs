@@ -27,7 +27,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
-        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement) && e.State is EntityState.Modified or EntityState.Deleted))
+        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse) && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Append-only business evidence cannot be edited or deleted.");
         foreach (var e in ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified))
             e.Property("Revision").CurrentValue = Guid.NewGuid().ToString("N");
@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<PerformanceResponse>().HasIndex(x=>new{x.AppraisalId,x.Kind});
         b.Entity<CompanyAsset>().HasIndex(x=>x.Tag).IsUnique();b.Entity<AssetMovement>().HasIndex(x=>x.AssetId);
         b.Entity<EmployeeShiftDay>().HasIndex(x=>new{x.EmployeeId,x.Date}).IsUnique();
         b.Entity<EmployeeDocument>().HasIndex(x=>x.AttachmentToken).IsUnique();

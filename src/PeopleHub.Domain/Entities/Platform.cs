@@ -97,6 +97,7 @@ public class PerfGoal
 }
 public class PerfAppraisal
 {
+    public string ResponseStamp {get;set;}="";
     public int Id { get; set; }
     public int CycleId { get; set; } public PerfCycle? Cycle { get; set; }
     public int EmployeeId { get; set; } public Employee? Employee { get; set; }

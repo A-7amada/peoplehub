@@ -188,3 +188,14 @@ public class AssetMovement
  public string Actor {get;set;}="";
  public DateTime At {get;set;}
 }
+
+public class PerformanceResponse
+{
+ public int Id {get;set;}
+ public int AppraisalId {get;set;}
+ public string Kind {get;set;}="";
+ public int? AppealId {get;set;}
+ public string Note {get;set;}="";
+ public string Actor {get;set;}="";
+ public DateTime At {get;set;}
+}

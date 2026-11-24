@@ -1,0 +1,58 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace PeopleHub.Infrastructure.Migrations.Postgres
+{
+    /// <inheritdoc />
+    public partial class PerformanceResponses : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.AddColumn<string>(
+                name: "ResponseStamp",
+                table: "PerfAppraisal",
+                type: "text",
+                nullable: false,
+                defaultValue: "");
+
+            migrationBuilder.CreateTable(
+                name: "PerformanceResponse",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    AppraisalId = table.Column<int>(type: "integer", nullable: false),
+                    Kind = table.Column<string>(type: "text", nullable: false),
+                    AppealId = table.Column<int>(type: "integer", nullable: true),
+                    Note = table.Column<string>(type: "text", nullable: false),
+                    Actor = table.Column<string>(type: "text", nullable: false),
+                    At = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    Revision = table.Column<string>(type: "text", nullable: true, defaultValue: "")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PerformanceResponse", x => x.Id);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PerformanceResponse_AppraisalId_Kind",
+                table: "PerformanceResponse",
+                columns: new[] { "AppraisalId", "Kind" });
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "PerformanceResponse");
+
+            migrationBuilder.DropColumn(
+                name: "ResponseStamp",
+                table: "PerfAppraisal");
+        }
+    }
+}

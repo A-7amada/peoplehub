@@ -54,7 +54,7 @@
 | WFL-007 | Required decision comments | P1 | Partial: rejection existing |
 | PER-001 | Grade competency framework and rating configuration | P1 | Open |
 | PER-002 | Multiple cycles | P1 | Existing |
-| PER-003 | Employee result acknowledgement and appeal | P1 | Open |
+| PER-003 | Employee result acknowledgement and appeal | P1 | Implemented immutable employee acknowledgement/appeal and independent HR disposition after closure; score correction workflow remains separate/open |
 | PER-004 | Separate feedback identity/comment/aggregate privacy and reviewer threshold | P0 | Implemented configurable separate grants and threshold gate; owner policy values remain unset. Existing finalized scores preserved |
 | PER-005 | PIP milestones and trends | P1 | Partial: development items existing |
 | HR-001 | Asset assignment, handover, condition, return, maintenance | P1 | Implemented inventory, unique tags, explicit assignment/return, maintenance/release/retirement and append-only movement evidence |
@@ -117,3 +117,5 @@ Shift follow-up: 160 tests pass including private document and overnight tests. 
 Asset follow-up: 164 tests pass (160 regression plus 4 asset tests). Registration, assignment and receipt evidence exercised locally through MVC forms; EN/AR viewport screenshots inspected. HR controls inventory/movements; employee sees only own assigned assets/history. Return validates the holder. No automatic clearance, deduction, valuation or depreciation. PostgreSQL schema deployed; live fictional asset registration, assignment and receipt history verified.
 
 Operational follow-up: 169 tests pass (165 regression and 4 scoped-calendar tests). Assigned lifecycle tasks now have a private assignee inbox on the assignee profile, avoiding access to another employee profile. Calendar registration and task inbox inspected locally in EN/AR. Holiday scopes affect new leave duration and attendance totals, with existing approved request duration preserved. Department is the implemented group, not arbitrary employee groups.
+
+Performance response follow-up: employee acknowledgement records receipt, not agreement; one appeal has a referenced HR disposition, with no self-review, no silent score rewrite and no payroll effect. Append-only response evidence and appraisal revision guard duplicate races. Local MVC appeal EN/AR inspected. Four dedicated tests pass; regular score correction after upheld appeal remains an explicit separate gap.

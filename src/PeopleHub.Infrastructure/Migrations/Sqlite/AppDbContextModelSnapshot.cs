@@ -2246,6 +2246,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("ManagerScore")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ResponseStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
@@ -2445,6 +2449,46 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.ToTable("PerfReminder");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PerformanceResponse", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("AppealId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AppraisalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppraisalId", "Kind");
+
+                    b.ToTable("PerformanceResponse");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.PerformanceReview", b =>
