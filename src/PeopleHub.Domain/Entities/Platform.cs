@@ -58,7 +58,10 @@ public class PerformanceReview
     public DateTime CreatedAt { get; set; }
     public static bool ValidScore(int s) => s is >= 1 and <= 5;
 }
-public class TrainingCourse { public int Id { get; set; } public string Title { get; set; } = ""; public string TitleAr { get; set; } = ""; public int Hours { get; set; } public DateTime Date { get; set; } }
+public class TrainingCourse { public int Id { get; set; } public string Title { get; set; } = ""; public string TitleAr { get; set; } = ""; public int Hours { get; set; } public DateTime Date { get; set; }
+ public string Need {get;set;}="";public decimal? PlannedBudget {get;set;}public string Currency {get;set;}="";
+ public string ApprovalStatus {get;set;}="Legacy";public int? CreatedByUserId {get;set;}public int? DecidedByUserId {get;set;}public string DecisionReason {get;set;}="";public DateTime? DecidedAt {get;set;}
+}
 public class TrainingEnrollment { public int Id { get; set; } public int CourseId { get; set; } public TrainingCourse? Course { get; set; } public int EmployeeId { get; set; } public Employee? Employee { get; set; } public bool Completed { get; set; } }
 
 /// <summary>End-of-service settlement: pro-rated salary, leave encashment and a company-policy gratuity (not a statutory amount).</summary>

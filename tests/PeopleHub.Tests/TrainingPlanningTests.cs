@@ -1,0 +1,15 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Services;
+using PeopleHub.Domain.Entities;
+namespace PeopleHub.Tests;
+public class TrainingPlanningTests
+{
+ class User(int id=1,bool hr=true):ICurrentUser{public string Email=>$"planner{id}@example.local";public int? EmployeeId=>id;public int UserId=>id;public bool IsAuthenticated=>true;public bool IsInRole(string r)=>hr;public bool Can(string p)=>hr;}
+ static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
+ static TalentService S(AppDbContext d,int id=1,bool hr=true){var u=new User(id,hr);var c=new AppClock(TimeProvider.System);return new(d,u,new AccessScope(d,u),c,new AuditService(d,u,c),new NotificationService(d,u,c));}
+ [Fact]public async Task NewPlanRequiresIndependentApprovalBeforeEnrolment(){await using var d=await Db();await S(d).AddCourseAsync("Demo planning",null,4,new(2027,1,4),"Need practice with safe data",2500,"EGP");var c=await d.Set<TrainingCourse>().SingleAsync(x=>x.Title=="Demo planning");Assert.Equal("Pending",c.ApprovalStatus);Assert.Equal(2500,c.PlannedBudget);await Assert.ThrowsAsync<DomainException>(()=>S(d,6,false).EnrollAsync(c.Id,6));await Assert.ThrowsAsync<DomainException>(()=>S(d).DecideCourseAsync(c.Id,true,"Self"));await S(d,2).DecideCourseAsync(c.Id,true,"Observed need and reviewed plan");await S(d,6,false).EnrollAsync(c.Id,6);Assert.True(await d.Set<TrainingEnrollment>().AnyAsync(x=>x.CourseId==c.Id&&x.EmployeeId==6));await Assert.ThrowsAsync<DomainException>(()=>S(d,2).DecideCourseAsync(c.Id,false,"Rewrite"));}
+ [Fact]public async Task RejectedPlanNeverAcceptsEnrolmentAndReasonRequired(){await using var d=await Db();await S(d).AddCourseAsync("Rejected demo",null,2,new(2027,1,4),"Need",null,null);var c=await d.Set<TrainingCourse>().SingleAsync(x=>x.Title=="Rejected demo");await Assert.ThrowsAsync<DomainException>(()=>S(d,2).DecideCourseAsync(c.Id,false,""));await S(d,2).DecideCourseAsync(c.Id,false,"Not appropriate for stated need");await Assert.ThrowsAsync<DomainException>(()=>S(d,6,false).EnrollAsync(c.Id,6));}
+ [Fact]public async Task PlanningInputsAndPermissionAreValidated(){await using var d=await Db();await Assert.ThrowsAsync<DomainException>(()=>S(d,6,false).AddCourseAsync("Denied",null,2,new(2027,1,4),"Need"));await Assert.ThrowsAsync<DomainException>(()=>S(d).AddCourseAsync("No need",null,2,new(2027,1,4)));await Assert.ThrowsAsync<DomainException>(()=>S(d).AddCourseAsync("Bad currency",null,2,new(2027,1,4),"Need",2500,""));await Assert.ThrowsAsync<DomainException>(()=>S(d).AddCourseAsync("Negative",null,2,new(2027,1,4),"Need",-1,"EGP"));}
+ [Fact]public async Task ExistingCoursesRemainLegacyWithoutFabricatedApproval(){await using var d=await Db();Assert.All(await d.Set<TrainingCourse>().ToListAsync(),x=>{Assert.Equal("Legacy",x.ApprovalStatus);Assert.Null(x.DecidedAt);Assert.Null(x.CreatedByUserId);});}
+}

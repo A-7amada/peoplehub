@@ -3106,11 +3106,39 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("Date")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int?>("DecidedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("DecisionReason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Hours")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Need")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double?>("PlannedBudget")
+                        .HasColumnType("double precision");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()

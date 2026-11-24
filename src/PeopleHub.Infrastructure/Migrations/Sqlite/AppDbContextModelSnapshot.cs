@@ -2969,11 +2969,39 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DecidedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DecisionReason")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Hours")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Need")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double?>("PlannedBudget")
+                        .HasColumnType("REAL");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()

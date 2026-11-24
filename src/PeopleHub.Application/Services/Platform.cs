@@ -302,12 +302,14 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
         var ids = me.Can(Perm.TalentManage) ? null : await scope.VisibleEmployeeIdsAsync();
         return await repo.ToListAsync(repo.Query<TrainingEnrollment>().Where(e => ids == null || ids.Contains(e.EmployeeId)));
     }
-    public async Task AddCourseAsync(string title, string? titleAr, int hours, DateTime date)
-    { Need(); if (string.IsNullOrWhiteSpace(title) || hours <= 0) throw new DomainException("err.required"); repo.Add(new TrainingCourse { Title = title.Trim(), TitleAr = titleAr?.Trim() ?? "", Hours = hours, Date = date }); await repo.SaveAsync(); }
+    public async Task AddCourseAsync(string title, string? titleAr, int hours, DateTime date,string? need=null,decimal? budget=null,string? currency=null)
+    { Need(); if (string.IsNullOrWhiteSpace(title)||title.Length>200||hours<=0||hours>1000||date.Date<clock.Today||date.Year>9998||string.IsNullOrWhiteSpace(need)||need.Length>2000||budget<0||budget>1000000000||budget!=null&&(currency==null||currency.Length!=3||!currency.All(x=>x>='A'&&x<='Z'))) throw new DomainException("err.required"); repo.Add(new TrainingCourse { Title=title.Trim(),TitleAr=titleAr?.Trim()??"",Hours=hours,Date=date.Date,Need=need.Trim(),PlannedBudget=budget,Currency=budget==null?"":currency!,ApprovalStatus="Pending",CreatedByUserId=me.UserId });audit.Log("ProposeCourse","Training",title,"Pending course approval, planning only, no spending");await repo.SaveAsync(); }
+    public Task DecideCourseAsync(int id,bool approve,string reason)=>repo.AtomicAsync(async()=>
+    {Need();var course=await repo.FirstOrDefaultAsync(repo.Query<TrainingCourse>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(course.ApprovalStatus!="Pending"||course.CreatedByUserId==me.UserId)throw new DomainException("err.forbidden");if(string.IsNullOrWhiteSpace(reason)||reason.Length>2000)throw new DomainException("err.reasonRequired");course.ApprovalStatus=approve?"Approved":"Rejected";course.DecidedByUserId=me.UserId;course.DecidedAt=clock.UtcNow;course.DecisionReason=reason.Trim();audit.Log("DecideCourse","Training",id,$"{course.ApprovalStatus}: {reason.Trim()}");await repo.SaveAsync();});
     public async Task EnrollAsync(int courseId, int employeeId)
     {
         if (employeeId != me.EmployeeId) Need();
-        if (!await repo.AnyAsync(repo.Query<TrainingCourse>().Where(x => x.Id == courseId)) || !await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Id == employeeId))) throw new DomainException("err.notFound");
+        if (!await repo.AnyAsync(repo.Query<TrainingCourse>().Where(x => x.Id == courseId && (x.ApprovalStatus=="Approved"||x.ApprovalStatus=="Legacy"))) || !await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Id == employeeId))) throw new DomainException("err.notFound");
         if (await repo.AnyAsync(repo.Query<TrainingEnrollment>().Where(x => x.CourseId == courseId && x.EmployeeId == employeeId))) throw new DomainException("err.alreadyEnrolled");
         repo.Add(new TrainingEnrollment { CourseId = courseId, EmployeeId = employeeId }); await repo.SaveAsync();
     }

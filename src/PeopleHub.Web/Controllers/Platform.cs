@@ -47,7 +47,8 @@ public class TalentController(Loc loc, TalentService svc, OrgService org, Employ
         ViewBag.Enrollments = await svc.EnrollmentsAsync();
         return View(await svc.CoursesAsync());
     }
-    [HttpPost] public Task<IActionResult> AddCourse(string title, string? titleAr, int hours, DateTime date) => Do(() => svc.AddCourseAsync(title, titleAr, hours, date), "msg.saved", () => RedirectToAction(nameof(Training)));
+    [HttpPost] public Task<IActionResult> AddCourse(string title, string? titleAr, int hours, DateTime date,string need,decimal? budget,string? currency) => Do(() => svc.AddCourseAsync(title, titleAr, hours, date,need,budget,currency), "msg.saved", () => RedirectToAction(nameof(Training)));
+    [HttpPost] public Task<IActionResult> DecideCourse(int id,bool approve,string reason)=>Do(()=>svc.DecideCourseAsync(id,approve,reason),"msg.saved",()=>RedirectToAction(nameof(Training)));
     [HttpPost] public Task<IActionResult> Enroll(int courseId, int? employeeId) => Do(() => svc.EnrollAsync(courseId, employeeId ?? me.EmployeeId ?? 0), "msg.saved", () => RedirectToAction(nameof(Training)));
     [HttpPost] public Task<IActionResult> TrainingOutcome(int enrollmentId,string kind,string note)=>Do(()=>evidence.OutcomeAsync(enrollmentId,kind,note),"msg.saved",()=>RedirectToAction(nameof(Training)));
     [HttpPost] public async Task<IActionResult> TrainingCertificate(int enrollmentId,string issuer,string reference,DateTime issuedOn,DateTime? expiresOn,IFormFile? file){var data=await FileBytes(file);return await Do(()=>evidence.CertificateAsync(enrollmentId,issuer,reference,issuedOn,expiresOn,file?.FileName??"",data??[]),"msg.saved",()=>RedirectToAction(nameof(Training)));}
