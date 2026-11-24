@@ -29,8 +29,11 @@ public class RequestsController(Loc loc, ApprovalService svc, AppClock clock, De
         var rows = await svc.ListAsync(kind, status, scope == "inbox");
         if (scope == "mine") rows = rows.Where(r => r.Employee.Id == int.Parse(User.FindFirst("emp")?.Value ?? "-1")).ToList();
         ViewBag.Today = clock.Today;
+        ViewBag.Assignees=await svc.AssigneeCandidatesAsync();
         return View(rows);
     }
+
+    [HttpPost] public Task<IActionResult> Reassign(string kind,int id,int stageIndex,int toUserId,string reason)=>Do(()=>svc.ReassignAsync(kind,id,stageIndex,toUserId,reason),"msg.saved",()=>Back("/Requests"));
 
     [HttpPost] public Task<IActionResult> Approve(string kind, int id, string? comment) => Do(() => svc.ApproveAsync(kind, id, comment), "msg.approved", () => Back("/Requests"));
     [HttpPost] public Task<IActionResult> Reject(string kind, int id, string? comment) => Do(() => svc.RejectAsync(kind, id, comment), "msg.rejected", () => Back("/Requests"));

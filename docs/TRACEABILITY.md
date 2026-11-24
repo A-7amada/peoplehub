@@ -49,8 +49,8 @@
 | WFL-002 | Parallel approvals and all/one/quorum rules | P1 | Open |
 | WFL-003 | Dynamic hierarchy/department approvers | P1 | Partial: direct manager/role existing |
 | WFL-004 | Explicit workflow versions | P1 | Implemented content-addressed immutable observed definitions linked to new requests plus resolved route snapshot; legacy version unknown, separate draft/publish lifecycle not implemented |
-| WFL-005 | Pending task reassignment | P1 | Open |
-| WFL-006 | Recall/substitute/unavailable approver | P1 | Partial: pending cancel/delegation existing |
+| WFL-005 | Pending task reassignment | P1 | Implemented reasoned workflow-admin reassignment of current pending stage to an active account, immutable history and in-app notification; self-approval blocked, stage revision guards stale updates, original route unchanged |
+| WFL-006 | Recall/substitute/unavailable approver | P1 | Implemented pending recall/cancellation, dated delegation and explicit administrator reassignment for unavailable approvers; no automatic absence inference or escalation |
 | WFL-007 | Required decision comments | P1 | Implemented admin-configured required approval comments per request kind, server validation, retained visible decision history; rejection reasons always required. Changes explicitly apply to next decisions including pending requests |
 | PER-001 | Grade competency framework and rating configuration | P1 | Open |
 | PER-002 | Multiple cycles | P1 | Existing |
@@ -137,3 +137,5 @@ PIP follow-up: 196 tests pass (193 regression plus 3 milestone tests). Reviewer 
 Performance history follow-up: 197 tests pass (193 regression and 4 PIP tests). Closed-cycle history is access-scoped, preserves missing scores and labels cross-cycle comparability limits. Employee progress-only controls and EN/AR history views inspected locally.
 
 Approval-comment follow-up: 200 tests pass (197 regression, 3 new policy tests). Default approvals remain optional until an administrator enables the per-kind policy. Rejection/cancellation now use an explicit transaction. EN/AR policy save and required inbox controls inspected locally.
+
+Approval reassignment follow-up: 203 tests pass. Both provider migrations generated, local SQLite upgrade and EN/AR current-assignee UI inspected. Reassignment replaces normal authority for only that stage, except SystemAdmin emergency override, and does not approve the request. Original routes remain unchanged. PostgreSQL parallel race stress still unverified.

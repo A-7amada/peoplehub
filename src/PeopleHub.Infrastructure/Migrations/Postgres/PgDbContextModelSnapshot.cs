@@ -33,6 +33,10 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<double>("Amount")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("AttachmentName")
                         .HasColumnType("text");
 
@@ -222,6 +226,55 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("ApprovalAction");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.ApprovalAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("StageIndex")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ToEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ToUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "RequestId", "StageIndex");
+
+                    b.ToTable("ApprovalAssignment");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.AssetMovement", b =>
                 {
                     b.Property<int>("Id")
@@ -323,6 +376,10 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("AttachmentName")
                         .HasColumnType("text");
@@ -1752,6 +1809,10 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("AttachmentName")
                         .HasColumnType("text");
 
@@ -2057,6 +2118,10 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("AttachmentName")
                         .HasColumnType("text");

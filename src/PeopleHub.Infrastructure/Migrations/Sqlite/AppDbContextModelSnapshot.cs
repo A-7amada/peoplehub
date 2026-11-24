@@ -26,6 +26,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<double>("Amount")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("AttachmentName")
                         .HasColumnType("TEXT");
 
@@ -209,6 +213,53 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("ApprovalAction");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.ApprovalAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("StageIndex")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("ToEmail")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ToUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "RequestId", "StageIndex");
+
+                    b.ToTable("ApprovalAssignment");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.AssetMovement", b =>
                 {
                     b.Property<int>("Id")
@@ -304,6 +355,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AttachmentName")
                         .HasColumnType("TEXT");
@@ -1669,6 +1724,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("AttachmentName")
                         .HasColumnType("TEXT");
 
@@ -1962,6 +2021,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("AssignmentStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("AttachmentName")
                         .HasColumnType("TEXT");
