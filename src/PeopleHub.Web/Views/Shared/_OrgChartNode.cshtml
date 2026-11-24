@@ -1,0 +1,4 @@
+@model DeptNode
+<li><div class="oc-box @(Model.Dept.IsActive ? "" : "off")"><span class="avatar oc-av">@Ui.Icon("org", 14)</span><div class="oc-t">@T.Name(Model.Dept.Name, Model.Dept.NameAr)</div>
+ <div class="oc-m">@(Model.ManagerName == null ? "-" : T.Name(Model.ManagerName, Model.ManagerNameAr ?? ""))</div><div class="oc-n">@Model.Headcount @T["org.people"]</div></div>
+ @if (Model.Children.Count > 0) { <ul>@foreach (var c in Model.Children) { <partial name="_OrgChartNode" model="c" /> }</ul> }</li>

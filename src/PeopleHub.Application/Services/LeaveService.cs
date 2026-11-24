@@ -26,7 +26,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         return existing.OrderBy(b => b.LeaveTypeId).ToList();
     }
 
-    public async Task RequestAsync(int typeId, DateTime start, DateTime end, string? reason, string? document)
+    public async Task RequestAsync(int typeId, DateTime start, DateTime end, string? reason, string? document, string? attToken = null)
     {
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == (me.EmployeeId ?? -1))) ?? throw new DomainException("err.forbidden");
         var type = await repo.FirstOrDefaultAsync(repo.Query<LeaveType>().Where(t => t.Id == typeId)) ?? throw new DomainException("err.notFound");
@@ -36,7 +36,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         req.Route = await flows.RouteForAsync("Leave", e, req.Days, !type.IsPaid);
         var mine = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.EmployeeId == e.Id));
         if (mine.Any(req.Overlaps)) throw new DomainException("err.overlap");
-        req.Employee = e;
+        req.Employee = e; req.AttachmentToken = attToken; req.AttachmentName = attToken == null ? null : document;
         repo.Add(req);
         await notify.NotifyStageAsync(req, $"{e.FullName}: {type.Name} {start:yyyy-MM-dd} → {end:yyyy-MM-dd} ({req.Days})");
         await repo.SaveAsync();

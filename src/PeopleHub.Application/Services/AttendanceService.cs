@@ -172,13 +172,13 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         await repo.SaveAsync();
     }
 
-    public async Task RequestCorrectionAsync(DateTime date, DateTime? newIn, DateTime? newOut, string? reason)
+    public async Task RequestCorrectionAsync(DateTime date, DateTime? newIn, DateTime? newOut, string? reason, string? attToken = null, string? attName = null)
     {
         var e = await MeAsync();
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == date.Date));
         var c = AttendanceCorrection.Create(e, date, rec?.CheckIn, rec?.CheckOut, newIn, newOut, reason, clock.Today);
         c.Route = await flows.RouteForAsync("Correction", e, 0);
-        c.Employee = e;
+        c.Employee = e; c.AttachmentToken = attToken; c.AttachmentName = attName;
         repo.Add(c);
         await notify.NotifyStageAsync(c, $"{e.FullName}: {date:yyyy-MM-dd}");
         await repo.SaveAsync();

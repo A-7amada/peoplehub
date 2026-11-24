@@ -1,0 +1,14 @@
+@model List<(Delegation D, Employee From, Employee To)>
+@{ ViewData["Title"] = T["deleg.title"]; var emps = (List<Employee>)ViewBag.Employees; DateTime today = ViewBag.Today; }
+<div class="page-head"><div><h1>@T["deleg.title"]</h1><div class="sub">@T["deleg.sub"]</div></div></div>
+<div class="grid g-main-r">
+<div class="card"><div class="card-h"><h2>@T["deleg.new"]</h2></div><div class="card-b"><form method="post" action="/Requests/Delegate" asp-antiforgery="true">
+ <div class="field"><label>@T["deleg.to"]</label><select name="to" required>@foreach (var e in emps) { <option value="@e.Id">@e.Code · @T.Name(e.FullName, e.FullNameAr)</option> }</select></div>
+ <div class="form-grid"><div class="field"><label>@T["common.from"]</label><input type="date" name="start" value="@today.ToString("yyyy-MM-dd")" required></div><div class="field"><label>@T["common.to"]</label><input type="date" name="end" value="@today.AddDays(7).ToString("yyyy-MM-dd")" required></div></div>
+ <button class="btn btn-primary">@Ui.Icon("plus", 14) @T["common.add"]</button><p class="muted small">@T["deleg.hint"]</p></form></div></div>
+<div class="card"><div class="card-h"><h2>@T["deleg.active"]</h2></div>
+@if (Model.Count == 0) { <div class="empty">@T["common.none"]</div> } else {
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["deleg.delegator"]</th><th>@T["deleg.to"]</th><th>@T["common.period"]</th><th></th></tr></thead><tbody>
+@foreach (var x in Model) { <tr><td>@T.Name(x.From.FullName, x.From.FullNameAr)</td><td>@T.Name(x.To.FullName, x.To.FullNameAr)</td><td class="small"><bdi>@T.Date(x.D.StartDate) → @T.Date(x.D.EndDate)</bdi> @if (x.D.IsActiveOn(today)) { @Ui.Chip(T["common.active"], "green") }</td>
+ <td class="right">@if (x.From.Id == Me.EmployeeId) { <form method="post" action="/Requests/Revoke" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@x.D.Id"><button class="btn btn-sm btn-bad">@T["deleg.revoke"]</button></form> }</td></tr> }
+</tbody></table></div> }</div></div>

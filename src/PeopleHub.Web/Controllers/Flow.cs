@@ -6,8 +6,21 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class RequestsController(Loc loc, ApprovalService svc, AppClock clock) : BaseController(loc)
+public class FilesController(Loc loc, AttachmentService files) : BaseController(loc)
 {
+    public async Task<IActionResult> Get(string id)
+    {
+        try { var a = await files.GetAsync(id); return File(a.Data, a.ContentType, a.FileName); }
+        catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }
+    }
+}
+
+public class RequestsController(Loc loc, ApprovalService svc, AppClock clock, DelegationService deleg, EmployeeService emps) : BaseController(loc)
+{
+    public async Task<IActionResult> Delegations() { ViewBag.Employees = await emps.ManagerCandidatesAsync(); ViewBag.Today = clock.Today; return View(await deleg.MineAsync()); }
+    [HttpPost] public Task<IActionResult> Delegate(int to, DateTime start, DateTime end) => Do(() => deleg.AddAsync(to, start, end), "msg.saved", () => RedirectToAction(nameof(Delegations)));
+    [HttpPost] public Task<IActionResult> Revoke(int id) => Do(() => deleg.RevokeAsync(id), "msg.saved", () => RedirectToAction(nameof(Delegations)));
+
     public async Task<IActionResult> Index(string? scope, string? kind, RequestStatus? status)
     {
         scope ??= "mine";
@@ -87,6 +100,13 @@ public class ReportsController(Loc loc, ReportService svc, AppClock clock, ICurr
         ViewBag.Key = key; ViewBag.Year = y; ViewBag.Month = m;
         try { return View(await svc.BuildAsync(key, y, m)); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }
+    }
+
+    public async Task<IActionResult> Xlsx(string key, int? year, int? month)
+    {
+        if (!me.Can(Perm.Reports)) return Forbidden();
+        var t = await svc.BuildAsync(key, year ?? clock.Today.Year, month ?? clock.Today.Month);
+        return File(XlsxWriter.Build(t.Key, t.Columns, t.Rows), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", $"report-{key}.xlsx");
     }
 
     public async Task<IActionResult> Csv(string key, int? year, int? month)

@@ -12,7 +12,7 @@ The feature set follows a business requirements document (BRD) for an Arabic HRM
 |---|---|---|
 | 1. Core HR | Employee records (personal, work, bank, insurance), department tree with managers and cost centers, branches, job titles with grades and salary ranges, status changes with history, contracts (fixed term / permanent, renewal, expiry alerts), career events, audit log of sensitive changes | File attachments (documents are referenced by name only), bulk import |
 | 2. Attendance | Check in / out, manual entry, shifts with grace period, lateness, early leave, overtime threshold, absence rules, excused absence, daily and monthly views, attendance correction requests | Fingerprint device and mobile GPS integration (the source is only recorded), shift rosters and rotations |
-| 3. Leave | Leave types, balances with carry-over, request and approval route (manager, plus HR for more than 2 days or unpaid), backdating rules, public holidays, overlap checks, cancelling approved leave, HR balance adjustments, who-is-away view | Approval delegation, accrual by tenure rules, half-day leave |
+| 3. Leave | Leave types, balances with carry-over, request and approval route (manager, plus HR for more than 2 days or unpaid), backdating rules, public holidays, overlap checks, cancelling approved leave, HR balance adjustments, who-is-away view | Accrual by tenure, accrual by tenure rules, half-day leave |
 | 4. Payroll | Salary components, monthly runs built from attendance, approved overtime and advances, advances with installments, bonus and deduction adjustments with a mandatory reason, staged approval (draft, HR review, finance, final close, paid), locked closed runs, reopen as logged admin exception, payslips with print view, bank transfer CSV | Real Egyptian social insurance and tax tables (rates here are **illustrative**), end-of-service settlement, accounting export |
 | 5. Employee portal | Own profile and contact update, check in / out, leave requests and balances, overtime / correction / advance requests, payslips, notifications | Mobile app |
 | 6. Reporting | Dashboard KPIs and charts, employee, attendance, leave balance, payroll cost and leavers reports with CSV export | Custom report builder, scheduled reports |
@@ -62,7 +62,7 @@ tests/
   PeopleHub.Tests           xUnit tests for the domain rules
 ```
 
-- Business rules live in the domain layer and are unit tested (46 tests: attendance calculation, leave rules, approval routing, configurable cycles and role-driven permissions, advances, contracts, status changes, payroll calculation and workflow, password hashing).
+- Business rules live in the domain layer and are unit tested (49 tests: attendance calculation, leave rules, approval routing, configurable cycles and role-driven permissions, advances, contracts, status changes, payroll calculation and workflow, password hashing).
 - Cookie authentication, PBKDF2 password hashing, antiforgery on every POST, permission checks in the application layer (role-to-permission map loaded from the database).
 - English and Arabic UI with a language switch and a right-to-left layout built with CSS logical properties.
 - The Egyptian weekend (Friday and Saturday) and public holidays are excluded from working days.
@@ -85,7 +85,7 @@ A `Dockerfile` is included (used for the Render free tier). Set `HR_SEED_PASSWOR
 ## Limits
 
 - Demo project with fictional data. Tax and insurance rates are illustrative, not legal advice or Egyptian law.
-- No file uploads, no email or SMS, no delegation of approvals (out-of-office), no external integrations.
+- Uploaded attachments (2 MB, PDF/JPG/PNG) are stored in the demo database, which resets on restart. PDF export uses the browser print dialog. No email or SMS, no external integrations. See BRD.md section 4B for an honest benchmark against ZenHR and Odoo.
 
 ## Documentation
 

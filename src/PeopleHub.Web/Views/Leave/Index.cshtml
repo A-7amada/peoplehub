@@ -8,10 +8,10 @@
 <div class="card"><div class="card-h"><h2>@T["leave.myRequests"]</h2></div>
  <partial name="_ReqTable" model="Model" />
 </div>
-<div class="card" style="align-self:start"><div class="card-h"><h2>@T["leave.request"]</h2></div><div class="card-b"><form method="post" action="/Leave/Request" asp-antiforgery="true">
+<div class="card" style="align-self:start"><div class="card-h"><h2>@T["leave.request"]</h2></div><div class="card-b"><form method="post" action="/Leave/Request" asp-antiforgery="true" enctype="multipart/form-data">
  <div class="field"><label>@T["common.type"]</label><select name="typeId">@foreach (var t in types) { <option value="@t.Id">@T.Name(t.Name, t.NameAr)</option> }</select></div>
  <div class="form-grid"><div class="field"><label>@T["common.from"]</label><input type="date" name="start" value="@today.AddDays(7).ToString("yyyy-MM-dd")" required></div><div class="field"><label>@T["common.to"]</label><input type="date" name="end" value="@today.AddDays(8).ToString("yyyy-MM-dd")" required></div></div>
  <div class="field"><label>@T["common.reason"]</label><input type="text" name="reason"></div>
- <div class="field"><label>@T["leave.document"]</label><input type="text" name="document" placeholder="medical-note.pdf"><span class="faint small">@T["leave.docHint"]</span></div>
+ <div class="field"><label>@T["leave.document"]</label><input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png"><span class="faint small">@T["leave.docHint"]</span></div>
  <button class="btn btn-primary">@T["common.submit"]</button><p class="muted small">@T["leave.routeHint"]</p></form></div></div>
 </div>

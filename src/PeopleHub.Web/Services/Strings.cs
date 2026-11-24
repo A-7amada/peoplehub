@@ -209,6 +209,11 @@ public partial class Loc
         A("permg.Reports", "Reports", "التقارير");
         A("permg.Administration", "Administration", "الإدارة");
 
+        A("deleg.title", "Approval delegation", "تفويض الموافقات"); A("nav.deleg", "Delegation", "التفويض");
+        A("deleg.sub", "Hand your approval rights to a colleague while you are away. They see and decide your requests for the chosen dates.", "فوّض زميلاً في صلاحيات الموافقة أثناء غيابك. سيرى طلباتك ويبت فيها خلال الفترة المحددة.");
+        A("deleg.new", "New delegation", "تفويض جديد"); A("deleg.to", "Delegate to", "المفوَّض إليه"); A("deleg.delegator", "Delegator", "المفوِّض"); A("deleg.active", "Delegations", "التفويضات"); A("deleg.revoke", "Revoke", "إلغاء");
+        A("deleg.hint", "The delegate gets exactly the approval steps you hold (direct manager of your team, or your roles). Nobody can approve their own request, even as a delegate. You can revoke at any time.", "يحصل المفوَّض على نفس خطوات الموافقة التي تملكها (مدير مباشر لفريقك أو أدوارك). لا يستطيع أحد الموافقة على طلبه حتى كمفوَّض. يمكنك الإلغاء في أي وقت.");
+        A("common.period", "Period", "الفترة"); A("org.chart", "Org chart", "الهيكل التنظيمي (شجرة)");
         // errors
         foreach (var (k, en, ar) in new[] {
             ("roleRequired", "Pick at least one role for a role step.", "اختر دوراً واحداً على الأقل لخطوة الدور."), ("maxSteps", "A cycle can have at most 6 steps.", "المسار يقبل 6 خطوات كحد أقصى."),
@@ -217,6 +222,7 @@ public partial class Loc
             ("roleSystem", "Built-in roles cannot be deleted.", "لا يمكن حذف الأدوار الأساسية."), ("roleInUse", "The role is still used by a user or an approval step.", "الدور ما زال مستخدماً في مستخدم أو خطوة موافقة."),
             ("lockout", "You cannot remove your own admin access.", "لا يمكنك إزالة صلاحية الإدارة عن نفسك."), ("userInvalid", "A valid email and a password of 8+ characters are required.", "مطلوب بريد صحيح وكلمة مرور 8 أحرف على الأقل."),
             ("userExists", "That email already has an account.", "هذا البريد لديه حساب بالفعل."),
+            ("fileType", "Only PDF, JPG or PNG files are accepted.", "الملفات المقبولة PDF أو JPG أو PNG فقط."), ("fileSize", "The file is larger than 2 MB.", "حجم الملف أكبر من 2 ميجابايت."), ("delegateSelf", "You cannot delegate to yourself.", "لا يمكنك التفويض لنفسك."),
             ("generic", "Something went wrong.", "حدث خطأ ما."), ("forbidden", "You do not have access to that.", "ليست لديك صلاحية لهذا الإجراء."), ("notFound", "Record not found.", "السجل غير موجود."),
             ("name", "Name is required.", "الاسم مطلوب."), ("email", "A valid email is required.", "البريد الإلكتروني غير صالح."), ("emailTaken", "That email is already used.", "هذا البريد مستخدم بالفعل."),
             ("salary", "Salary values must not be negative.", "قيم الراتب لا يمكن أن تكون سالبة."), ("salaryRange", "Salary is outside the range of the job title.", "الراتب خارج نطاق المسمى الوظيفي."),

@@ -17,6 +17,8 @@ public abstract class Approvable
     public int StageIndex { get; set; }
     public RequestStatus Status { get; set; } = RequestStatus.Pending;
     public string? Comment { get; set; }
+    public string? AttachmentToken { get; set; }
+    public string? AttachmentName { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? DecidedAt { get; set; }
 

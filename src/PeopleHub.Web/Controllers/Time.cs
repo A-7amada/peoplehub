@@ -5,7 +5,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class AttendanceController(Loc loc, AttendanceService svc, OrgService org, EmployeeService emps, AppClock clock, ICurrentUser me) : BaseController(loc)
+public class AttendanceController(Loc loc, AttendanceService svc, OrgService org, EmployeeService emps, AppClock clock, ICurrentUser me, AttachmentService files) : BaseController(loc)
 {
     public async Task<IActionResult> Index(int? year, int? month, int? id)
     {
@@ -50,14 +50,15 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
         Do(() => svc.RequestOvertimeAsync(date, hours, reason), "msg.requestSent", () => Redirect("/Requests"));
 
     [HttpPost]
-    public Task<IActionResult> Correction(DateTime date, string? checkIn, string? checkOut, string? reason)
+    public async Task<IActionResult> Correction(DateTime date, string? checkIn, string? checkOut, string? reason, IFormFile? file)
     {
         DateTime? T(string? s) => TimeSpan.TryParse(s, out var t) ? date.Date + t : null;
-        return Do(() => svc.RequestCorrectionAsync(date, T(checkIn), T(checkOut), reason), "msg.requestSent", () => Redirect("/Requests"));
+        var bytes = await FileBytes(file);
+        return await Do(() => { var (tok, nm) = files.Save(file?.FileName, bytes); return svc.RequestCorrectionAsync(date, T(checkIn), T(checkOut), reason, tok, nm); }, "msg.requestSent", () => Redirect("/Requests"));
     }
 }
 
-public class LeaveController(Loc loc, LeaveService svc, ApprovalService approvals, AppClock clock, ICurrentUser me) : BaseController(loc)
+public class LeaveController(Loc loc, LeaveService svc, ApprovalService approvals, AppClock clock, ICurrentUser me, AttachmentService files) : BaseController(loc)
 {
     public async Task<IActionResult> Index()
     {
@@ -70,8 +71,11 @@ public class LeaveController(Loc loc, LeaveService svc, ApprovalService approval
     }
 
     [HttpPost]
-    public Task<IActionResult> Request(int typeId, DateTime start, DateTime end, string? reason, string? document) =>
-        Do(() => svc.RequestAsync(typeId, start, end, reason, document), "msg.requestSent", () => RedirectToAction(nameof(Index)));
+    public async Task<IActionResult> Request(int typeId, DateTime start, DateTime end, string? reason, string? document, IFormFile? file)
+    {
+        var bytes = await FileBytes(file);
+        return await Do(() => { var (tok, nm) = files.Save(file?.FileName, bytes); return svc.RequestAsync(typeId, start, end, reason, nm ?? document, tok); }, "msg.requestSent", () => RedirectToAction(nameof(Index)));
+    }
 
     [HttpPost]
     public Task<IActionResult> CancelApproved(int id) => Do(() => svc.CancelApprovedAsync(id), "msg.saved", () => RedirectToAction(nameof(Index)));

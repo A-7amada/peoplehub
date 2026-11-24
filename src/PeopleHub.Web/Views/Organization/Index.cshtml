@@ -1,6 +1,7 @@
 @model OrgOverview
 @{ ViewData["Title"] = T["nav.organization"]; bool hr = Me.Can(Perm.OrgManage); var mgrs = (List<Employee>)ViewBag.Managers; var flat = new List<DeptNode>(); void Walk(DeptNode n) { flat.Add(n); n.Children.ForEach(Walk); } Model.Tree.ForEach(Walk); }
 <div class="page-head"><div><h1>@T["nav.organization"]</h1><div class="sub">@T["org.sub"]</div></div></div>
+<div class="card" style="margin-bottom:18px"><div class="card-h"><h2>@T["org.chart"]</h2></div><div class="card-b" style="overflow-x:auto"><div class="orgchart"><ul>@foreach (var n in Model.Tree) { <partial name="_OrgChartNode" model="n" /> }</ul></div></div></div>
 <div class="grid g-main-r">
 <div class="card"><div class="card-h"><h2>@T["org.departments"]</h2></div><div class="card-b">
 @{ void Render(List<DeptNode> nodes) { } }

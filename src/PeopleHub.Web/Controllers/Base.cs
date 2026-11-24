@@ -22,6 +22,13 @@ public abstract class BaseController(Loc loc) : Controller
         return next();
     }
 
+    protected static async Task<byte[]?> FileBytes(IFormFile? f)
+    {
+        if (f == null || f.Length == 0) return null;
+        if (f.Length > AttachmentService.MaxBytes) return new byte[AttachmentService.MaxBytes + 1]; // rejected by the service with a clear message
+        using var ms = new MemoryStream(); await f.CopyToAsync(ms); return ms.ToArray();
+    }
+
     protected IActionResult Back(string? fallback = null) =>
         Request.Headers.Referer.ToString() is { Length: > 0 } r && Uri.TryCreate(r, UriKind.Absolute, out var u) && u.Host == Request.Host.Host ? Redirect(u.PathAndQuery) : Redirect(fallback ?? "/");
 

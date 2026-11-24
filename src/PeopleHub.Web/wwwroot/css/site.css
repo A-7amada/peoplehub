@@ -184,3 +184,18 @@ bdi{unicode-bidi:isolate}
 .matrix{min-width:980px}.matrix th{min-width:92px;font-size:.68rem;line-height:1.25;vertical-align:bottom}
 .matrix th:first-child,.matrix td:first-child{min-width:290px;position:sticky;inset-inline-start:0;background:#fff;z-index:1;text-align:start}
 .matrix .grp td:first-child{background:#f4f5fb}.matrix td{padding-block:9px}
+
+.orgchart{text-align:center;min-width:max-content;padding:8px 4px}
+.orgchart ul{display:flex;justify-content:center;padding:20px 0 0;margin:0;list-style:none;position:relative}
+.orgchart ul ul::before{content:"";position:absolute;top:0;inset-inline-start:50%;border-inline-start:2px solid #cfd5ea;height:20px}
+.orgchart li{position:relative;padding:20px 10px 0;text-align:center;list-style:none}
+.orgchart li::before,.orgchart li::after{content:"";position:absolute;top:0;inset-inline-end:50%;width:50%;height:20px;border-top:2px solid #cfd5ea}
+.orgchart li::after{inset-inline-end:auto;inset-inline-start:50%;border-inline-start:2px solid #cfd5ea}
+.orgchart li:only-child::before,.orgchart li:only-child::after{display:none}.orgchart li:only-child{padding-top:0}
+.orgchart li:first-child::before,.orgchart li:last-child::after{border:0 none}
+.orgchart li:last-child::before{border-inline-end:2px solid #cfd5ea;border-radius:0 8px 0 0}.orgchart li:first-child::after{border-radius:8px 0 0 0}
+[dir=rtl] .orgchart li:last-child::before{border-radius:8px 0 0 0}[dir=rtl] .orgchart li:first-child::after{border-radius:0 8px 0 0}
+.oc-box{display:inline-block;min-width:150px;max-width:190px;padding:12px 14px;border:1px solid #e0e4f2;border-radius:14px;background:linear-gradient(180deg,#fff,#f7f8ff);box-shadow:0 4px 14px rgba(60,70,140,.08)}
+.oc-box.off{opacity:.55}.oc-av{width:30px;height:30px;background:#eef0ff;color:#5b5bd6;margin:0 auto 6px}
+.oc-t{font-weight:700;font-size:.9rem}.oc-m{font-size:.78rem;color:var(--ink2);margin-top:2px}.oc-n{margin-top:6px;font-size:.72rem;font-weight:700;color:#5b5bd6;background:#eef0ff;border-radius:99px;display:inline-block;padding:1px 9px}
+@media print{.sidebar,.topbar,.demo-banner,.actions,.seg{display:none!important}.main{margin:0!important}}

@@ -33,6 +33,7 @@ else {
     <a class="@On("Attendance")" href="/Attendance">@Ui.Icon("clock") @T["nav.attendance"]</a>
     <a class="@On("Leave")" href="@(User.Claims.Any(c => c.Type == "emp") ? "/Leave" : "/Leave/Team")">@Ui.Icon("calendar") @T["nav.leave"]</a>
     <a class="@On("Requests")" href="/Requests?scope=@(inbox > 0 ? "inbox" : "mine")">@Ui.Icon("inbox") @T["nav.requests"] @if (inbox > 0) { <span class="badge">@inbox</span> }</a>
+    <a class="@On("Requests") nav-sub" href="/Requests/Delegations">@Ui.Icon("users") @T["nav.deleg"]</a>
     <div class="nav-label">@T["nav.finance"]</div>
     <a class="@On("Payroll")" href="/Payroll">@Ui.Icon("wallet") @T["nav.payroll"]</a>
     @if (Can(Perm.Reports)) { <a class="@On("Reports")" href="/Reports">@Ui.Icon("chart") @T["nav.reports"]</a> }

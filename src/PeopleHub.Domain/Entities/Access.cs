@@ -152,3 +152,28 @@ public static class RoutePlanner
         return string.Join(',', route);
     }
 }
+
+/// <summary>Temporary hand-over of approval rights (for example while the manager is on leave).</summary>
+public class Delegation
+{
+    public int Id { get; set; }
+    public int FromEmployeeId { get; set; }
+    public int ToEmployeeId { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public bool Revoked { get; set; }
+    public bool IsActiveOn(DateTime day) => !Revoked && StartDate.Date <= day.Date && day.Date <= EndDate.Date;
+}
+
+/// <summary>Uploaded supporting document (PDF or image up to 2 MB), kept in the database.</summary>
+public class Attachment
+{
+    public int Id { get; set; }
+    public string Token { get; set; } = Guid.NewGuid().ToString("N");
+    public string FileName { get; set; } = "";
+    public string ContentType { get; set; } = "";
+    public byte[] Data { get; set; } = [];
+    public int OwnerEmployeeId { get; set; }
+    public string UploadedBy { get; set; } = "";
+    public DateTime At { get; set; } = DateTime.UtcNow;
+}

@@ -8,8 +8,8 @@
 <div class="grid g2" style="margin-top:18px">
  <div class="card"><div class="card-h"><h2>@T["att.requestOvertime"]</h2></div><div class="card-b"><form method="post" action="/Attendance/Overtime" asp-antiforgery="true" class="form-grid">
   <div class="field"><label>@T["common.date"]</label><input type="date" name="date" value="@(((DateTime)ViewBag.Today).AddDays(-1).ToString("yyyy-MM-dd"))"></div><div class="field"><label>@T["att.hours"]</label><input type="number" name="hours" step="0.5" min="0.5" max="8" value="2"></div>
-  <div class="field full"><label>@T["common.reason"]</label><input type="text" name="reason" required></div><div class="full"><button class="btn btn-primary">@T["common.submit"]</button></div></form></div></div>
- <div class="card"><div class="card-h"><h2>@T["att.requestCorrection"]</h2></div><div class="card-b"><form method="post" action="/Attendance/Correction" asp-antiforgery="true" class="form-grid">
+  <div class="field full"><label>@T["common.reason"]</label><input type="text" name="reason" required></div><div class="field full"><label>@T["leave.document"]</label><input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png"><span class="faint small">@T["leave.docHint"]</span></div><div class="full"><button class="btn btn-primary">@T["common.submit"]</button></div></form></div></div>
+ <div class="card"><div class="card-h"><h2>@T["att.requestCorrection"]</h2></div><div class="card-b"><form method="post" action="/Attendance/Correction" asp-antiforgery="true" enctype="multipart/form-data" class="form-grid">
   <div class="field"><label>@T["common.date"]</label><input type="date" name="date" value="@(((DateTime)ViewBag.Today).AddDays(-1).ToString("yyyy-MM-dd"))"></div><div></div>
   <div class="field"><label>@T["att.checkIn"]</label><input type="time" name="checkIn" value="09:00"></div><div class="field"><label>@T["att.checkOut"]</label><input type="time" name="checkOut" value="17:00"></div>
   <div class="field full"><label>@T["common.reason"]</label><input type="text" name="reason" required></div><div class="full"><button class="btn btn-primary">@T["common.submit"]</button></div></form></div></div>

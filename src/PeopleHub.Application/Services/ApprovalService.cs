@@ -4,26 +4,33 @@ using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Application.Services;
 
 public record RequestRow(string Kind, int Id, Employee Employee, string TypeName, string TypeNameAr, string Detail,
-    RequestStatus Status, string? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel,
+    RequestStatus Status, string? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel, string? AttachmentToken, string? AttachmentName,
     List<ApprovalAction> History);
 
-public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows)
+public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows, DelegationService delegations)
 {
     public static readonly string[] Kinds = ["Leave", "Overtime", "Correction", "Advance"];
+
+    private List<(int FromEmployeeId, string[] Roles)>? _deleg;
+    private async Task EnsureDelegationsAsync() => _deleg ??= await delegations.ActiveToMeAsync();
 
     private bool CanActOn(Approvable a)
     {
         if (a.Status != RequestStatus.Pending || a.CurrentStage is not { } stage) return false;
         if (a.EmployeeId == me.EmployeeId) return false; // nobody approves their own request
         if (me.IsInRole(Roles.SystemAdmin)) return true;
-        if (stage == ApprovalStage.Manager) return a.Employee?.ManagerId != null && a.Employee.ManagerId == me.EmployeeId;
-        return stage.Split('|').Any(me.IsInRole);
+        if (stage == ApprovalStage.Manager ? a.Employee?.ManagerId != null && a.Employee.ManagerId == me.EmployeeId : stage.Split('|').Any(me.IsInRole)) return true;
+        // delegated rights: the delegator would have been allowed to act on this step
+        foreach (var d in _deleg ?? [])
+            if (stage == ApprovalStage.Manager ? a.Employee?.ManagerId == d.FromEmployeeId : stage.Split('|').Intersect(d.Roles).Any()) return true;
+        return false;
     }
 
     public async Task<List<RequestRow>> ListAsync(string? kind, RequestStatus? status, bool inboxOnly)
     {
         var ids = await scope.VisibleEmployeeIdsAsync();
-        bool Vis(Approvable a) => ids == null || ids.Contains(a.EmployeeId);
+        await EnsureDelegationsAsync();
+        bool Vis(Approvable a) => ids == null || ids.Contains(a.EmployeeId) || CanActOn(a);
         var items = new List<(string Kind, Approvable A, string T, string TAr, string Detail)>();
         if (kind is null or "Leave")
             items.AddRange((await repo.ToListAsync(repo.Query<LeaveRequest>())).Where(Vis).Select(l => ("Leave", (Approvable)l, l.LeaveType?.Name ?? "", l.LeaveType?.NameAr ?? "",
@@ -38,7 +45,7 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
 
         var actions = (await repo.ToListAsync(repo.Query<ApprovalAction>().OrderBy(x => x.At))).ToLookup(x => (x.Kind, x.RequestId));
         var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, i.A.Employee!, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
-                i.A.CreatedAt, i.A.Comment, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)),
+                i.A.CreatedAt, i.A.Comment, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)), i.A.AttachmentToken, i.A.AttachmentName,
                 actions[(i.Kind, i.A.Id)].ToList()))
             .Where(r => status == null || r.Status == status)
             .Where(r => !inboxOnly || r.CanAct)
@@ -48,7 +55,8 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
 
     public async Task<int> PendingForMeAsync() => (await ListAsync(null, RequestStatus.Pending, true)).Count;
 
-    private async Task<Approvable> LoadAsync(string kind, int id) => (kind switch
+    private async Task<Approvable> LoadAsync(string kind, int id) { await EnsureDelegationsAsync(); return await LoadCoreAsync(kind, id); }
+    private async Task<Approvable> LoadCoreAsync(string kind, int id) => (kind switch
     {
         "Leave" => await repo.FirstOrDefaultAsync(repo.Query<LeaveRequest>().Where(x => x.Id == id)) as Approvable,
         "Overtime" => await repo.FirstOrDefaultAsync(repo.Query<OvertimeRequest>().Where(x => x.Id == id)),

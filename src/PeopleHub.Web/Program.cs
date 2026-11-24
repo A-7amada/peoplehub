@@ -26,6 +26,8 @@ builder.Services.AddScoped<LeaveService>();
 builder.Services.AddScoped<ApprovalService>();
 builder.Services.AddScoped<PayrollService>();
 builder.Services.AddScoped<WorkflowService>();
+builder.Services.AddScoped<AttachmentService>();
+builder.Services.AddScoped<DelegationService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<ReportService>();
 builder.Services.AddSingleton<Loc>();
