@@ -207,6 +207,7 @@ public partial class Loc
         A("permg.Leave", "Leave", "الإجازات");
         A("permg.Payroll", "Payroll", "المرتبات");
         A("permg.Reports", "Reports", "التقارير");
+        A("permg.Talent", "Talent", "المواهب");
         A("permg.Administration", "Administration", "الإدارة");
 
         A("deleg.title", "Approval delegation", "تفويض الموافقات"); A("nav.deleg", "Delegation", "التفويض");

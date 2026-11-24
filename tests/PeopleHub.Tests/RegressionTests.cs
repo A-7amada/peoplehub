@@ -17,3 +17,22 @@ public class RegressionTests {
  [Theory][InlineData(0)][InlineData(13)]public async Task AttendanceRejectsInvalidMonth(int month){await using var d=await Db();var u=new User(true);var c=new AppClock(TimeProvider.System);var a=new AuditService(d,u,c);var s=new AttendanceService(d,new AccessScope(d,u),u,a,new NotificationService(d,u,c),c,new WorkflowService(d,u,a));await Assert.ThrowsAsync<DomainException>(()=>s.SummariesAsync([],2026,month));}
  [Fact]public async Task EmployeeOptionalBlankFieldsSaveAndRoundTrip(){await using var d=await Db();var u=new User(true);var c=new AppClock(TimeProvider.System);var dept=new Department{Name="Test"};var branch=new Branch{Name="Test"};var title=new JobTitle{Name="Test"};d.Add(dept);d.Add(branch);d.Add(title);await d.SaveAsync();var e=new Employee{FullName="Fictional",Email="fictional@example.local",DepartmentId=dept.Id,BranchId=branch.Id,JobTitleId=title.Id,HireDate=c.Today,NationalId=null!,Phone=null!,BankName=null!,FullNameAr=null!};await new EmployeeService(d,new AccessScope(d,u),u,new AuditService(d,u,c),c).SaveAsync(e,null);d.ChangeTracker.Clear();var saved=await d.Set<Employee>().SingleAsync();Assert.Equal("",saved.NationalId);Assert.Equal("",saved.Phone);}
 }
+
+public class RolePermissionRegressionTests {
+ [Theory]
+ [InlineData("Employee","payroll.prepare",false)]
+ [InlineData("DepartmentManager","payroll.view",false)]
+ [InlineData("HRSpecialist","emp.salary",false)]
+ [InlineData("AttendanceOfficer","attendance.manage",true)]
+ [InlineData("PayrollOfficer","payroll.prepare",true)]
+ [InlineData("PayrollOfficer","payroll.financeApprove",false)]
+ [InlineData("FinanceManager","payroll.financeApprove",true)]
+ [InlineData("FinanceManager","payroll.finalize",false)]
+ [InlineData("TopManagement","payroll.finalize",true)]
+ [InlineData("TopManagement","payroll.export",false)]
+ [InlineData("HRManager","payroll.hrReview",true)]
+ [InlineData("HRManager","admin.users",false)]
+ public void DefaultRolesHaveSeparatedDuties(string role,string permission,bool expected) {
+  Assert.Equal(expected,Perm.Defaults.TryGetValue(role,out var p)&&p.Contains(permission));
+ }
+}

@@ -50,3 +50,7 @@ Commit `7f0f970` deployed successfully to Render. Seven public demo roles each l
 Live fictional actions: employee check-in and check-out; a new bilingual regression course created before the deploy survived it; employee enrolled in that course; a one-day leave request for 14 December 2026 was submitted and its direct-manager step approved. The manager downloaded employee CSV successfully. English and Arabic training screenshots were inspected visually. Live HR reauthentication requires a renewed vault site approval, so remaining admin write verification is pending, not reported as passed.
 
 A final UI review also found an attachment control on the overtime form that was not handled by that endpoint. It was moved to attendance correction, whose endpoint supports it, and the obsolete no-uploads hint was corrected in both languages.
+
+## Later all-role follow-up
+
+The HR login approval was granted and the live employee/candidate/training follow-up completed. The pending-HR note above describes the earlier checkpoint, not a current blocker. The subsequent isolated role pass and cleanup are in `ROLE-REGRESSION.md`.
