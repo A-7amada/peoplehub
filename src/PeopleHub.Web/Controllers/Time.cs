@@ -63,7 +63,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
     }
 }
 
-public class LeaveController(Loc loc, LeaveService svc, ApprovalService approvals, AppClock clock, ICurrentUser me, AttachmentService files) : BaseController(loc)
+public class LeaveController(Loc loc, LeaveService svc, ApprovalService approvals, AppClock clock, ICurrentUser me, AttachmentService files, LeaveCalendar calendar) : BaseController(loc)
 {
     public async Task<IActionResult> Index()
     {
@@ -85,6 +85,9 @@ public class LeaveController(Loc loc, LeaveService svc, ApprovalService approval
 
     [HttpPost]
     public Task<IActionResult> CancelApproved(int id, string? reason) => Do(() => svc.CancelApprovedAsync(id,reason), "msg.saved", () => RedirectToAction(nameof(Index)));
+
+    public async Task<IActionResult> Calendar(int? year,int? month,int? departmentId)
+    {try{return View(await calendar.GetAsync(year??clock.Today.Year,month??clock.Today.Month,departmentId));}catch(DomainException ex){TempData["err"]=L[ex.Message];return RedirectToAction(nameof(Index));}}
 
     public async Task<IActionResult> Team()
     {

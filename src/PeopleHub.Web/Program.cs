@@ -42,6 +42,7 @@ builder.Services.AddScoped<ShiftSchedule>();
 builder.Services.AddScoped<EmploymentTimeline>();
 builder.Services.AddScoped<AttendanceService>();
 builder.Services.AddScoped<LeaveService>();
+builder.Services.AddScoped<LeaveCalendar>();
 builder.Services.AddScoped<ApprovalService>();
 builder.Services.AddScoped<PayrollService>();
 builder.Services.AddScoped<WorkflowService>();

@@ -1,0 +1,11 @@
+@model LeaveCalendarView
+@{ViewData["Title"]=T["leave.calendar"];}
+<div class="page-head"><div><h1>@T["leave.calendar"]</h1><p class="sub">@T["leave.calendarHint"]</p></div><a class="btn" href="/Leave">@T["nav.leave"]</a></div>
+<div class="card" style="margin-bottom:18px"><div class="card-b"><form method="get" class="inline-form">
+<div class="field" style="flex:1;min-width:120px"><label>@T["common.year"]</label><input type="number" name="year" min="2000" max="2100" value="@Model.Year" required></div>
+<div class="field" style="flex:1;min-width:120px"><label>@T["common.month"]</label><select name="month">@for(var m=1;m<=12;m++){<option value="@m" selected="@(m==Model.Month)">@m</option>}</select></div>
+<div class="field" style="flex:1;min-width:120px"><label>@T["emp.department"]</label><select name="departmentId"><option value="">@T["common.all"]</option>@foreach(var d in Model.Departments){<option value="@d.Id" selected="@(d.Id==Model.DepartmentId)">@T.Name(d.Name,d.NameAr)</option>}</select></div><button class="btn btn-primary">@T["common.filter"]</button>
+</form></div></div>
+<div class="grid g3 leave-calendar">
+@foreach(var day in Model.Days){<section class="card"><div class="card-h"><h2 dir="ltr">@day.Date.ToString("yyyy-MM-dd")</h2><span class="badge">@T["leave.awayCount"]: @day.Away.Count</span></div><div class="card-b">@if(day.Away.Count==0){<span class="faint">@T["common.none"]</span>}else{foreach(var e in day.Away){<div class="person" style="margin-bottom:8px">@Ui.Avatar(e,T)<span class="nm">@T.Name(e.FullName,e.FullNameAr)</span></div>}}</div></section>}
+</div>

@@ -30,7 +30,7 @@
 | LEV-005 | Leave encashment | P1 | Partial: settlement estimate only |
 | LEV-006 | Approved leave cancellation, reversal, reason and notification | P0 | Implemented this batch |
 | LEV-007 | Notice-period and negative-balance policies | P0 | Partial: no negative balance; notice policy open |
-| LEV-008 | Department calendar | P1 | Open |
+| LEV-008 | Department calendar | P1 | Implemented scoped month view of approved leave spans, historical department filter, no reason/type/medical detail; weekends shown as span context, not deducted leave days |
 | LEV-009 | Simultaneous request/approval constraints | P0 | Partial: employee revision serializes concurrent request creation, final balance check is atomic; PostgreSQL race stress remains unverified |
 | PAY-001 | Grade/category salary structures | P0 | Open |
 | PAY-002 | Payroll eligibility | P0 | Partial: active/on-leave employed by month end; terminal-period eligibility open |
@@ -123,3 +123,5 @@ Performance response follow-up: employee acknowledgement records receipt, not ag
 Session follow-up: 177 tests pass (173 regression plus 4 session tests). Two isolated browser contexts exercised: owner revokes the other, its next request rejects while current remains valid; current revoke then rejects current request. EN/AR security page inspected. Session tokens are stored only as hashes. Old cookies without a session record are intentionally signed out on rollout. User-agent/IP are displayed as unverified hints, not device identity.
 
 Attendance exception follow-up: 181 tests pass (177 regression plus 4 exception tests). Missing punch inbox inspected in EN/AR. Overnight shifts are not flagged before next-day end. No record still uses the absence calendar. Reprocessing keeps manual, excused and locked records, preserves raw evidence and does not invent missing times. Unknown device IDs are visible only to attendance managers and are not silently remapped.
+
+Leave calendar follow-up: 184 tests pass (181 regression plus 3 calendar tests). Month clipping, approved-only visibility, historical departments and scope boundaries verified. EN/AR and 390px viewport inspected. Narrow shell now uses a horizontal navigation strip rather than a full-height sidebar. Existing own/team/company permissions are not broadened.
