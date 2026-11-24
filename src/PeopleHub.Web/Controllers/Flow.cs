@@ -178,3 +178,11 @@ public class PayrollJournalsController(Loc loc,PayrollJournals svc):BaseControll
  public async Task<IActionResult> Index(int id){Response.Headers.CacheControl="no-store";try{return View(await svc.BuildAsync(id));}catch(DomainException){return Forbidden();}}
  public async Task<IActionResult> Csv(int id){try{Response.Headers.CacheControl="no-store";return File(System.Text.Encoding.UTF8.GetBytes("\uFEFF"+await svc.CsvAsync(id)),"text/csv",$"internal-cost-centre-{id}.csv");}catch(DomainException){return Forbidden();}}
 }
+
+public class PayrollAdjustmentsController(Loc loc,PayrollAdjustments svc):BaseController(loc)
+{
+ public async Task<IActionResult> Index(int id){Response.Headers.CacheControl="no-store";try{ViewBag.Target=id;ViewBag.Sources=await svc.SourcesAsync(id);return View(await svc.ListAsync(id));}catch(DomainException){return Forbidden();}}
+ [HttpPost]public Task<IActionResult> Propose(int id,int sourceLineId,string kind,decimal amount,string reason)=>Do(()=>svc.ProposeAsync(sourceLineId,id,kind,amount,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+ [HttpPost]public Task<IActionResult> Decide(int id,int adjustmentId,bool approve,string reason)=>Do(()=>svc.DecideAsync(adjustmentId,approve,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+ [HttpPost]public Task<IActionResult> Apply(int id,int adjustmentId,string reason)=>Do(()=>svc.ApplyAsync(adjustmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+}

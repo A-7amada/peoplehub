@@ -2741,6 +2741,106 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("PasswordReset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollAdjustment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ProposedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("SourceLineId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SourceRunId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("SourceVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TargetRunId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetRunId");
+
+                    b.ToTable("PayrollAdjustment");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollAdjustmentEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("AdjustmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdjustmentId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("PayrollAdjustmentEvent");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollBankResult", b =>
                 {
                     b.Property<int>("Id")
@@ -2977,6 +3077,10 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("CalculationVersion")
                         .HasColumnType("integer");
+
+                    b.Property<string>("CorrectionStamp")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");

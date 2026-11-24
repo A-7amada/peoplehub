@@ -2622,6 +2622,102 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("PasswordReset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollAdjustment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("REAL");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProposedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("SourceLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SourceRunId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SourceVersion")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TargetRunId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TargetRunId");
+
+                    b.ToTable("PayrollAdjustment");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollAdjustmentEvent", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("AdjustmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("Sequence")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AdjustmentId", "Sequence")
+                        .IsUnique();
+
+                    b.ToTable("PayrollAdjustmentEvent");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollBankResult", b =>
                 {
                     b.Property<int>("Id")
@@ -2850,6 +2946,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.Property<int>("CalculationVersion")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("CorrectionStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");

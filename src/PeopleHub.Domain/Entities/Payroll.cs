@@ -66,6 +66,7 @@ public class PayrollRun
     public int CalculationVersion { get; set; }
     public string? FinalizedBy { get; set; }
     public bool AdvancesApplied { get; set; }
+    public string CorrectionStamp { get; set; } = "";
     public bool IsLocked => Status is PayrollStatus.Finalized or PayrollStatus.Paid;
 
     public void Review() => Move(PayrollStatus.Draft, PayrollStatus.HRReviewed);
