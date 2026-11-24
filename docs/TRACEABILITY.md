@@ -42,7 +42,7 @@
 | PAY-008 | Immutable calculation inputs, policy/version/hash and history | P0 | Implemented for new calculations; old history not reconstructed |
 | PAY-009 | Approved payroll locking and separate final approver | P0 | Implemented this batch |
 | PAY-010 | Bank-result reconciliation | P1 | Partial: separate initially-unset grant, manual append-only full-net paid/rejected/returned evidence per locked payroll line, reference/reason/amount/state/duplicate guards and current result view. No transfer, automatic status/advance changes, partial payment or bank file import; external verification/adapters remain open |
-| PAY-011 | Cost-centre journals | P2 | Open |
+| PAY-011 | Cost-centre journals | P2 | Partial: locked-run cost-centre planning projection and CSV of captured gross expense, deductions clearing and net payable, balanced per line and group. Missing historical cost centres stay unallocated. Financial-view plus payroll-view required, export separate. No account mappings, employer costs, posted journals or accounting adapter; owner chart-of-accounts and integration remain open |
 | PAY-012 | Complete final settlement and approval | P0 | Partial: estimator only |
 | PAY-013 | Single versioned Egyptian policy, legal validation status | P0 | Documented EG-DEMO-2026-v1, not legally validated |
 | WFL-001 | SLA, reminders and escalation | P1 | Partial: per-kind explicit elapsed-hour reminder policy (off by default), daily recipient/stage ledger, current approver/reassignment/delegation targeting and minimal private in-app reminders while service is awake. No automatic escalation, working-hours calendar or delivery-time guarantee; durable scheduling and escalation policy remain open |
@@ -187,3 +187,5 @@ Approval reminder follow-up: five tests cover disabled defaults, elapsed stage t
 Salary structure follow-up: five tests cover salary/manage permission boundaries, grade and pending-schedule guards, invalid/duplicate components, explicit application with historical payroll unchanged and immutable source/application evidence. Local MVC creation/application and EN/AR inspected. No automatic grade-based update, backdating, real payment, compliance claim or assumed compensation value.
 
 Flexible shift follow-up: nine domain/service tests cover arrival window edges, late/early arrival, personal expected end, overtime, invalid/overnight configurations, permission and no rewrite of earlier records. Local MVC definition and EN/AR shift calendar inspected. Dated assignment uses the existing explicit schedule.
+
+Cost-centre journal follow-up: three focused tests cover permission/export boundaries, legacy unallocated snapshots, balanced totals, privacy-minimal output, spreadsheet-formula escaping and draft/unbalanced guards. EN/AR summary inspected. Internal EGP planning projection only, no posted accounting entries or bank instruction.

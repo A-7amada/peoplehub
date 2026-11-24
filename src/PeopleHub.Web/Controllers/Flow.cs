@@ -172,3 +172,9 @@ public class SalaryStructuresController(Loc loc,SalaryStructures svc,EmployeeSer
  [HttpPost,RequireStepUp]public Task<IActionResult> Create(string name,int grade,decimal basic,string componentAmounts,string reason)=>Do(()=>svc.CreateAsync(name,grade,basic,componentAmounts,reason),"msg.saved",()=>RedirectToAction(nameof(Index)));
  [HttpPost,RequireStepUp]public Task<IActionResult> Apply(int employeeId,int structureId,string reason)=>Do(()=>svc.ApplyAsync(employeeId,structureId,reason),"msg.saved",()=>RedirectToAction(nameof(Index)));
 }
+
+public class PayrollJournalsController(Loc loc,PayrollJournals svc):BaseController(loc)
+{
+ public async Task<IActionResult> Index(int id){Response.Headers.CacheControl="no-store";try{return View(await svc.BuildAsync(id));}catch(DomainException){return Forbidden();}}
+ public async Task<IActionResult> Csv(int id){try{Response.Headers.CacheControl="no-store";return File(System.Text.Encoding.UTF8.GetBytes("\uFEFF"+await svc.CsvAsync(id)),"text/csv",$"internal-cost-centre-{id}.csv");}catch(DomainException){return Forbidden();}}
+}
