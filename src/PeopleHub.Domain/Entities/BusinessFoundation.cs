@@ -258,3 +258,13 @@ public class RecruitmentEvent
 {
  public int Id {get;set;}public int CandidateId {get;set;}public int? InterviewId {get;set;}public string Kind {get;set;}="";public string Note {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+
+/// <summary>Immutable internal offer proposal. Not a sent letter or contract.</summary>
+public class CandidateOffer
+{
+ public int Id {get;set;}public int CandidateId {get;set;}public string RoleTitle {get;set;}="";public decimal MonthlyBase {get;set;}public string Currency {get;set;}="";public DateTime StartOn {get;set;}public DateTime ValidUntil {get;set;}public string Terms {get;set;}="";public int CreatedByUserId {get;set;}public string Actor {get;set;}="";public DateTime At {get;set;}
+}
+public class CandidateOfferEvent
+{
+ public int Id {get;set;}public int OfferId {get;set;}public string Kind {get;set;}="";public string Note {get;set;}="";public int ActorUserId {get;set;}public string Actor {get;set;}="";public DateTime At {get;set;}
+}

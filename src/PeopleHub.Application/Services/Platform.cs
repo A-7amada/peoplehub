@@ -284,13 +284,17 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
         repo.Add(new Candidate { JobOpeningId = jobId, Name = name.Trim(), Email = email?.Trim() ?? "", Note = note?.Trim() ?? "", CreatedAt = clock.UtcNow });
         await repo.SaveAsync();
     }
-    public async Task MoveCandidateAsync(int id, bool reject)
+    public Task MoveCandidateAsync(int id, bool reject)=>repo.AtomicAsync(async()=>
     {
         Need(); var c = await repo.FirstOrDefaultAsync(repo.Query<Candidate>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
         if(c.Stage is CandidateStage.Hired or CandidateStage.Rejected)throw new DomainException("err.forbidden");
+        if(!reject&&c.Stage==CandidateStage.Offer){var offers=await repo.ToListAsync(repo.Query<CandidateOffer>().Where(x=>x.CandidateId==c.Id));var latest=offers.OrderBy(x=>x.Id).LastOrDefault();if(latest==null||!await repo.AnyAsync(repo.Query<CandidateOfferEvent>().Where(x=>x.OfferId==latest.Id&&x.Kind=="Accepted")))throw new DomainException("err.forbidden");}
+        c.InterviewStamp=Guid.NewGuid().ToString("N");
+        if(reject){var offers=await repo.ToListAsync(repo.Query<CandidateOffer>().Where(x=>x.CandidateId==c.Id));var ids=offers.Select(x=>x.Id).ToList();var events=await repo.ToListAsync(repo.Query<CandidateOfferEvent>().Where(x=>ids.Contains(x.OfferId)).OrderBy(x=>x.Id));foreach(var offer in offers){var state=events.LastOrDefault(x=>x.OfferId==offer.Id)?.Kind??"Proposed";if(state is "Proposed" or "Approved")repo.Add(new CandidateOfferEvent{OfferId=offer.Id,Kind="Withdrawn",Note="Candidate moved to rejected stage",ActorUserId=me.UserId,Actor=me.Email,At=clock.UtcNow});}}
         if (reject) c.Stage = CandidateStage.Rejected; else c.Stage = Candidate.Next(c.Stage) ?? c.Stage;
+        repo.Add(new RecruitmentEvent{CandidateId=c.Id,Kind="StageChanged",Note=c.Stage.ToString(),Actor=me.Email,At=clock.UtcNow});
         audit.Log("Update", "Candidate", c.Name, c.Stage.ToString()); await repo.SaveAsync();
-    }
+    });
 
     public async Task<List<PerformanceReview>> ReviewsAsync()
     {

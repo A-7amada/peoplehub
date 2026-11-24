@@ -25,15 +25,18 @@ public class DeviceApiController(DeviceService device, SettingsService settings)
     }
 }
 
-public class TalentController(Loc loc, TalentService svc, OrgService org, EmployeeService emps, ICurrentUser me, AppClock clock, AccessScope scope,TrainingEvidence evidence,RecruitmentInterviews interviews) : BaseController(loc)
+public class TalentController(Loc loc, TalentService svc, OrgService org, EmployeeService emps, ICurrentUser me, AppClock clock, AccessScope scope,TrainingEvidence evidence,RecruitmentInterviews interviews,RecruitmentOffers offers) : BaseController(loc)
 {
     public async Task<IActionResult> Recruitment()
     {
         if (!me.Can(Perm.TalentManage)) return Forbidden();
+        ViewBag.Offers=await offers.GetAsync();
         ViewBag.Interviews=await interviews.GetAsync();ViewBag.Interviewers=await emps.ManagerCandidatesAsync();
         ViewBag.Jobs = await svc.JobsAsync(); ViewBag.Depts = await org.DepartmentsAsync();
         return View(await svc.CandidatesAsync());
     }
+    [HttpPost] public Task<IActionResult> ProposeOffer(int candidateId,string roleTitle,decimal monthlyBase,string currency,DateTime startOn,DateTime validUntil,string terms)=>Do(()=>offers.ProposeAsync(candidateId,roleTitle,monthlyBase,currency,startOn,validUntil,terms),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public Task<IActionResult> DecideOffer(int offerId,string decision,string note)=>Do(()=>offers.DecideAsync(offerId,decision,note),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> ScheduleInterview(int candidateId,int interviewerEmployeeId,DateTime localStart,int minutes,string place,string note)=>Do(()=>interviews.ScheduleAsync(candidateId,interviewerEmployeeId,localStart,minutes,place,note),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> CloseInterview(int interviewId,bool complete,string note)=>Do(()=>interviews.CloseAsync(interviewId,complete,note),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> AddJob(string title, string? titleAr, int? dept, int positions,string justification) => Do(() => svc.AddJobAsync(title, titleAr, dept, positions,justification), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
