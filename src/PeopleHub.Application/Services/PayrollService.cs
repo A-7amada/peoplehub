@@ -20,11 +20,12 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
     public async Task<List<PayrollCalculationSnapshot>> SnapshotsAsync(int id)
     {
         Require(Perm.PayView);
-        return await repo.ToListAsync(repo.Query<PayrollCalculationSnapshot>().Where(x=>x.RunId==id).OrderByDescending(x=>x.Version));
+        var rows=await repo.ToListAsync(repo.Query<PayrollCalculationSnapshot>().Where(x=>x.RunId==id).OrderByDescending(x=>x.Version));
+        return rows.Select(x=>new PayrollCalculationSnapshot{Id=x.Id,RunId=x.RunId,Version=x.Version,Event=x.Event,PolicyVersion=x.PolicyVersion,At=x.At,Actor=x.Actor,Sha256=x.Sha256,Payload=""}).ToList();
     }
     public async Task<string> SnapshotFileAsync(int id)
     {
-        Require(Perm.PayExport);
+        Require(Perm.PayExport);Require(Perm.EmpBank);Require(Perm.EmpIdentity);
         var s=await repo.FirstOrDefaultAsync(repo.Query<PayrollCalculationSnapshot>().Where(x=>x.Id==id)) ?? throw new DomainException("err.notFound");
         audit.Log("Export","PayrollSnapshot",id,"calculation evidence exported");await repo.SaveAsync();
         return JsonSerializer.Serialize(new {s.Version,s.Event,s.PolicyVersion,s.At,s.Actor,s.Sha256,Calculation=JsonSerializer.Deserialize<JsonElement>(s.Payload)},new JsonSerializerOptions {WriteIndented=true});
@@ -194,7 +195,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
 
     public async Task<string> BankFileAsync(int id)
     {
-        Require(Perm.PayExport);
+        Require(Perm.PayExport);Require(Perm.EmpBank);
         var (run, lines, _) = await RunAsync(id);
         if (!run.IsLocked) throw new DomainException("err.payrollState");
         var sb = new StringBuilder("Code,Name,Bank,IBAN,Net,Currency\n");
