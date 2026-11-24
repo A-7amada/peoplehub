@@ -20,8 +20,8 @@ public class DeviceApiController(DeviceService device, SettingsService settings)
         if (string.IsNullOrEmpty(real) || !System.Security.Cryptography.CryptographicOperations.FixedTimeEquals(System.Text.Encoding.UTF8.GetBytes(key), System.Text.Encoding.UTF8.GetBytes(real))) return Unauthorized(new { error = "bad device key" });
         if (!SettingsService.DeviceMode) return Conflict(new { error = "attendance source is set to System, device punches are ignored" });
         if (punches == null || punches.Count == 0 || punches.Count > 5000) return BadRequest(new { error = "send 1 to 5000 punches" });
-        var n = await device.IngestAsync(punches.Where(p => !string.IsNullOrWhiteSpace(p.UserId)).Select(p => new DeviceService.PunchIn(p.UserId.Trim(), p.Time)));
-        return Ok(new { accepted = n });
+        try { var n = await device.IngestAsync(punches.Select(p => new DeviceService.PunchIn(p.UserId, p.Time))); return Ok(new { accepted = n }); }
+        catch(DomainException ex) { return BadRequest(new { error=ex.Message }); }
     }
 }
 

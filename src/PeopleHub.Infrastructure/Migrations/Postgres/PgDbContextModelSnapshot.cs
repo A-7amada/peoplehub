@@ -326,6 +326,63 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("AttendanceCorrection");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.AttendanceEvidence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("AfterIn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("AfterOut")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("BeforeIn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("BeforeOut")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int?>("CorrectionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "Date");
+
+                    b.ToTable("AttendanceEvidence");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.AttendanceRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -756,8 +813,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int?>("EmployeeId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasColumnType("text");
+
                     b.Property<bool>("Matched")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("ReceivedAt")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
@@ -769,6 +832,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("timestamp without time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
 
                     b.HasIndex("DeviceUserId", "Time");
 
@@ -884,6 +950,10 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<int>("JobTitleId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("LeaveRequestStamp")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int?>("ManagerId")
                         .HasColumnType("integer");

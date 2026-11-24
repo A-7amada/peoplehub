@@ -19,6 +19,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     public async Task AtomicAsync(Func<Task> work)
     {
+        if (Database.CurrentTransaction != null) { await work(); return; }
         await using var tx = await Database.BeginTransactionAsync();
         try { await work(); await tx.CommitAsync(); }
         catch { await tx.RollbackAsync(); ChangeTracker.Clear(); throw; }
@@ -26,7 +27,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
-        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog) && e.State is EntityState.Modified or EntityState.Deleted))
+        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence) && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Append-only business evidence cannot be edited or deleted.");
         foreach (var e in ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified))
             e.Property("Revision").CurrentValue = Guid.NewGuid().ToString("N");
@@ -43,6 +44,8 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<AttendanceEvidence>().HasIndex(x=>new{x.EmployeeId,x.Date});
+        b.Entity<DevicePunch>().HasIndex(x=>x.IdempotencyKey).IsUnique();
         b.Entity<PayrollCalculationSnapshot>().HasIndex(x => new { x.RunId, x.Version }).IsUnique();
         b.Entity<LeaveTransaction>();
         b.Entity<EmployeeAssignment>();

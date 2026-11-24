@@ -18,6 +18,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
             ViewBag.Today = eid == me.EmployeeId ? await svc.TodayRecordAsync() : null;
             ViewBag.Summary = (await svc.SummariesAsync([ViewBag.Emp], y, m))[eid.Value];
             ViewBag.Own = eid == me.EmployeeId;
+            ViewBag.Evidence=await svc.EvidenceAsync(eid.Value,y,m);
             return View(await svc.MonthAsync(eid.Value, y, m));
         }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }

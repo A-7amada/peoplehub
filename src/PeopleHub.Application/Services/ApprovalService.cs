@@ -65,7 +65,8 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
         _ => null
     }) ?? throw new DomainException("err.notFound");
 
-    public async Task ApproveAsync(string kind, int id, string? comment)
+    public Task ApproveAsync(string kind, int id, string? comment) => repo.AtomicAsync(()=>ApproveCoreAsync(kind,id,comment));
+    private async Task ApproveCoreAsync(string kind, int id, string? comment)
     {
         var a = await LoadAsync(kind, id);
         if (!CanActOn(a)) throw new DomainException("err.forbidden");
@@ -123,9 +124,11 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
                 var isNew = rec == null;
                 rec ??= new AttendanceRecord { EmployeeId = c.EmployeeId, Date = c.Date };
                 var before = $"{rec.CheckIn:HH:mm}-{rec.CheckOut:HH:mm}";
+                var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
                 rec.CheckIn = c.NewCheckIn; rec.CheckOut = c.NewCheckOut; rec.Source = AttendanceSource.Manual; rec.IsExcused = false; rec.ExcuseNote = null;
                 rec.Recompute(shift);
                 if (isNew) repo.Add(rec);
+                repo.Add(AttendanceEvidence.Capture(rec,"ApprovedCorrection",me.Email,clock.UtcNow,c.Reason,beforeIn,beforeOut,c.Id));
                 audit.Log("Correct", "Attendance", $"{c.Employee!.Code}/{c.Date:yyyy-MM-dd}", $"{before} -> {c.NewCheckIn:HH:mm}-{c.NewCheckOut:HH:mm}; {c.Reason}");
                 break;
         }

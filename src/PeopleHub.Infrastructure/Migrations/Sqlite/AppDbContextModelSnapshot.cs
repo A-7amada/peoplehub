@@ -309,6 +309,61 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("AttendanceCorrection");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.AttendanceEvidence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("AfterIn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("AfterOut")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("BeforeIn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("BeforeOut")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("CorrectionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "Date");
+
+                    b.ToTable("AttendanceEvidence");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.AttendanceRecord", b =>
                 {
                     b.Property<int>("Id")
@@ -715,8 +770,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("EmployeeId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Matched")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ReceivedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
@@ -728,6 +789,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique();
 
                     b.HasIndex("DeviceUserId", "Time");
 
@@ -839,6 +903,10 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.Property<int>("JobTitleId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("LeaveRequestStamp")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("ManagerId")
                         .HasColumnType("INTEGER");

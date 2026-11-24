@@ -58,7 +58,8 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         if (!me.Can(Perm.EmpManage)) throw new DomainException("err.forbidden");
     }
 
-    public async Task SaveAsync(Employee model, string? reason)
+    public Task SaveAsync(Employee model, string? reason) => repo.AtomicAsync(()=>SaveCoreAsync(model,reason));
+    private async Task SaveCoreAsync(Employee model, string? reason)
     {
         RequireHr();
         model.FullNameAr ??= ""; model.NationalId ??= ""; model.MaritalStatus ??= ""; model.Nationality ??= "Egyptian";

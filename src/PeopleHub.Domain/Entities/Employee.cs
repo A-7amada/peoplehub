@@ -21,6 +21,7 @@ public class Employee
     public string Phone { get; set; } = "";
     public string Email { get; set; } = "";
 
+    public string LeaveRequestStamp { get; set; } = "";
     public DateTime HireDate { get; set; }
     public int JobTitleId { get; set; }
     public JobTitle? JobTitle { get; set; }

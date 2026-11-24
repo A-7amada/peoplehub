@@ -73,15 +73,23 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
     /// <summary>Stores punches (from the push API or the simulator), then turns them into attendance records.</summary>
     public async Task<int> IngestAsync(IEnumerable<PunchIn> punches)
     {
+        int added=0;await repo.AtomicAsync(async()=>added=await IngestCoreAsync(punches));return added;
+    }
+    private async Task<int> IngestCoreAsync(IEnumerable<PunchIn> punches)
+    {
         var emps = await repo.ToListAsync(repo.Query<Employee>());
         var byCode = emps.ToDictionary(e => e.Code, StringComparer.OrdinalIgnoreCase);
-        var existing = (await repo.ToListAsync(repo.Query<DevicePunch>())).Select(p => (p.DeviceUserId, p.Time)).ToHashSet();
+        var existing = (await repo.ToListAsync(repo.Query<DevicePunch>())).Select(p => (p.DeviceUserId.Trim().ToUpperInvariant(), p.Time)).ToHashSet();
         var added = 0;
         foreach (var p in punches)
         {
-            if (existing.Contains((p.UserId, p.Time))) continue;
-            var emp = byCode.GetValueOrDefault(p.UserId);
-            repo.Add(new DevicePunch { DeviceUserId = p.UserId, Time = p.Time, EmployeeId = emp?.Id, Matched = emp != null }); added++;
+            if(p==null) throw new DomainException("err.required");
+            var code=(p.UserId??"").Trim().ToUpperInvariant();
+            if(string.IsNullOrEmpty(code) || code.Length>100 || p.Time.Year<2000 || p.Time.Year>9998) throw new DomainException("err.required");
+            if (!existing.Add((code, p.Time))) continue;
+            var emp = byCode.GetValueOrDefault(code);
+            var key=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes($"{code}|{p.Time.Ticks}")));
+            repo.Add(new DevicePunch { DeviceUserId = code, Time = p.Time, EmployeeId = emp?.Id, Matched = emp != null,IdempotencyKey=key,ReceivedAt=clock.UtcNow }); added++;
         }
         await repo.SaveAsync();
         await RebuildAsync(emps);
@@ -101,9 +109,11 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
             if (rec != null && rec.Source == AttendanceSource.Manual && rec.CheckIn != null) continue;
             var emp = emps.First(e => e.Id == eid);
             var isNew = rec == null; rec ??= new AttendanceRecord { EmployeeId = eid, Date = day };
+            var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
             rec.CheckIn = times[0]; rec.CheckOut = times.Count > 1 && times[^1] > times[0].AddMinutes(1) ? times[^1] : null; rec.Source = AttendanceSource.Fingerprint;
             rec.Recompute(shifts.FirstOrDefault(s => s.Id == emp.ShiftId) ?? shifts.FirstOrDefault() ?? new Shift { Name = "Default", Start = new(9, 0, 0), End = new(17, 0, 0) });
             if (isNew) { repo.Add(rec); recs.Add(rec); }
+            if(isNew || beforeIn!=rec.CheckIn || beforeOut!=rec.CheckOut) repo.Add(AttendanceEvidence.Capture(rec,"DeviceProjection",me.Email,clock.UtcNow,"Derived from retained device punches",beforeIn,beforeOut));
         }
         await repo.SaveAsync();
     }

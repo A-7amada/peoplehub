@@ -16,11 +16,11 @@
 | ATT-001 | Rotating/multiple shifts | P1 | Open |
 | ATT-002 | Overnight shifts | P1 | Partial: calculator supports, UI pairing open |
 | ATT-003 | Missing punch exceptions | P1 | Open |
-| ATT-004 | Raw punch ledger and idempotent processing | P0 | Open |
+| ATT-004 | Raw punch ledger and idempotent processing | P0 | Implemented: append-only punches, normalized batch/retry dedupe and unique idempotency key; concurrent losing request may require retry |
 | ATT-005 | Flexible hours | P1 | Open |
 | ATT-006 | Remote attendance/geofencing | P2 | Open |
 | ATT-007 | Approved attendance period locking | P1 | Open |
-| ATT-008 | Reasoned manual corrections with original evidence | P0 | Partial: approval correction/audit existing, immutable raw evidence open |
+| ATT-008 | Reasoned manual corrections with original evidence | P0 | Implemented: approved correction retains before/after, reason and original raw punches |
 | ATT-009 | Branch/group holiday calendars | P1 | Open |
 | ATT-010 | Category/shift grace periods | P1 | Partial: shift grace existing, categories open |
 | LEV-001 | Accrual by joining date/month and eligibility rules | P0 | Open: policy decision required |
@@ -31,7 +31,7 @@
 | LEV-006 | Approved leave cancellation, reversal, reason and notification | P0 | Implemented this batch |
 | LEV-007 | Notice-period and negative-balance policies | P0 | Partial: no negative balance; notice policy open |
 | LEV-008 | Department calendar | P1 | Open |
-| LEV-009 | Simultaneous request/approval constraints | P0 | Partial: optimistic concurrency; overlap race still open |
+| LEV-009 | Simultaneous request/approval constraints | P0 | Partial: employee revision serializes concurrent request creation, final balance check is atomic; PostgreSQL race stress remains unverified |
 | PAY-001 | Grade/category salary structures | P0 | Open |
 | PAY-002 | Payroll eligibility | P0 | Partial: active/on-leave employed by month end; terminal-period eligibility open |
 | PAY-003 | Joining/termination proration | P0 | Partial: settlement fixed, regular payroll proration open |
@@ -74,7 +74,7 @@
 | SEC-010 | Step-up auth for sensitive admin actions | P0 | Open |
 | ARC-001 | Modular monolith domain boundaries and policies | P1 | Existing layers; deeper policy extraction open |
 | ARC-002 | PostgreSQL/SQL Server | P0 | PostgreSQL existing |
-| ARC-003 | Explicit business transactions | P0 | Partial: new payroll build/recalc/adjust/finalize atomic |
+| ARC-003 | Explicit business transactions | P0 | Partial: payroll, attendance, device ingestion, final approvals, leave request/adjustment and employee save atomic; remaining service paths under review |
 | ARC-004 | Durable background scheduler | P1 | Open |
 | ARC-005 | Distributed cache/multi-instance | P2 | Open |
 | ARC-006 | Private object storage | P1 | Open |
@@ -101,3 +101,5 @@
 4. P2 integrations/enterprise infrastructure and P3 strategic HR.
 
 Acceptance is feature-level. A successful deployment of batch1 does not close batches2-4.
+
+Attendance evidence follow-up: 130 tests pass. New tests cover same-batch duplicate, database uniqueness, append-only punch/evidence guards, partial-ingestion rollback, retained original/history, read scope, correction evidence and failed final leave-approval rollback. Both provider migrations generated; local SQLite upgrade and EN/AR attendance evidence inspected. PostgreSQL integration race stress not run.

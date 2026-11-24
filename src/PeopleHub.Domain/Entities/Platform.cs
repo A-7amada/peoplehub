@@ -10,6 +10,8 @@ public class DevicePunch
     public DateTime Time { get; set; }
     public int? EmployeeId { get; set; }
     public bool Matched { get; set; }
+    public string? IdempotencyKey { get; set; }
+    public DateTime? ReceivedAt { get; set; }
 }
 
 public class EmailOutbox

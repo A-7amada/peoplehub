@@ -16,6 +16,13 @@ public record DailyRow(Employee Employee, AttendanceRecord? Record, bool OnLeave
 public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows)
 {
 
+    public async Task<List<AttendanceEvidence>> EvidenceAsync(int employeeId,int year,int month)
+    {
+        if(!await scope.CanSeeAsync(employeeId)) throw new DomainException("err.forbidden");
+        if(year<1900 || year>9998 || month<1 || month>12) throw new DomainException("err.required");
+        var start=new DateTime(year,month,1);var end=start.AddMonths(1);
+        return await repo.ToListAsync(repo.Query<AttendanceEvidence>().Where(x=>x.EmployeeId==employeeId && x.Date>=start && x.Date<end).OrderByDescending(x=>x.Id));
+    }
     public async Task<Shift> ShiftOfAsync(Employee e)
     {
         var shifts = await repo.ToListAsync(repo.Query<Shift>().OrderBy(s => s.Id));
@@ -32,7 +39,8 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         return await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == d));
     }
 
-    public async Task CheckInAsync()
+    public Task CheckInAsync() => repo.AtomicAsync(()=>CheckInCoreAsync());
+    private async Task CheckInCoreAsync()
     {
         if (SettingsService.DeviceMode) throw new DomainException("err.deviceMode");
         var e = await MeAsync();
@@ -45,23 +53,28 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         rec.CheckIn = clock.Now; rec.Source = AttendanceSource.MobileApp;
         rec.Recompute(await ShiftOfAsync(e));
         if (existing == null) repo.Add(rec);
+        repo.Add(AttendanceEvidence.Capture(rec,"CheckIn",me.Email,clock.UtcNow));
         await repo.SaveAsync();
     }
 
-    public async Task CheckOutAsync()
+    public Task CheckOutAsync() => repo.AtomicAsync(()=>CheckOutCoreAsync());
+    private async Task CheckOutCoreAsync()
     {
         if (SettingsService.DeviceMode) throw new DomainException("err.deviceMode");
         var e = await MeAsync();
         var rec = await TodayRecordAsync();
         if (rec?.CheckIn == null) throw new DomainException("err.noCheckIn");
         if (rec.CheckOut != null) throw new DomainException("err.duplicateCheckOut");
+        var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
         rec.CheckOut = clock.Now;
         if (rec.CheckOut <= rec.CheckIn) rec.CheckOut = rec.CheckIn.Value.AddMinutes(1);
         rec.Recompute(await ShiftOfAsync(e));
+        repo.Add(AttendanceEvidence.Capture(rec,"CheckOut",me.Email,clock.UtcNow,"",beforeIn,beforeOut));
         await repo.SaveAsync();
     }
 
-    public async Task AddManualAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source)
+    public Task AddManualAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source) => repo.AtomicAsync(()=>AddManualCoreAsync(employeeId,date,checkIn,checkOut,source));
+    private async Task AddManualCoreAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source)
     {
         if (!me.Can(Perm.AttManage)) throw new DomainException("err.forbidden");
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == employeeId)) ?? throw new DomainException("err.notFound");
@@ -74,12 +87,14 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         rec.CheckIn = checkIn; rec.CheckOut = checkOut; rec.Source = source; rec.IsExcused = false; rec.ExcuseNote = null;
         rec.Recompute(await ShiftOfAsync(e));
         if (isNew) repo.Add(rec);
+        repo.Add(AttendanceEvidence.Capture(rec,"ManualEntry",me.Email,clock.UtcNow));
         audit.Log("Create", "Attendance", $"{e.Code}/{date:yyyy-MM-dd}", $"{source} in={checkIn:HH:mm} out={checkOut:HH:mm}");
         await repo.SaveAsync();
     }
 
     /// <summary>Marks an absence as excused (with a note) so it is not deducted.</summary>
-    public async Task ExcuseAbsenceAsync(int employeeId, DateTime date, string? note)
+    public Task ExcuseAbsenceAsync(int employeeId, DateTime date, string? note) => repo.AtomicAsync(()=>ExcuseAbsenceCoreAsync(employeeId,date,note));
+    private async Task ExcuseAbsenceCoreAsync(int employeeId, DateTime date, string? note)
     {
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == employeeId)) ?? throw new DomainException("err.notFound");
         var manager = e.ManagerId != null && e.ManagerId == me.EmployeeId;
@@ -88,6 +103,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == employeeId && r.Date == date.Date));
         if (rec != null && rec.Status != AttendanceStatus.Absent) throw new DomainException("err.notAbsent");
         if (rec == null) { rec = new AttendanceRecord { EmployeeId = employeeId, Date = date.Date, Status = AttendanceStatus.Absent }; repo.Add(rec); }
+        repo.Add(AttendanceEvidence.Capture(rec,rec.IsExcused?"ExcuseUpdated":"Excused",me.Email,clock.UtcNow,note.Trim()));
         rec.IsExcused = true; rec.ExcuseNote = note.Trim();
         audit.Log("Excuse", "Attendance", $"{e.Code}/{date:yyyy-MM-dd}", note);
         await repo.SaveAsync();
