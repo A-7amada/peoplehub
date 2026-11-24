@@ -2708,6 +2708,94 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("PerformanceReview");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PipMilestone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppraisalId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("DueOn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SuccessMeasure")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppraisalId");
+
+                    b.ToTable("PipMilestone");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PipProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("MilestoneId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("Progress")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MilestoneId");
+
+                    b.ToTable("PipProgress");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Role", b =>
                 {
                     b.Property<int>("Id")

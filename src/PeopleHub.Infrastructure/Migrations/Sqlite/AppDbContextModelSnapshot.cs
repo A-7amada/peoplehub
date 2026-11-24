@@ -2591,6 +2591,90 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("PerformanceReview");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PipMilestone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("AppraisalId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DueOn")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SuccessMeasure")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppraisalId");
+
+                    b.ToTable("PipMilestone");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PipProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MilestoneId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Progress")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MilestoneId");
+
+                    b.ToTable("PipProgress");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Role", b =>
                 {
                     b.Property<int>("Id")

@@ -211,3 +211,25 @@ public class LoginSession
  public string Ip {get;set;}="";
  public DateTime? RevokedAt {get;set;}
 }
+
+public class PipMilestone
+{
+ public int Id {get;set;}
+ public int AppraisalId {get;set;}
+ public string Title {get;set;}="";
+ public string SuccessMeasure {get;set;}="";
+ public DateTime DueOn {get;set;}
+ public string Status {get;set;}="Open";
+ public string CreatedBy {get;set;}="";
+ public DateTime CreatedAt {get;set;}
+}
+public class PipProgress
+{
+ public int Id {get;set;}
+ public int MilestoneId {get;set;}
+ public string Kind {get;set;}="Update";
+ public int? Progress {get;set;}
+ public string Note {get;set;}="";
+ public string Actor {get;set;}="";
+ public DateTime At {get;set;}
+}

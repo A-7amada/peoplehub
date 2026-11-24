@@ -56,7 +56,7 @@
 | PER-002 | Multiple cycles | P1 | Existing |
 | PER-003 | Employee result acknowledgement and appeal | P1 | Implemented immutable employee acknowledgement/appeal and independent HR disposition after closure; score correction workflow remains separate/open |
 | PER-004 | Separate feedback identity/comment/aggregate privacy and reviewer threshold | P0 | Implemented configurable separate grants and threshold gate; owner policy values remain unset. Existing finalized scores preserved |
-| PER-005 | PIP milestones and trends | P1 | Partial: development items existing |
+| PER-005 | PIP milestones and trends | P1 | Partial: explicit measurable milestones, dated progress evidence, independent completion/cancellation and immutable timeline implemented; cross-cycle trend analytics open |
 | HR-001 | Asset assignment, handover, condition, return, maintenance | P1 | Implemented inventory, unique tags, explicit assignment/return, maintenance/release/retirement and append-only movement evidence |
 | HR-002 | Training needs, budgets, approval, certificates/expiry/effectiveness | P1 | Open |
 | HR-003 | Requisitions, interviews, offers and onboarding | P1 | Open |
@@ -131,3 +131,5 @@ Rotation follow-up: 187 tests pass (184 regression plus 3 rotation tests). Expli
 Diagnostics follow-up: 190 tests pass (187 regression plus 3 counter tests). EN/AR dashboard and non-admin denial inspected. Health endpoints return minimal text, readiness checks database connectivity with timeout and no diagnostic secrets. Admin metrics are action-level aggregate counts/5xx/latency/in-flight, no raw path or query. State resets on process restart, no uptime or job-health guarantee.
 
 Workflow revision follow-up: 193 tests pass (190 regression plus 3 revision tests). New leave/overtime/correction/advance requests retain definition hash and resolved route; immutable JSON revisions reuse content hash. Editing configured steps affects later requests only. Existing requests remain version unknown, not backfilled. Both provider migrations generated, local SQLite upgrade and new leave MVC flow plus EN/AR revision register inspected. Concurrent first use of one definition may return database contention and require retry; PostgreSQL parallel stress remains unverified.
+
+PIP follow-up: 196 tests pass (193 regression plus 3 milestone tests). Reviewer chooses goals, success measures, due dates and support. Owner may record progress but not approve own completion. Completion requires 100% and reviewer evidence, no automatic disciplinary, score, salary or employment effect. Both provider migrations and local MVC creation/update verified, EN/AR inspected.
