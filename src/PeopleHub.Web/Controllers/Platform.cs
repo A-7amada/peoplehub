@@ -33,7 +33,8 @@ public class TalentController(Loc loc, TalentService svc, OrgService org, Employ
         ViewBag.Jobs = await svc.JobsAsync(); ViewBag.Depts = await org.DepartmentsAsync();
         return View(await svc.CandidatesAsync());
     }
-    [HttpPost] public Task<IActionResult> AddJob(string title, string? titleAr, int? dept, int positions) => Do(() => svc.AddJobAsync(title, titleAr, dept, positions), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public Task<IActionResult> AddJob(string title, string? titleAr, int? dept, int positions,string justification) => Do(() => svc.AddJobAsync(title, titleAr, dept, positions,justification), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public Task<IActionResult> DecideJob(int id,bool approve,string reason)=>Do(()=>svc.DecideJobAsync(id,approve,reason),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> ToggleJob(int id) => Do(() => svc.CloseJobAsync(id), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> AddCandidate(int jobId, string name, string? email, string? note) => Do(() => svc.AddCandidateAsync(jobId, name, email, note), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> Move(int id, bool reject) => Do(() => svc.MoveCandidateAsync(id, reject), "msg.saved", () => RedirectToAction(nameof(Recruitment)));

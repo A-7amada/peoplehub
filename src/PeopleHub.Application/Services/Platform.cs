@@ -267,17 +267,20 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
 
     public Task<List<JobOpening>> JobsAsync() => repo.ToListAsync(repo.Query<JobOpening>().OrderByDescending(j => j.IsOpen).ThenByDescending(j => j.CreatedAt));
     public Task<List<Candidate>> CandidatesAsync() => repo.ToListAsync(repo.Query<Candidate>().OrderBy(c => c.Stage).ThenByDescending(c => c.CreatedAt));
-    public async Task AddJobAsync(string title, string? titleAr, int? dept, int positions)
+    public async Task AddJobAsync(string title,string? titleAr,int? dept,int positions,string? justification=null)
     {
-        Need(); if (string.IsNullOrWhiteSpace(title)) throw new DomainException("err.required");
-        repo.Add(new JobOpening { Title = title.Trim(), TitleAr = titleAr?.Trim() ?? "", DepartmentId = dept, Positions = Math.Max(1, positions), CreatedAt = clock.UtcNow });
-        audit.Log("Create", "Job", title, ""); await repo.SaveAsync();
+        Need();if(string.IsNullOrWhiteSpace(title)||title.Length>200||positions<1||positions>1000||string.IsNullOrWhiteSpace(justification)||justification.Length>2000)throw new DomainException("err.required");if(dept!=null&&!await repo.AnyAsync(repo.Query<Department>().Where(x=>x.Id==dept)))throw new DomainException("err.notFound");
+        repo.Add(new JobOpening{Title=title.Trim(),TitleAr=titleAr?.Trim()??"",DepartmentId=dept,Positions=positions,Justification=justification.Trim(),ApprovalStatus="Pending",RequestedByUserId=me.UserId,IsOpen=false,CreatedAt=clock.UtcNow});audit.Log("Requisition","Job",title,"Pending recruitment approval, not published externally");await repo.SaveAsync();
     }
-    public async Task CloseJobAsync(int id) { Need(); var j = await repo.FirstOrDefaultAsync(repo.Query<JobOpening>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound"); j.IsOpen = !j.IsOpen; await repo.SaveAsync(); }
+    public Task DecideJobAsync(int id,bool approve,string reason)=>repo.AtomicAsync(async()=>
+    {
+        Need();var j=await repo.FirstOrDefaultAsync(repo.Query<JobOpening>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(j.ApprovalStatus!="Pending"||j.RequestedByUserId==me.UserId)throw new DomainException("err.forbidden");if(string.IsNullOrWhiteSpace(reason)||reason.Length>2000)throw new DomainException("err.reasonRequired");j.ApprovalStatus=approve?"Approved":"Rejected";j.ApprovedByUserId=me.UserId;j.ApprovalReason=reason.Trim();j.DecidedAt=clock.UtcNow;j.IsOpen=approve;audit.Log("DecideRequisition","Job",id,$"{j.ApprovalStatus}: {reason.Trim()}");await repo.SaveAsync();
+    });
+    public async Task CloseJobAsync(int id){Need();var j=await repo.FirstOrDefaultAsync(repo.Query<JobOpening>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(j.ApprovalStatus is not("Approved" or "Legacy"))throw new DomainException("err.forbidden");j.IsOpen=!j.IsOpen;audit.Log("ToggleOpening","Job",id,j.IsOpen?"Open":"Closed");await repo.SaveAsync();}
     public async Task AddCandidateAsync(int jobId, string name, string? email, string? note)
     {
         Need(); if (string.IsNullOrWhiteSpace(name)) throw new DomainException("err.required");
-        if (!await repo.AnyAsync(repo.Query<JobOpening>().Where(x => x.Id == jobId && x.IsOpen))) throw new DomainException("err.notFound");
+        if (!await repo.AnyAsync(repo.Query<JobOpening>().Where(x => x.Id == jobId && x.IsOpen && (x.ApprovalStatus=="Approved"||x.ApprovalStatus=="Legacy")))) throw new DomainException("err.notFound");
         repo.Add(new Candidate { JobOpeningId = jobId, Name = name.Trim(), Email = email?.Trim() ?? "", Note = note?.Trim() ?? "", CreatedAt = clock.UtcNow });
         await repo.SaveAsync();
     }

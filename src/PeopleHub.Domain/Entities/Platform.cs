@@ -32,6 +32,7 @@ public class PasswordReset { public int Id { get; set; } public int UserId { get
 public enum CandidateStage { Applied = 0, Screening = 1, Interview = 2, Offer = 3, Hired = 4, Rejected = 5 }
 public class JobOpening
 {
+    public string Justification {get;set;}="";public string ApprovalStatus {get;set;}="Legacy";public int? RequestedByUserId {get;set;}public int? ApprovedByUserId {get;set;}public string ApprovalReason {get;set;}="";public DateTime? DecidedAt {get;set;}
     public int Id { get; set; }
     public string Title { get; set; } = ""; public string TitleAr { get; set; } = "";
     public int? DepartmentId { get; set; } public Department? Department { get; set; }

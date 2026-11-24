@@ -1695,7 +1695,21 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApprovalReason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("ApprovedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("DecidedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<int?>("DepartmentId")
@@ -1704,7 +1718,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<bool>("IsOpen")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("Justification")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Positions")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("RequestedByUserId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Revision")

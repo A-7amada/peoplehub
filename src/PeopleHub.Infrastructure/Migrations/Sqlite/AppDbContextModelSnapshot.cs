@@ -1616,7 +1616,21 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("ApprovalReason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ApprovalStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("ApprovedByUserId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DecidedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<int?>("DepartmentId")
@@ -1625,7 +1639,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<bool>("IsOpen")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Justification")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Positions")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("RequestedByUserId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Revision")
