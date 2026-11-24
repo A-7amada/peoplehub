@@ -6,7 +6,7 @@ This is an interim evidence log, not the final all-module acceptance report. The
 
 ## Current automated evidence
 
-After lifecycle privacy and financial session-guard review, 321 automated cases passed: 88 + 92 + 141 cases including advance validation and controller guard tests. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
+After lifecycle privacy and financial session-guard review, 322 automated cases passed: 88 + 93 + 141 cases including advance validation and controller guard tests. Web build passed with compiler warnings. Tests use SQLite except explicitly environment-gated external paths; no PostgreSQL contention or load claim is made.
 
 Referenced-correction coverage: separate initially-unset permission, source/target period and state, positive cent amounts, independent non-subject decision, unique decision sequence, proposer-only unapplied withdrawal, review gate, exactly-once draft application, source immutability, deduction safety and preservation on recalculation. Local MVC proposal, separate Finance approval and explicit preparer apply passed; temporary local Finance grant removed. EN/AR viewport screenshots inspected after application.
 
@@ -28,3 +28,5 @@ Lifecycle privacy audit found that broad profile scope could read checklist/prob
 Financial session-guard review added 14 controller attribute and reject-before-action cases for correction mutations, payroll draft adjustment/recalculation, Finance/paid-state recording, advance settlement and reassignment. A local MVC proposal without elevation redirected before creating a correction; verification returned to Payroll without replay. EN/AR verification prompt pixels inspected. Existing session tests cover expiry, password lockout and enabled authenticator checks. This is not proof of every authorization path.
 
 Null-identity privacy regression: a company-scoped account without an employee link cannot read or complete unassigned lifecycle tasks. Null is not treated as an assignment. No UI change.
+
+Performance null-identity regression: an account without an employee link cannot be treated as manager of an employee whose manager is unset. Direct appraisal access, company-scoped listing and development mutation are denied. No UI change.

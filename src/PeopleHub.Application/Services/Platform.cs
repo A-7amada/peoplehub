@@ -418,7 +418,7 @@ public partial class PerfService(IRepository repo, ICurrentUser me, AccessScope 
         var dev = await repo.ToListAsync(repo.Query<DevItem>().Where(d => d.AppraisalId == a.Id).OrderBy(d => d.Id));
         var ids = await scope.VisibleEmployeeIdsAsync();
         var cycle = a.Cycle ?? await CycleAsync(a.CycleId); var open = cycle.Status == CycleStatus.Open && (!cycle.AutoPhases || clock.Today >= cycle.Start.Date);
-        bool self = a.EmployeeId == me.EmployeeId, mgr = a.Employee?.ManagerId == me.EmployeeId && !self;
+        bool self = a.EmployeeId == me.EmployeeId, mgr = me.EmployeeId!=null && a.Employee?.ManagerId == me.EmployeeId && !self;
         bool visible = Hr || self || mgr;
         var gs = PerfCalc.GoalScore(goals); var comp = await ScoreAsync(a, goals);
         // before the cycle closes an employee sees only their own input, never the manager's score
