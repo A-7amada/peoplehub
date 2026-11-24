@@ -69,6 +69,8 @@ public class EmploymentChange
  public int EmployeeId {get;set;}
  public DateTime EffectiveOn {get;set;}
  public string Kind {get;set;}="Assignment";
+ public DateTime? ReturnOn {get;set;}
+ public int? ParentChangeId {get;set;}
  public int DepartmentId {get;set;}
  public int BranchId {get;set;}
  public int JobTitleId {get;set;}

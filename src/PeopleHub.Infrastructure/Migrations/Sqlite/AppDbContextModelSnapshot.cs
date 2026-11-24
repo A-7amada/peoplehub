@@ -1473,8 +1473,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("ManagerId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int?>("ParentChangeId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Reason")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReturnOn")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Revision")

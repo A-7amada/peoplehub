@@ -10,7 +10,7 @@
 | EMP-004 | Effective-dated employee status transitions | P0 | Partial: future dated status schedule, cancellation and recorded effective date; broader transition policy and missed-run handling under review |
 | EMP-005 | Historical department, title, manager, shift and salary assignments | P0 | Partial: current history plus future assignment scheduling/cancellation; backdating and full historical payroll allocations remain open |
 | EMP-006 | Probation and confirmation | P1 | Implemented explicit probation end and reasoned final decision, no invented duration |
-| EMP-007 | Temporary/permanent transfers | P0 | Partial: current and future permanent transfer history, temporary return schedule open |
+| EMP-007 | Temporary/permanent transfers | P0 | Implemented current/future permanent transfers and explicitly dated temporary assignment with linked snapshot return; cancellation before start cancels both, return cannot be removed separately, changes remain blocked until return. No backdated changes or automatic allowance/payroll recalculation |
 | EMP-008 | Clearance and asset handover | P1 | Implemented clearance tasks and separate asset assignment/return with condition and receipt evidence; clearance is not auto-approved |
 | EMP-009 | HR custom fields | P1 | Implemented HR-only typed text/date/number fields, validation and audit |
 | ATT-001 | Rotating/multiple shifts | P1 | Implemented dated employee shift assignments, configurable definitions and explicit repeating calendar-day pattern generator; no automatic weekend/pay policy change |
@@ -147,3 +147,7 @@ Privacy follow-up: department leave cards and leave-balance report type labels a
 Privacy audit follow-up: sensitive free-text contract/status/career/assignment/scheduled-change notes are withheld without the identity grant (owner still sees their own). List and manager picker employee copies are redacted, approval rows carry name/code only, turnover exports mask reasons, and other employees' leave-balance report rows are omitted without evidence access. Broader service and attachment-category audit remains open.
 
 Round 34: 211 tests pass, including historical-text redaction, list picker copies, leave ledger/balance service denial and report row omission without the evidence grant. EN/AR restricted profile/history inspected locally; SEC-001 remains Partial for broader service/category review.
+
+Temporary assignment follow-up: explicit return date snapshots current department/branch/title/manager/shift/salary; applies start then return in effective order after downtime, retains historical interval, and never infers a return duration. Financial allocation across payroll periods remains open.
+
+Round 35: 215 tests pass, including linked return restoration, cancellation atomicity, missed-start-and-return catch-up and invalid return validation. Both provider migrations generated, local SQLite upgrade and end-to-end temporary assignment staged, EN/AR form and linked return visually inspected. PostgreSQL parallel stress remains unverified.

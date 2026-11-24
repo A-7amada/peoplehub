@@ -11,6 +11,8 @@ public class EmploymentTimeline(IRepository repo,ICurrentUser me,AppClock clock,
   if(change.EffectiveOn.Date<=clock.Today || change.EffectiveOn.Year>9998 || string.IsNullOrWhiteSpace(change.Reason))throw new DomainException("err.required");
   var e=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==change.EmployeeId))??throw new DomainException("err.notFound");
   if(e.Status is EmployeeStatus.Terminated or EmployeeStatus.Resigned or EmployeeStatus.Retired)throw new DomainException("err.finalStatus");
+  if(change.Kind=="Status" && change.ReturnOn!=null)throw new DomainException("err.required");
+  if(change.ReturnOn is {} returnOn && (returnOn.Date<=change.EffectiveOn.Date || returnOn.Year>9998))throw new DomainException("err.required");
   if(change.Kind=="Status") {if(change.Status==null || !Enum.IsDefined(change.Status.Value) || change.Status==e.Status)throw new DomainException("err.required");}
   else if(change.Kind=="Assignment")
   {
@@ -20,13 +22,16 @@ public class EmploymentTimeline(IRepository repo,ICurrentUser me,AppClock clock,
   else throw new DomainException("err.required");
   if(await repo.AnyAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==e.Id && !x.Cancelled && x.AppliedAt==null)))throw new DomainException("err.required");
   e.LeaveRequestStamp=Guid.NewGuid().ToString("N");
-  change.Id=0;change.EffectiveOn=change.EffectiveOn.Date;change.CreatedAt=clock.UtcNow;change.AppliedAt=null;change.Cancelled=false;change.Actor=me.Email;change.Reason=change.Reason.Trim();repo.Add(change);audit.Log("Schedule","Employee",e.Id,$"{change.Kind} on {change.EffectiveOn:yyyy-MM-dd}: {change.Reason}");await repo.SaveAsync();
+  change.Id=0;change.EffectiveOn=change.EffectiveOn.Date;change.CreatedAt=clock.UtcNow;change.AppliedAt=null;change.Cancelled=false;change.ParentChangeId=null;change.ReturnOn=change.ReturnOn?.Date;change.Actor=me.Email;change.Reason=change.Reason.Trim();repo.Add(change);audit.Log("Schedule","Employee",e.Id,$"{change.Kind} on {change.EffectiveOn:yyyy-MM-dd}: {change.Reason}");await repo.SaveAsync();
+  if(change.ReturnOn is {} back){repo.Add(new EmploymentChange{EmployeeId=e.Id,Kind="Assignment",EffectiveOn=back,ParentChangeId=change.Id,DepartmentId=e.DepartmentId,BranchId=e.BranchId,JobTitleId=e.JobTitleId,ManagerId=e.ManagerId,ShiftId=e.ShiftId,BasicSalary=e.BasicSalary,Reason=$"Return from temporary assignment #{change.Id}: {change.Reason}",Actor=me.Email,CreatedAt=clock.UtcNow});await repo.SaveAsync();}
  }
- public async Task CancelAsync(int id,string reason)
+ public Task CancelAsync(int id,string reason)=>repo.AtomicAsync(async()=>
  {
   if(!me.Can(Perm.EmpManage))throw new DomainException("err.forbidden");if(string.IsNullOrWhiteSpace(reason))throw new DomainException("err.reasonRequired");
-  var x=await repo.FirstOrDefaultAsync(repo.Query<EmploymentChange>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(x.AppliedAt!=null || x.Cancelled || x.EffectiveOn<=clock.Today)throw new DomainException("err.forbidden");x.Cancelled=true;audit.Log("CancelSchedule","Employee",x.EmployeeId,$"schedule #{id}: {reason.Trim()}");await repo.SaveAsync();
- }
+  var x=await repo.FirstOrDefaultAsync(repo.Query<EmploymentChange>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(x.ParentChangeId!=null || x.AppliedAt!=null || x.Cancelled || x.EffectiveOn<=clock.Today)throw new DomainException("err.forbidden");x.Cancelled=true;
+  foreach(var child in await repo.ToListAsync(repo.Query<EmploymentChange>().Where(c=>c.ParentChangeId==x.Id && c.AppliedAt==null)))child.Cancelled=true;
+  audit.Log("CancelSchedule","Employee",x.EmployeeId,$"schedule #{id}: {reason.Trim()}");await repo.SaveAsync();
+ });
  public Task ApplyDueAsync()=>repo.AtomicAsync(async()=>
  {
   var due=await repo.ToListAsync(repo.Query<EmploymentChange>().Where(x=>!x.Cancelled && x.AppliedAt==null && x.EffectiveOn<=clock.Today).OrderBy(x=>x.EffectiveOn).ThenBy(x=>x.Id));

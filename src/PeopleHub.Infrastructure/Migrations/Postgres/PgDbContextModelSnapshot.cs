@@ -1544,9 +1544,15 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int?>("ManagerId")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("ParentChangeId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReturnOn")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
