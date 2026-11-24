@@ -1,0 +1,25 @@
+@model List<AppraisalView>
+@{ ViewData["Title"] = T.IsAr ? "إدارة الأداء" : "Performance management"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var cycles = (List<PerfCycle>)ViewBag.Cycles; var c = ViewBag.Cycle as PerfCycle; bool hr = Context.User.Claims.Any(x => x.Type == System.Security.Claims.ClaimTypes.Role && PermissionCache.Has(new[] { x.Value }, Perm.TalentManage));
+  var st = new Dictionary<CycleStatus, (string en, string ar, string col)> { [CycleStatus.Open] = ("Open: goals and ratings", "مفتوحة: الأهداف والتقييم", "green"), [CycleStatus.Calibration] = ("Calibration", "المعايرة", "amber"), [CycleStatus.Closed] = ("Closed", "مغلقة", "violet") };
+  string BandAr(string b) => b switch { "Outstanding" => "متميز", "Exceeds" => "يفوق التوقعات", "Meets" => "يحقق التوقعات", _ => "يحتاج تحسين" }; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Cycle, weighted goals, self and manager ratings, HR calibration and development plans. Results advise, people decide on promotion and bonus.", "دورة وأهداف بأوزان وتقييم ذاتي وتقييم المدير ومعايرة الموارد البشرية وخطط تطوير. النتائج استرشادية والقرار للإنسان في الترقية والمكافأة.")</div></div>
+ @if (c != null && hr && c.Status != CycleStatus.Closed) { <div class="actions"><form method="post" action="/Perf/Advance" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@c.Id"><button class="btn btn-primary">@(c.Status == CycleStatus.Open ? X("Move to calibration", "نقل للمعايرة") : X("Close cycle and publish completed results", "إغلاق الدورة ونشر النتائج المكتملة"))</button></form></div> }</div>
+<div class="card" style="margin-bottom:18px"><div class="filters"><div class="seg">@foreach (var x in cycles) { <a class="@(x.Id == c?.Id ? "on" : "")" href="/Perf?cycle=@x.Id">@x.Name</a> }</div>
+ @if (c != null) { <span style="margin-inline-start:auto">@Ui.Chip(T.IsAr ? st[c.Status].ar : st[c.Status].en, st[c.Status].col)</span> }</div></div>
+@if (c != null) {
+ var done = Model.Count(m => m.A.ManagerDone); var finals = Model.Where(m => m.Final != null && (m.A.EmployeeId != (int.TryParse(Context.User.FindFirst("emp")?.Value, out var eid) ? eid : -1) || c.Status == CycleStatus.Closed)).Select(m => m.Final!.Value).ToList();
+ <div class="grid g4" style="margin-bottom:18px">
+  <div class="card kpi t-violet"><div class="lbl">@X("Appraisals", "التقييمات")</div><div class="val">@Model.Count</div></div>
+  <div class="card kpi t-green"><div class="lbl">@X("Self done", "تقييم ذاتي")</div><div class="val">@Model.Count(m => m.A.SelfDone)</div></div>
+  <div class="card kpi t-amber"><div class="lbl">@X("Manager done", "تقييم المدير")</div><div class="val">@done</div></div>
+  <div class="card kpi t-rose"><div class="lbl">@X("Average final", "متوسط النهائي")</div><div class="val">@(finals.Count == 0 ? "-" : finals.Average().ToString("0.00"))</div></div></div>
+ <div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["req.employee"]</th><th>@X("Goals", "الأهداف")</th><th>@X("Self", "ذاتي")</th><th>@X("Manager", "المدير")</th><th>@X("Final", "النهائي")</th><th>@X("Band", "التصنيف")</th><th></th></tr></thead><tbody>
+ @foreach (var m in Model) { bool own = m.A.EmployeeId == (int.TryParse(Context.User.FindFirst("emp")?.Value, out var me) ? me : -1); bool showMgr = !own || c.Status == CycleStatus.Closed;
+  <tr><td>@T.Name(m.A.Employee!.FullName, m.A.Employee.FullNameAr)</td><td class="num">@m.Goals.Count</td><td>@(m.A.SelfDone ? Ui.Chip("✓", "green") : "-")</td><td>@(showMgr && m.A.ManagerDone ? Ui.Chip("✓", "green") : "-")</td>
+   <td class="num">@(showMgr && m.Final != null ? m.Final.Value.ToString("0.00") : (hr && !own && m.Computed != null ? m.Computed.Value.ToString("0.00") + "*" : "-"))</td>
+   <td>@if (showMgr && m.Final != null) { @(T.IsAr ? BandAr(PerfCalc.Band(m.Final.Value)) : PerfCalc.Band(m.Final.Value)) }</td><td class="right"><a class="btn btn-sm" href="/Perf/Appraisal/@m.A.Id">@X("Open", "فتح")</a></td></tr> }
+ @if (Model.Count == 0) { <tr><td colspan="7" class="empty">@T["common.none"]</td></tr> }</tbody></table></div><div class="card-b faint small">* @X("not final until calibration or close", "غير نهائي قبل المعايرة أو الإغلاق")</div></div> }
+@if (hr) { <div class="card" style="margin-top:18px"><div class="card-h"><h2>@X("New cycle", "دورة جديدة")</h2></div><div class="card-b"><form method="post" action="/Perf/NewCycle" asp-antiforgery="true" class="grid g2">
+ <div class="field"><label>@X("Name", "الاسم")</label><input name="name" value="@DateTime.Today.Year H2" required></div><div></div>
+ <div class="field"><label>@X("Start", "البداية")</label><input type="date" name="start" value="@(DateTime.Today.ToString("yyyy-MM-dd"))"></div><div class="field"><label>@X("End", "النهاية")</label><input type="date" name="end" value="@(DateTime.Today.AddMonths(6).ToString("yyyy-MM-dd"))"></div>
+ <div><button class="btn btn-primary">@X("Open cycle for all employees", "فتح الدورة لكل الموظفين")</button></div></form></div></div> }

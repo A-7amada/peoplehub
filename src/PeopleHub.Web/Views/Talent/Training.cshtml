@@ -11,5 +11,5 @@
 </div>
 @if (mgr) { <div class="card" style="margin-top:18px"><div class="card-h"><h2>@X("New course", "دورة جديدة")</h2></div><div class="card-b"><form method="post" action="/Talent/AddCourse" asp-antiforgery="true" class="grid g2">
  <div class="field"><label>@X("Title", "العنوان")</label><input name="title" required></div><div class="field"><label>@X("Title (Arabic)", "العنوان بالعربية")</label><input name="titleAr"></div>
- <div class="field"><label>@X("Hours", "الساعات")</label><input type="number" name="hours" min="1" value="4"></div><div class="field"><label>@X("Date", "التاريخ")</label><input type="date" name="date" value="@DateTime.Today.AddDays(14):yyyy-MM-dd"></div>
+ <div class="field"><label>@X("Hours", "الساعات")</label><input type="number" name="hours" min="1" value="4"></div><div class="field"><label>@X("Date", "التاريخ")</label><input type="date" name="date" value="@(DateTime.Today.AddDays(14).ToString("yyyy-MM-dd"))"></div>
  <div><button class="btn btn-primary">@T["common.add"]</button></div></form></div></div> }

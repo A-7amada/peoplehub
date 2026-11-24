@@ -30,7 +30,7 @@ builder.Services.AddScoped<AttachmentService>();
 builder.Services.AddScoped<DelegationService>();
 builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<ReportService>();
-builder.Services.AddScoped<SettingsService>(); builder.Services.AddScoped<DeviceService>(); builder.Services.AddScoped<EmailService>(); builder.Services.AddScoped<AccountService>(); builder.Services.AddScoped<TalentService>(); builder.Services.AddScoped<ReportBuilderService>();
+builder.Services.AddScoped<SettingsService>(); builder.Services.AddScoped<DeviceService>(); builder.Services.AddScoped<EmailService>(); builder.Services.AddScoped<AccountService>(); builder.Services.AddScoped<TalentService>(); builder.Services.AddScoped<PerfService>(); builder.Services.AddScoped<ReportBuilderService>();
 builder.Services.AddDataProtection();
 builder.Services.AddSingleton<Loc>();
 builder.Services.AddControllersWithViews(o => o.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute()));

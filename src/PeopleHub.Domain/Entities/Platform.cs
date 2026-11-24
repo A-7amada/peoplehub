@@ -72,3 +72,40 @@ public static class Settlement
         return new(pro, leave, grat, pro + leave + grat, years);
     }
 }
+
+public enum CycleStatus { Open = 0, Calibration = 1, Closed = 2 }
+public class PerfCycle { public int Id { get; set; } public string Name { get; set; } = ""; public DateTime Start { get; set; } public DateTime End { get; set; } public CycleStatus Status { get; set; } }
+public class PerfGoal
+{
+    public int Id { get; set; } public int AppraisalId { get; set; }
+    public string Title { get; set; } = ""; public string Target { get; set; } = "";
+    public int Weight { get; set; } public int Progress { get; set; }
+    public int? SelfScore { get; set; } public int? ManagerScore { get; set; }
+}
+public class PerfAppraisal
+{
+    public int Id { get; set; }
+    public int CycleId { get; set; } public PerfCycle? Cycle { get; set; }
+    public int EmployeeId { get; set; } public Employee? Employee { get; set; }
+    public int? SelfScore { get; set; } public string SelfComment { get; set; } = "";
+    public int? ManagerScore { get; set; } public string ManagerComment { get; set; } = "";
+    public bool SelfDone { get; set; } public bool ManagerDone { get; set; }
+    public decimal? FinalScore { get; set; } public string CalibrationNote { get; set; } = "";
+}
+public class DevItem { public int Id { get; set; } public int AppraisalId { get; set; } public string Action { get; set; } = ""; public DateTime? Due { get; set; } public bool Done { get; set; } }
+
+/// <summary>Scoring rules: goals are weighted (weights should total 100), the manager's overall rating blends 70% goals and 30% overall judgement, and HR may calibrate the final score with a written reason.</summary>
+public static class PerfCalc
+{
+    public static decimal? GoalScore(IEnumerable<PerfGoal> goals)
+    {
+        var g = goals.Where(x => x.ManagerScore != null && x.Weight > 0).ToList(); if (g.Count == 0) return null;
+        return Math.Round(g.Sum(x => x.ManagerScore!.Value * (decimal)x.Weight) / g.Sum(x => (decimal)x.Weight), 2);
+    }
+    public static decimal? Computed(decimal? goalScore, int? overall) =>
+        goalScore == null ? overall : overall == null ? goalScore : Math.Round(goalScore.Value * 0.7m + overall.Value * 0.3m, 2);
+    public static string Band(decimal s) => s >= 4.5m ? "Outstanding" : s >= 3.5m ? "Exceeds" : s >= 2.5m ? "Meets" : "NeedsImprovement";
+    /// <summary>Advisory only: a person decides on promotion, bonus or an improvement plan.</summary>
+    public static string Recommendation(decimal s) => s >= 4.5m ? "PromotionReview+Bonus" : s >= 3.5m ? "Bonus" : s >= 2.5m ? "None" : "ImprovementPlan";
+    public static bool WeightsOk(IEnumerable<PerfGoal> goals) => goals.Sum(g => g.Weight) == 100;
+}

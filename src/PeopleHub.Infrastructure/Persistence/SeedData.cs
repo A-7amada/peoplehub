@@ -299,6 +299,17 @@ public static class SeedData
         var some = emps.Values.Where(e => e.IsWorking).Take(6).ToList();
         foreach (var e in some) db.Add(new TrainingEnrollment { CourseId = c2.Id, EmployeeId = e.Id, Completed = e.Id % 2 == 0 });
         foreach (var e in some.Take(3)) db.Add(new PerformanceReview { EmployeeId = e.Id, Period = $"{today.Year - 1} H2", Goals = "Deliver quarterly targets; mentor a junior colleague", Comment = "Reliable and proactive.", Score = 3 + (e.Id % 3), Reviewer = "manager@peoplehub.local", CreatedAt = DateTime.UtcNow.AddDays(-30) });
+        // performance cycle: fictional, last half-year closed-for-self but in calibration
+        var cyc = new PerfCycle { Name = $"{today.Year} H1", Start = today.AddMonths(-6), End = today.AddDays(-1), Status = CycleStatus.Calibration }; db.Add(cyc); await db.SaveChangesAsync();
+        var apps = emps.Values.Where(e => e.IsWorking).Select(e => new PerfAppraisal { CycleId = cyc.Id, EmployeeId = e.Id }).ToList(); db.AddRange(apps); await db.SaveChangesAsync();
+        foreach (var a in apps.Take(8))
+        {
+            var g1 = new PerfGoal { AppraisalId = a.Id, Title = "Deliver quarterly objectives", Target = "100% of agreed milestones", Weight = 60, Progress = 80, SelfScore = 4, ManagerScore = 3 + (a.EmployeeId % 3) };
+            var g2 = new PerfGoal { AppraisalId = a.Id, Title = "Quality and customer feedback", Target = "Score 4.2+ in internal survey", Weight = 40, Progress = 70, SelfScore = 4, ManagerScore = 3 + (a.EmployeeId % 2) };
+            db.AddRange(g1, g2); a.SelfScore = 4; a.SelfComment = "Met most targets; slipped on one deadline."; a.SelfDone = true; a.ManagerScore = 3 + (a.EmployeeId % 3); a.ManagerComment = "Solid half-year."; a.ManagerDone = true;
+            db.Add(new DevItem { AppraisalId = a.Id, Action = "Complete Time Management course", Due = today.AddDays(30) });
+        }
+        await db.SaveChangesAsync();
         // welcome notifications + sample audit entries
         var users = await db.Set<AppUser>().ToListAsync();
         foreach (var u in users)

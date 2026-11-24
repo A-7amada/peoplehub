@@ -62,7 +62,7 @@ tests/
   PeopleHub.Tests           xUnit tests for the domain rules
 ```
 
-- Business rules live in the domain layer and are unit tested (58 tests: attendance calculation, leave rules, approval routing, configurable cycles and role-driven permissions, advances, contracts, status changes, payroll calculation and workflow, password hashing).
+- Business rules live in the domain layer and are unit tested (63 tests: attendance calculation, leave rules, approval routing, configurable cycles and role-driven permissions, advances, contracts, status changes, payroll calculation and workflow, password hashing).
 - Cookie authentication, PBKDF2 password hashing, antiforgery on every POST, permission checks in the application layer (role-to-permission map loaded from the database).
 - English and Arabic UI with a language switch and a right-to-left layout built with CSS logical properties.
 - The Egyptian weekend (Friday and Saturday) and public holidays are excluded from working days.
@@ -92,3 +92,7 @@ A `Dockerfile` is included (used for the Render free tier). Set `HR_SEED_PASSWOR
 ## Documentation
 
 [BRD.md](BRD.md) is a business requirements document (Arabic) describing the whole system, its rules and its flows.
+
+## Performance management (round 5)
+
+`/Perf` has cycles (Open -> Calibration -> Closed), weighted goals, progress, self and manager ratings, HR calibration with an audited reason, and development actions. Scores use 70% weighted goals + 30% manager overall (or overall only without goals). Promotion/bonus advice is advisory, never an automatic payroll change. Only the employee, direct manager and Talent managers can view appraisals; employees see manager scores after close. Dates are descriptive, phase changes are manual. No 360, competency templates, automatic KPI feeds or automatic training/payroll integration. See BRD section 4D.

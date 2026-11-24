@@ -312,3 +312,134 @@ public class ReportBuilderService(IRepository repo, AccessScope scope, ICurrentU
         return new ReportTable("custom-" + dataset, chosen, rows.Select(r => chosen.Select(c => r.GetValueOrDefault(c, "")).ToList()).ToList());
     }
 }
+
+public record AppraisalView(PerfAppraisal A, List<PerfGoal> Goals, List<DevItem> Dev, decimal? GoalScore, decimal? Computed, decimal? Final, bool CanSelf, bool CanManage, bool CanCalibrate, bool Visible);
+
+public class PerfService(IRepository repo, ICurrentUser me, AccessScope scope, AppClock clock, AuditService audit, NotificationService notify)
+{
+    private bool Hr => me.Can(Perm.TalentManage);
+    public Task<List<PerfCycle>> CyclesAsync() => repo.ToListAsync(repo.Query<PerfCycle>().OrderByDescending(c => c.Id));
+
+    public async Task<PerfCycle> CycleAsync(int id) => await repo.FirstOrDefaultAsync(repo.Query<PerfCycle>().Where(c => c.Id == id)) ?? throw new DomainException("err.notFound");
+
+    public async Task CreateCycleAsync(string name, DateTime start, DateTime end)
+    {
+        if (!Hr) throw new DomainException("err.forbidden");
+        if (string.IsNullOrWhiteSpace(name) || start.Year < 2000 || end.Year < 2000 || end < start) throw new DomainException("err.required");
+        var c = new PerfCycle { Name = name.Trim(), Start = start, End = end, Status = CycleStatus.Open }; repo.Add(c); await repo.SaveAsync();
+        foreach (var e in (await repo.ToListAsync(repo.Query<Employee>())).Where(e => e.IsWorking && e.HireDate <= end.Date))
+            repo.Add(new PerfAppraisal { CycleId = c.Id, EmployeeId = e.Id });
+        audit.Log("Create", "PerfCycle", name, ""); await repo.SaveAsync();
+        await notify.NotifyPermAsync(Perm.ScopeTeam, "notif.perfCycle", name, "/Perf"); await repo.SaveAsync();
+    }
+
+    public async Task AdvanceCycleAsync(int id)
+    {
+        if (!Hr) throw new DomainException("err.forbidden"); var c = await CycleAsync(id);
+        if (c.Status == CycleStatus.Open) c.Status = CycleStatus.Calibration;
+        else if (c.Status == CycleStatus.Calibration)
+        {
+            c.Status = CycleStatus.Closed;
+            foreach (var a in await repo.ToListAsync(repo.Query<PerfAppraisal>().Where(a => a.CycleId == id)))
+            { await SealAsync(a); await notify.NotifyEmployeeAsync(a.EmployeeId, "notif.review", c.Name, "/Perf"); }
+        }
+        audit.Log("Update", "PerfCycle", c.Name, c.Status.ToString()); await repo.SaveAsync();
+    }
+
+    private async Task SealAsync(PerfAppraisal a)
+    {
+        var goals = await repo.ToListAsync(repo.Query<PerfGoal>().Where(g => g.AppraisalId == a.Id));
+        if (a.ManagerDone) a.FinalScore ??= PerfCalc.Computed(PerfCalc.GoalScore(goals), a.ManagerScore);
+    }
+
+    public async Task<List<AppraisalView>> ListAsync(int cycleId)
+    {
+        var ids = await scope.VisibleEmployeeIdsAsync();
+        var apps = (await repo.ToListAsync(repo.Query<PerfAppraisal>().Where(a => a.CycleId == cycleId))).Where(a => ids == null || ids.Contains(a.EmployeeId) || a.EmployeeId == me.EmployeeId).ToList();
+        var res = new List<AppraisalView>(); foreach (var a in apps) { var v = await BuildAsync(a); if (v.Visible) res.Add(v); } return res;
+    }
+
+    public async Task<AppraisalView> GetAsync(int id)
+    {
+        var a = await repo.FirstOrDefaultAsync(repo.Query<PerfAppraisal>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
+        var v = await BuildAsync(a); if (!v.Visible) throw new DomainException("err.forbidden"); return v;
+    }
+
+    private async Task<AppraisalView> BuildAsync(PerfAppraisal a)
+    {
+        var goals = await repo.ToListAsync(repo.Query<PerfGoal>().Where(g => g.AppraisalId == a.Id).OrderBy(g => g.Id));
+        var dev = await repo.ToListAsync(repo.Query<DevItem>().Where(d => d.AppraisalId == a.Id).OrderBy(d => d.Id));
+        var ids = await scope.VisibleEmployeeIdsAsync();
+        var cycle = a.Cycle ?? await CycleAsync(a.CycleId); var open = cycle.Status == CycleStatus.Open;
+        bool self = a.EmployeeId == me.EmployeeId, mgr = a.Employee?.ManagerId == me.EmployeeId && !self;
+        bool visible = Hr || self || mgr;
+        var gs = PerfCalc.GoalScore(goals); var comp = PerfCalc.Computed(gs, a.ManagerScore);
+        // before the cycle closes an employee sees only their own input, never the manager's score
+        return new(a, goals, dev, gs, comp, a.FinalScore ?? (cycle.Status == CycleStatus.Closed ? comp : null),
+            self && open && !a.SelfDone, (mgr || Hr) && !self && open, Hr && cycle.Status == CycleStatus.Calibration && !self, visible);
+    }
+
+    private async Task<(PerfAppraisal A, PerfCycle C)> LoadAsync(int id)
+    {
+        var a = await repo.FirstOrDefaultAsync(repo.Query<PerfAppraisal>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
+        return (a, await CycleAsync(a.CycleId));
+    }
+
+    public async Task AddGoalAsync(int appraisalId, string title, string? target, int weight)
+    {
+        var v = await GetAsync(appraisalId); if (!v.CanManage) throw new DomainException("err.forbidden");
+        if (string.IsNullOrWhiteSpace(title) || weight is < 1 or > 100) throw new DomainException("err.required");
+        if (v.A.ManagerDone) throw new DomainException("err.forbidden");
+        if (v.Goals.Sum(g => g.Weight) + weight > 100) throw new DomainException("err.weights");
+        repo.Add(new PerfGoal { AppraisalId = appraisalId, Title = title.Trim(), Target = target?.Trim() ?? "", Weight = weight });
+        await notify.NotifyEmployeeAsync(v.A.EmployeeId, "notif.goal", title, $"/Perf/Appraisal/{appraisalId}"); await repo.SaveAsync();
+    }
+
+    public async Task UpdateProgressAsync(int goalId, int progress, int? selfScore)
+    {
+        var g = await repo.FirstOrDefaultAsync(repo.Query<PerfGoal>().Where(x => x.Id == goalId)) ?? throw new DomainException("err.notFound");
+        var v = await GetAsync(g.AppraisalId); if (!v.CanSelf && !v.CanManage) throw new DomainException("err.forbidden");
+        g.Progress = Math.Clamp(progress, 0, 100); if (v.CanSelf && selfScore is >= 1 and <= 5) g.SelfScore = selfScore; await repo.SaveAsync();
+    }
+
+    public async Task SubmitSelfAsync(int id, int score, string? comment)
+    {
+        var v = await GetAsync(id); if (!v.CanSelf) throw new DomainException("err.forbidden");
+        if (!PerformanceReview.ValidScore(score)) throw new DomainException("err.required");
+        v.A.SelfScore = score; v.A.SelfComment = comment?.Trim() ?? ""; v.A.SelfDone = true; await repo.SaveAsync();
+    }
+
+    public async Task SubmitManagerAsync(int id, int score, string? comment, Dictionary<int, int> goalScores)
+    {
+        var v = await GetAsync(id); if (!v.CanManage) throw new DomainException("err.forbidden");
+        if (!PerformanceReview.ValidScore(score)) throw new DomainException("err.required");
+        if (v.Goals.Count > 0 && !PerfCalc.WeightsOk(v.Goals)) throw new DomainException("err.weights100");
+        if (v.Goals.Any(g => !goalScores.TryGetValue(g.Id, out var s) || !PerformanceReview.ValidScore(s))) throw new DomainException("err.required");
+        foreach (var g in v.Goals) g.ManagerScore = goalScores[g.Id];
+        v.A.ManagerScore = score; v.A.ManagerComment = comment?.Trim() ?? ""; v.A.ManagerDone = true;
+        audit.Log("Update", "Appraisal", v.A.Id.ToString(), $"manager score {score}"); await repo.SaveAsync();
+    }
+
+    public async Task CalibrateAsync(int id, decimal score, string? note)
+    {
+        var v = await GetAsync(id); if (!v.CanCalibrate) throw new DomainException("err.forbidden");
+        if (!v.A.ManagerDone) throw new DomainException("err.managerFirst");
+        if (score < 1 || score > 5 || string.IsNullOrWhiteSpace(note)) throw new DomainException("err.calibNote");
+        v.A.FinalScore = Math.Round(score, 2); v.A.CalibrationNote = note.Trim();
+        audit.Log("Update", "Appraisal", v.A.Id.ToString(), $"calibrated to {score}: {note}"); await repo.SaveAsync();
+    }
+
+    public async Task AddDevAsync(int id, string action, DateTime? due)
+    {
+        var v = await GetAsync(id); if (!(v.CanManage || Hr || v.A.Employee?.ManagerId == me.EmployeeId || v.A.EmployeeId == me.EmployeeId)) throw new DomainException("err.forbidden");
+        if (string.IsNullOrWhiteSpace(action)) throw new DomainException("err.required");
+        repo.Add(new DevItem { AppraisalId = id, Action = action.Trim(), Due = due }); await repo.SaveAsync();
+    }
+    public async Task ToggleDevAsync(int itemId)
+    {
+        var d = await repo.FirstOrDefaultAsync(repo.Query<DevItem>().Where(x => x.Id == itemId)) ?? throw new DomainException("err.notFound");
+        var v = await GetAsync(d.AppraisalId);
+        if (!(Hr || v.A.EmployeeId == me.EmployeeId || v.A.Employee?.ManagerId == me.EmployeeId)) throw new DomainException("err.forbidden");
+        d.Done = !d.Done; await repo.SaveAsync();
+    }
+}

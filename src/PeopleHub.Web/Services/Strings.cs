@@ -214,7 +214,10 @@ public partial class Loc
         A("deleg.new", "New delegation", "تفويض جديد"); A("deleg.to", "Delegate to", "المفوَّض إليه"); A("deleg.delegator", "Delegator", "المفوِّض"); A("deleg.active", "Delegations", "التفويضات"); A("deleg.revoke", "Revoke", "إلغاء");
         A("deleg.hint", "The delegate gets exactly the approval steps you hold (direct manager of your team, or your roles). Nobody can approve their own request, even as a delegate. You can revoke at any time.", "يحصل المفوَّض على نفس خطوات الموافقة التي تملكها (مدير مباشر لفريقك أو أدوارك). لا يستطيع أحد الموافقة على طلبه حتى كمفوَّض. يمكنك الإلغاء في أي وقت.");
         A("common.period", "Period", "الفترة"); A("org.chart", "Org chart", "الهيكل التنظيمي (شجرة)");
+        A("err.managerFirst", "A manager rating is needed before calibration.", "تقييم المدير مطلوب قبل المعايرة.");
         // errors
+        A("err.weights", "Goal weights cannot exceed 100% in total.", "مجموع أوزان الأهداف لا يمكن أن يتعدى 100%."); A("err.weights100", "Goal weights must total exactly 100% before rating.", "يجب أن يكون مجموع أوزان الأهداف 100% قبل التقييم.");
+        A("err.calibNote", "Enter a score from 1 to 5 and a written reason.", "أدخل درجة من 1 إلى 5 وسبباً مكتوباً."); A("notif.perfCycle", "A new performance cycle is open", "دورة تقييم أداء جديدة مفتوحة"); A("notif.goal", "A new goal was set for you", "تم تحديد هدف جديد لك");
         A("err.deviceMode", "Attendance is read from the ZKTeco device. Check in and out on the machine.", "الحضور يُقرأ من ماكينة ZKTeco. سجّل حضورك وانصرافك على الماكينة.");
         A("err.notDeviceMode", "Attendance source is set to System. Switch it to Device first.", "مصدر الحضور مضبوط على النظام. غيّره إلى الماكينة أولاً.");
         A("err.deviceDown", "The device did not respond.", "الماكينة لا تستجيب."); A("err.badIp", "Enter a valid device IP address.", "أدخل عنوان IP صحيح للماكينة."); A("err.badPort", "Enter a valid port (1 to 65535).", "أدخل منفذاً صحيحاً (1 إلى 65535).");

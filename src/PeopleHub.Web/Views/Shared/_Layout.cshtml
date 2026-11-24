@@ -36,7 +36,7 @@ else {
     <a class="@On("Requests") nav-sub" href="/Requests/Delegations">@Ui.Icon("users") @T["nav.deleg"]</a>
     <div class="nav-label">@(T.IsAr ? "المواهب" : "Talent")</div>
     @if (Can(Perm.TalentManage)) { <a class="@On("Talent")" href="/Talent/Recruitment">@Ui.Icon("users") @(T.IsAr ? "التوظيف" : "Recruitment")</a> }
-    <a href="/Talent/Performance">@Ui.Icon("chart") @(T.IsAr ? "تقييم الأداء" : "Performance")</a>
+    <a class="@On("Perf")" href="/Perf">@Ui.Icon("chart") @(T.IsAr ? "إدارة الأداء" : "Performance")</a>
     <a href="/Talent/Training">@Ui.Icon("clock") @(T.IsAr ? "التدريب" : "Training")</a>
     <div class="nav-label">@T["nav.finance"]</div>
     <a class="@On("Payroll")" href="/Payroll">@Ui.Icon("wallet") @T["nav.payroll"]</a>

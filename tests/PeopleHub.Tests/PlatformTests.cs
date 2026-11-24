@@ -14,3 +14,12 @@ public class PlatformTests
     [Fact] public void Candidate_StagesAdvance() { Assert.Equal(CandidateStage.Screening, Candidate.Next(CandidateStage.Applied)); Assert.Null(Candidate.Next(CandidateStage.Hired)); }
     [Fact] public void Review_ScoreRange() { Assert.True(PerformanceReview.ValidScore(5)); Assert.False(PerformanceReview.ValidScore(6)); }
 }
+public class PerfTests
+{
+    static PerfGoal G(int w, int? s) => new() { Weight = w, ManagerScore = s };
+    [Fact] public void GoalScore_IsWeighted() => Assert.Equal(3.6m, PerfCalc.GoalScore(new[] { G(60, 4), G(40, 3) }));
+    [Fact] public void GoalScore_NullWithoutRatings() => Assert.Null(PerfCalc.GoalScore(new[] { G(100, null) }));
+    [Fact] public void Computed_Blends70_30() => Assert.Equal(4.3m, PerfCalc.Computed(4m, 5));
+    [Fact] public void Bands_AndAdvice() { Assert.Equal("Outstanding", PerfCalc.Band(4.6m)); Assert.Equal("NeedsImprovement", PerfCalc.Band(2.4m)); Assert.Equal("ImprovementPlan", PerfCalc.Recommendation(2m)); Assert.Equal("PromotionReview+Bonus", PerfCalc.Recommendation(4.5m)); }
+    [Fact] public void Weights_MustTotal100() { Assert.True(PerfCalc.WeightsOk(new[] { G(60, 1), G(40, 1) })); Assert.False(PerfCalc.WeightsOk(new[] { G(60, 1) })); }
+}
