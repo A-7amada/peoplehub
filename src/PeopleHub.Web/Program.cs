@@ -35,6 +35,7 @@ builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<EmployeeLifecycle>();
 builder.Services.AddScoped<AssetService>();
 builder.Services.AddScoped<HolidayService>();
+builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<EmployeeDocuments>();
 builder.Services.AddScoped<ShiftSchedule>();
 builder.Services.AddScoped<EmploymentTimeline>();
@@ -65,7 +66,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             var id = c.Principal?.FindFirst("uid")?.Value;
             var db = c.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
             var u = int.TryParse(id, out var uid) ? await db.Set<AppUser>().AsNoTracking().FirstOrDefaultAsync(u => u.Id == uid && u.IsActive) : null;
-            if (u == null || c.Principal?.FindFirst("stamp")?.Value != u.SecurityStamp) c.RejectPrincipal();
+            var sessions=c.HttpContext.RequestServices.GetRequiredService<SessionService>();
+            if (u == null || c.Principal?.FindFirst("stamp")?.Value != u.SecurityStamp || !await sessions.ValidAsync(u.Id,c.Principal?.FindFirst("sid")?.Value)) c.RejectPrincipal();
         }; o.ExpireTimeSpan = TimeSpan.FromHours(8); });
 builder.Services.Configure<RequestLocalizationOptions>(o =>
 {

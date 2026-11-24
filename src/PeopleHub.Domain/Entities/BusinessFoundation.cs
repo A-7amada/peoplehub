@@ -199,3 +199,15 @@ public class PerformanceResponse
  public string Actor {get;set;}="";
  public DateTime At {get;set;}
 }
+
+public class LoginSession
+{
+ public int Id {get;set;}
+ public int UserId {get;set;}
+ public string TokenHash {get;set;}="";
+ public DateTime StartedAt {get;set;}
+ public DateTime ExpiresAt {get;set;}
+ public string Agent {get;set;}="";
+ public string Ip {get;set;}="";
+ public DateTime? RevokedAt {get;set;}
+}

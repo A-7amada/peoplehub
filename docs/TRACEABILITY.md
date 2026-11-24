@@ -64,7 +64,7 @@
 | HR-005 | Confidential grievances, investigation and discipline | P1 | Open |
 | SEC-001 | Field-level identity/salary/bank/medical access | P0 | Partial: salary/bank edit boundary repaired; granular identity/medical grants open |
 | SEC-002 | Separation of duties | P0 | Implemented creator cannot finalize own run |
-| SEC-003 | Session expiry/revocation/device management | P0 | Partial:8h expiry/security stamp existing, session inventory open |
+| SEC-003 | Session expiry/revocation/device management | P0 | Implemented hashed per-login sessions, 8h absolute expiry, owner inventory/revocation, logout and credential-change invalidation; no verified physical-device binding |
 | SEC-004 | Sensitive-field encryption at rest | P0 | Open: key management required |
 | SEC-005 | Append-only audit history | P0 | Implemented repository guard; database-owner tampering not prevented |
 | SEC-006 | Failed-login lockout and suspicious detection | P0 | Implemented password lockout after five failures for 15 minutes plus audit; broader anomaly detection open |
@@ -119,3 +119,5 @@ Asset follow-up: 164 tests pass (160 regression plus 4 asset tests). Registratio
 Operational follow-up: 169 tests pass (165 regression and 4 scoped-calendar tests). Assigned lifecycle tasks now have a private assignee inbox on the assignee profile, avoiding access to another employee profile. Calendar registration and task inbox inspected locally in EN/AR. Holiday scopes affect new leave duration and attendance totals, with existing approved request duration preserved. Department is the implemented group, not arbitrary employee groups.
 
 Performance response follow-up: employee acknowledgement records receipt, not agreement; one appeal has a referenced HR disposition, with no self-review, no silent score rewrite and no payroll effect. Append-only response evidence and appraisal revision guard duplicate races. Local MVC appeal EN/AR inspected. Four dedicated tests pass; regular score correction after upheld appeal remains an explicit separate gap.
+
+Session follow-up: 177 tests pass (173 regression plus 4 session tests). Two isolated browser contexts exercised: owner revokes the other, its next request rejects while current remains valid; current revoke then rejects current request. EN/AR security page inspected. Session tokens are stored only as hashes. Old cookies without a session record are intentionally signed out on rollout. User-agent/IP are displayed as unverified hints, not device identity.

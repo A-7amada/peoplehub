@@ -36,13 +36,14 @@ public abstract class BaseController(Loc loc) : Controller
     protected IActionResult Forbidden() { TempData["err"] = loc["err.forbidden"]; return Redirect("/"); }
 }
 
-public class AccountController(Loc loc, AuthService auth, AccountService accounts, Microsoft.AspNetCore.DataProtection.IDataProtectionProvider dp, AppClock clock, IConfiguration config) : Controller
+public class AccountController(Loc loc, AuthService auth, AccountService accounts, Microsoft.AspNetCore.DataProtection.IDataProtectionProvider dp, AppClock clock, IConfiguration config,SessionService sessions) : Controller
 {
     private Microsoft.AspNetCore.DataProtection.IDataProtector Prot => dp.CreateProtector("peoplehub.2fa");
 
     private async Task SignIn(AppUser u)
     {
-        var claims = new List<Claim> { new(ClaimTypes.Name, u.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp) };
+        var sid=await sessions.StartAsync(u.Id,Request.Headers.UserAgent.ToString(),HttpContext.Connection.RemoteIpAddress?.ToString()??"");
+        var claims = new List<Claim> { new(ClaimTypes.Name, u.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp),new("sid",sid) };
         if (u.EmployeeId != null) claims.Add(new("emp", u.EmployeeId.ToString()!));
         claims.AddRange(u.RoleArray.Select(r => new Claim(ClaimTypes.Role, r)));
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, "cookie")));
@@ -84,7 +85,8 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
         ViewBag.Token = token; ViewBag.Valid = await accounts.TokenValidAsync(token ?? ""); return View();
     }
 
-    [Authorize] public async Task<IActionResult> Security(string? setup) { ViewBag.User = await accounts.CurrentAsync(); ViewBag.Setup = setup == "1"; return View(); }
+    [Authorize] public async Task<IActionResult> Security(string? setup) { ViewBag.User = await accounts.CurrentAsync(); ViewBag.Setup = setup == "1";ViewBag.Sessions=await sessions.MineAsync();ViewBag.CurrentSessionHash=SessionService.Hash(User.FindFirst("sid")?.Value??""); return View(); }
+    [Authorize,HttpPost]public async Task<IActionResult> RevokeSession(int id){try{await sessions.RevokeAsync(id);TempData["ok"]=loc["msg.saved"];}catch(DomainException ex){TempData["err"]=loc[ex.Message];}return RedirectToAction(nameof(Security));}
     [Authorize, HttpPost] public async Task<IActionResult> ChangePassword(string current, string next) { try { await accounts.ChangePasswordAsync(current, next); TempData["ok"] = loc["msg.saved"]; } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; } return RedirectToAction(nameof(Security)); }
     [Authorize, HttpPost] public async Task<IActionResult> BeginTotp() { try { await accounts.BeginTotpAsync(); return RedirectToAction(nameof(Security), new { setup = 1 }); } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; return RedirectToAction(nameof(Security)); } }
     [Authorize, HttpPost] public async Task<IActionResult> EnableTotp(string code) { try { await accounts.EnableTotpAsync(code); TempData["ok"] = loc["msg.saved"]; return RedirectToAction(nameof(Security)); } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; return RedirectToAction(nameof(Security), new { setup = 1 }); } }
@@ -105,7 +107,7 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
     }
 
     [HttpPost]
-    public async Task<IActionResult> Logout() { await HttpContext.SignOutAsync(); return RedirectToAction(nameof(Login)); }
+    public async Task<IActionResult> Logout() { await sessions.RevokeCurrentAsync(User.FindFirst("sid")?.Value);await HttpContext.SignOutAsync(); return RedirectToAction(nameof(Login)); }
 
     [AllowAnonymous, HttpGet]
     public IActionResult Lang(string? to, string? returnUrl)

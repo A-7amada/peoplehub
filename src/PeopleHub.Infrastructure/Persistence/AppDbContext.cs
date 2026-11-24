@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<LoginSession>().HasIndex(x=>x.TokenHash).IsUnique();
         b.Entity<PerformanceResponse>().HasIndex(x=>new{x.AppraisalId,x.Kind});
         b.Entity<CompanyAsset>().HasIndex(x=>x.Tag).IsUnique();b.Entity<AssetMovement>().HasIndex(x=>x.AssetId);
         b.Entity<EmployeeShiftDay>().HasIndex(x=>new{x.EmployeeId,x.Date}).IsUnique();

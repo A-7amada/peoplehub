@@ -197,6 +197,7 @@ public class EmailService(IRepository repo, AppClock clock)
 
 public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, EmailService mail, AuditService audit)
 {
+    private async Task RevokeSignInsAsync(int userId){foreach(var session in await repo.ToListAsync(repo.Query<LoginSession>().Where(x=>x.UserId==userId&&x.RevokedAt==null)))session.RevokedAt=clock.UtcNow;}
     private static void CheckPolicy(string pw)
     {
         int.TryParse(SettingsService.Get("pwd.minLength"), out var min); if (min < 6) min = 8;
@@ -207,7 +208,7 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
     {
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
         if (!PasswordHasher.Verify(current ?? "", u.PasswordHash)) throw new DomainException("err.wrongPassword");
-        CheckPolicy(next ?? ""); u.PasswordHash = PasswordHasher.Hash(next!); u.SecurityStamp = Guid.NewGuid().ToString("N");
+        CheckPolicy(next ?? "");await RevokeSignInsAsync(u.Id); u.PasswordHash = PasswordHasher.Hash(next!); u.SecurityStamp = Guid.NewGuid().ToString("N");
         audit.Log("Update", "Password", u.Email, "changed by user"); await repo.SaveAsync();
     }
 
@@ -230,7 +231,7 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
         if (r == null || r.Expires < clock.UtcNow) return false;
         CheckPolicy(next ?? "");
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == r.UserId)) ?? throw new DomainException("err.forbidden");
-        u.PasswordHash = PasswordHasher.Hash(next!); u.SecurityStamp = Guid.NewGuid().ToString("N"); r.Used = true; audit.Log("Update", "Password", u.Email, "reset by token"); await repo.SaveAsync(); return true;
+        await RevokeSignInsAsync(u.Id);u.PasswordHash = PasswordHasher.Hash(next!); u.SecurityStamp = Guid.NewGuid().ToString("N"); r.Used = true; audit.Log("Update", "Password", u.Email, "reset by token"); await repo.SaveAsync(); return true;
     }
 
     private static string HashToken(string token) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(token ?? "")));
@@ -252,7 +253,7 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
     {
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
         if (!PasswordHasher.Verify(password ?? "", u.PasswordHash)) throw new DomainException("err.wrongPassword");
-        u.TotpEnabled = false; u.TotpSecret = null; u.SecurityStamp = Guid.NewGuid().ToString("N"); audit.Log("Update", "2FA", u.Email, "disabled"); await repo.SaveAsync();
+        await RevokeSignInsAsync(u.Id);u.TotpEnabled = false; u.TotpSecret = null; u.SecurityStamp = Guid.NewGuid().ToString("N"); audit.Log("Update", "2FA", u.Email, "disabled"); await repo.SaveAsync();
     }
     public Task<AppUser?> CurrentAsync() => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId));
     public Task<AppUser?> ByIdAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == id && x.IsActive));
