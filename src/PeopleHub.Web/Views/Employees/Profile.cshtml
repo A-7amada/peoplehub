@@ -44,6 +44,7 @@
 </div>
 }
 @if (tab == "leave") {
+@if(!self&&!Me.Can(Perm.LeaveEvidence)){<div class="alert info">@(T.IsAr?"أرصدة الإجازات وسجلها متاحان لصاحب البيانات أو لصلاحية الاطلاع على أدلة الإجازات فقط.":"Leave balances and ledger are limited to the employee or the leave-evidence permission.")</div>}
 <div class="card"><div class="card-h"><h2>@T["leave.balances"] @ViewBag.Year</h2></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["common.type"]</th><th>@T["leave.entitled"]</th><th>@T["leave.carried"]</th><th>@T["leave.used"]</th><th>@T["leave.remaining"]</th>@if (hr) { <th></th> }</tr></thead><tbody>
 @foreach (var b in bal) { <tr><td>@(self||Me.Can(Perm.LeaveEvidence)?T.Name(b.LeaveType!.Name,b.LeaveType.NameAr):(T.IsAr?"إجازة خاصة":"Private leave"))</td><td class="num">@b.Entitled</td><td class="num">@b.CarriedOver</td><td class="num">@b.Used</td><td class="num"><b>@b.Remaining</b></td>
  @if (hr) { <td class="right"><form method="post" action="/Employees/AdjustBalance" asp-antiforgery="true" class="inline-form" style="justify-content:flex-end"><input type="hidden" name="id" value="@e.Id"><input type="hidden" name="typeId" value="@b.LeaveTypeId"><input type="number" name="entitled" value="@b.Entitled" style="width:70px"><input type="text" name="reason" placeholder="@T["common.reason"]" style="width:130px"><button class="btn btn-sm">@T["common.save"]</button></form></td> }</tr> }

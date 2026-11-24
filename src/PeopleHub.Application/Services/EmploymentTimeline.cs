@@ -3,7 +3,7 @@ using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Application.Services;
 public class EmploymentTimeline(IRepository repo,ICurrentUser me,AppClock clock,AuditService audit)
 {
- public async Task<List<EmploymentChange>> ListAsync(int employeeId,AccessScope scope){if(!await scope.CanSeeAsync(employeeId))throw new DomainException("err.forbidden");return await repo.ToListAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==employeeId).OrderBy(x=>x.EffectiveOn));}
+ public async Task<List<EmploymentChange>> ListAsync(int employeeId,AccessScope scope){if(!await scope.CanSeeAsync(employeeId))throw new DomainException("err.forbidden");return (await repo.ToListAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==employeeId).OrderBy(x=>x.EffectiveOn))).Select(x=>{var copy=System.Text.Json.JsonSerializer.Deserialize<EmploymentChange>(System.Text.Json.JsonSerializer.Serialize(x))!;if(me.EmployeeId!=employeeId&&!me.Can(Perm.EmpIdentity))copy.Reason="";if(!scope.CanSeeSalary(employeeId))copy.BasicSalary=0;return copy;}).ToList();}
  public Task ScheduleAsync(EmploymentChange change)=>repo.AtomicAsync(()=>ScheduleCoreAsync(change));
  private async Task ScheduleCoreAsync(EmploymentChange change)
  {

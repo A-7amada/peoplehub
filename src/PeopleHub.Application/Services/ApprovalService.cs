@@ -52,7 +52,7 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
 
         var requiredComments=await flows.RequiredApprovalCommentsAsync();
         var actions = (await repo.ToListAsync(repo.Query<ApprovalAction>().OrderBy(x => x.At))).ToLookup(x => (x.Kind, x.RequestId));
-        var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, i.A.Employee!, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
+        var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, new Employee{Id=i.A.EmployeeId,Code=i.A.Employee!.Code,FullName=i.A.Employee.FullName,FullNameAr=i.A.Employee.FullNameAr}, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
                 i.A.CreatedAt, CanLeaveEvidence(i.A)?i.A.Comment:null, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)), CanLeaveEvidence(i.A)?i.A.AttachmentToken:null, CanLeaveEvidence(i.A)?i.A.AttachmentName:null,
                 CanLeaveEvidence(i.A)?actions[(i.Kind, i.A.Id)].ToList():[],i.A.WorkflowRevisionHash,requiredComments.Contains(i.Kind),Assigned(i.A)?.ToEmail))
             .Where(r => status == null || r.Status == status)

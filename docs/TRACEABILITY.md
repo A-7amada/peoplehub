@@ -62,7 +62,7 @@
 | HR-003 | Requisitions, interviews, offers and onboarding | P1 | Open |
 | HR-004 | Benefits plans/dependents/eligibility/enrolment/cost allocation | P1 | Open |
 | HR-005 | Confidential grievances, investigation and discipline | P1 | Open |
-| SEC-001 | Field-level identity/salary/bank/medical access | P0 | Partial: implemented separate identity, bank-view, bank-edit and leave-evidence grants alongside salary permission; profile/edit redaction and tampered POST/file download guards. New grants are unset for existing non-SystemAdmin roles pending owner configuration; broader export/service privacy audit remains open |
+| SEC-001 | Field-level identity/salary/bank/medical access | P0 | Partial: implemented separate identity, bank-view, bank-edit and leave-evidence grants alongside salary permission; profile/edit/list/history redaction and tampered POST/file download guards; leave ledger/balance exports restricted to owner or evidence grant. New grants are unset for existing non-SystemAdmin roles pending owner configuration; broader export/service privacy audit remains open |
 | SEC-002 | Separation of duties | P0 | Implemented creator cannot finalize own run |
 | SEC-003 | Session expiry/revocation/device management | P0 | Implemented hashed per-login sessions, 8h absolute expiry, owner inventory/revocation, logout and credential-change invalidation; no verified physical-device binding |
 | SEC-004 | Sensitive-field encryption at rest | P0 | Open: key management required |
@@ -143,3 +143,7 @@ Approval reassignment follow-up: 203 tests pass. Both provider migrations genera
 Sensitive-field follow-up: 207 tests pass (192 remaining regressions and 15 privacy/foundation cases). General employee management, company scope and salary access no longer imply identity or bank access. Owner retains own profile/leave evidence access. New independent grants default to unassigned rather than guessing owner policy. Medical leave type, supporting attachment and decision comments are hidden without the leave-evidence grant; direct file retrieval is guarded. EN/AR general-HR profile/edit screens inspected. Existing unchanged legacy identity values are preserved without blocking unrelated edits; changed identity values remain validated.
 
 Privacy follow-up: department leave cards and leave-balance report type labels are also masked without leave-evidence access; another employee's leave ledger is withheld because free-text reasons can contain private evidence. Broader privacy audit remains explicitly partial.
+
+Privacy audit follow-up: sensitive free-text contract/status/career/assignment/scheduled-change notes are withheld without the identity grant (owner still sees their own). List and manager picker employee copies are redacted, approval rows carry name/code only, turnover exports mask reasons, and other employees' leave-balance report rows are omitted without evidence access. Broader service and attachment-category audit remains open.
+
+Round 34: 211 tests pass, including historical-text redaction, list picker copies, leave ledger/balance service denial and report row omission without the evidence grant. EN/AR restricted profile/history inspected locally; SEC-001 remains Partial for broader service/category review.

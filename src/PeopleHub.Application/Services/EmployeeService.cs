@@ -22,14 +22,14 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         if (f.DepartmentId is { } d) q = q.Where(e => e.DepartmentId == d);
         if (f.BranchId is { } b) q = q.Where(e => e.BranchId == b);
         if (f.Status is { } st) q = q.Where(e => e.Status == st);
-        return await repo.ToListAsync(q.OrderBy(e => e.Code));
+        return (await repo.ToListAsync(q.OrderBy(e => e.Code))).Select(VisibleCopy).ToList();
     }
 
     public async Task<Dictionary<int, Employee>> LookupAsync() =>
         (await repo.ToListAsync(repo.Query<Employee>())).ToDictionary(e => e.Id);
 
     public async Task<List<Employee>> ManagerCandidatesAsync() =>
-        await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.FullName));
+        (await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.FullName))).Select(VisibleCopy).ToList();
 
     public Task<Employee?> GetAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e => e.Id == id));
 
@@ -40,14 +40,15 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         var mgr = e.ManagerId is { } m ? await GetAsync(m) : null;
         var visible=VisibleCopy(e);
         return new EmployeeProfile(visible, mgr?.FullName, mgr?.FullNameAr,
-            await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.StartDate)),
-            await repo.ToListAsync(repo.Query<StatusHistory>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.At)),
-            await repo.ToListAsync(repo.Query<CareerEvent>().Where(c => c.EmployeeId == id && (c.Type != CareerEventType.SalaryChange || scope.CanSeeSalary(id))).OrderByDescending(c => c.Date)),
+            (await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.StartDate))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Notes="";return copy;}).ToList(),
+            (await repo.ToListAsync(repo.Query<StatusHistory>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.At))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Reason=null;return copy;}).ToList(),
+            (await repo.ToListAsync(repo.Query<CareerEvent>().Where(c => c.EmployeeId == id && (c.Type != CareerEventType.SalaryChange || scope.CanSeeSalary(id))).OrderByDescending(c => c.Date))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Details="";return copy;}).ToList(),
             scope.CanSeeSalary(id) ? await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == id)) : [],
             scope.CanSeeSalary(id),
             e.ShiftId is { } s ? await repo.FirstOrDefaultAsync(repo.Query<Shift>().Where(x => x.Id == s)) : null,CanIdentity(id),CanBank(id));
     }
 
+    private static T Copy<T>(T source)=>System.Text.Json.JsonSerializer.Deserialize<T>(System.Text.Json.JsonSerializer.Serialize(source))!;
     private bool CanIdentity(int id)=>me.EmployeeId==id||me.Can(Perm.EmpIdentity);
     private bool CanBank(int id)=>me.EmployeeId==id||me.Can(Perm.EmpBank);
     private Employee VisibleCopy(Employee source)
@@ -71,7 +72,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     public async Task<List<EmployeeAssignment>> AssignmentsAsync(int id)
     {
         if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
-        return await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==id).OrderByDescending(x=>x.EffectiveFrom).ThenByDescending(x=>x.Id));
+        return (await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==id).OrderByDescending(x=>x.EffectiveFrom).ThenByDescending(x=>x.Id))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Reason="";if(!scope.CanSeeSalary(id))copy.BasicSalary=0;return copy;}).ToList();
     }
 
     private void RequireHr()

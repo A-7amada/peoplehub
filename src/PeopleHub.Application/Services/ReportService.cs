@@ -92,7 +92,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                     w.Select(e => { var x = s[e.Id]; return new List<string> { e.Code, e.FullName, x.WorkingDays.ToString(), x.PresentDays.ToString(), x.LateCount.ToString(), x.LateMinutes.ToString(),
                         x.AbsentDays.ToString(), x.ExcusedAbsences.ToString(), x.LeaveDays.ToString(), x.OvertimeHours.ToString("0.#", CultureInfo.InvariantCulture) }; }).ToList());
             case "leave":
-                var bals = (await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.Year == year))).Where(b => emps.Any(e => e.Id == b.EmployeeId)).ToList();
+                var bals = (await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.Year == year))).Where(b => emps.Any(e => e.Id == b.EmployeeId)).Where(b=>me.EmployeeId==b.EmployeeId||me.Can(Perm.LeaveEvidence)).ToList();
                 return new("leave", ["Code", "Name", "Leave type", "Entitled", "Carried over", "Used", "Remaining"],
                     bals.OrderBy(b => b.EmployeeId).Select(b => { var e = emps.First(x => x.Id == b.EmployeeId); return new List<string> { e.Code, e.FullName, me.EmployeeId==e.Id||me.Can(Perm.LeaveEvidence)?b.LeaveType?.Name??"":"Private leave", b.Entitled.ToString(), b.CarriedOver.ToString(), b.Used.ToString(), b.Remaining.ToString() }; }).ToList());
             case "payroll":
@@ -106,7 +106,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                 var left = emps.Where(e => !e.IsWorking).ToList();
                 var hist = await repo.ToListAsync(repo.Query<StatusHistory>());
                 return new("turnover", ["Code", "Name", "Department", "Status", "Date", "Reason"],
-                    left.Select(e => { var h = hist.Where(x => x.EmployeeId == e.Id).OrderByDescending(x => x.At).FirstOrDefault(); return new List<string> { e.Code, e.FullName, e.Department?.Name ?? "", e.Status.ToString(), h?.At.ToString("yyyy-MM-dd") ?? "", h?.Reason ?? "" }; }).ToList());
+                    left.Select(e => { var h = hist.Where(x => x.EmployeeId == e.Id).OrderByDescending(x => x.At).FirstOrDefault(); return new List<string> { e.Code, e.FullName, e.Department?.Name ?? "", e.Status.ToString(), h?.At.ToString("yyyy-MM-dd") ?? "", me.EmployeeId==e.Id||me.Can(Perm.EmpIdentity)?h?.Reason??"":"" }; }).ToList());
         }
     }
 

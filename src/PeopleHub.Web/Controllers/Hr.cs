@@ -37,7 +37,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
             await Lists();
             ViewBag.Assignments=await svc.AssignmentsAsync(eid);
             ViewBag.Tab = tab; ViewBag.Components = await svc.ComponentsAsync();
-            ViewBag.Balances = tab == "leave" ? await leave.BalancesAsync(eid, clock.Today.Year) : [];
+            ViewBag.Balances = tab == "leave" && (me.EmployeeId==eid||me.Can(Perm.LeaveEvidence)) ? await leave.BalancesAsync(eid, clock.Today.Year) : [];
             ViewBag.Ledger=tab=="leave" ? await leave.TransactionsAsync(eid,clock.Today.Year) : [];
             ViewBag.Types = await leave.TypesAsync();
             ViewBag.Year = clock.Today.Year;

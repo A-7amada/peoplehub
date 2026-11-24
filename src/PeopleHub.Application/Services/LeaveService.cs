@@ -18,6 +18,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
     public async Task<List<LeaveBalance>> BalancesAsync(int employeeId, int year)
     {
         if (!await scope.CanSeeAsync(employeeId)) throw new DomainException("err.forbidden");
+        if(me.EmployeeId!=employeeId&&!me.Can(Perm.LeaveEvidence))throw new DomainException("err.forbidden");
         var types = await TypesAsync();
         var existing = await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == employeeId && b.Year == year));
         var prev = await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == employeeId && b.Year == year - 1));
