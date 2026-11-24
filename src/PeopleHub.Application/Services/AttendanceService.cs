@@ -16,6 +16,20 @@ public record DailyRow(Employee Employee, AttendanceRecord? Record, bool OnLeave
 public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows)
 {
 
+    public async Task<bool> IsLockedAsync(int employeeId,int year,int month)=>await repo.AnyAsync(repo.Query<AttendancePeriodLock>().Where(x=>x.EmployeeId==employeeId && x.Year==year && x.Month==month));
+    public Task LockAsync(int employeeId,int year,int month,string reason)=>repo.AtomicAsync(()=>LockCoreAsync(employeeId,year,month,reason));
+    private async Task LockCoreAsync(int employeeId,int year,int month,string reason)
+    {
+        if(!me.Can(Perm.AttManage))throw new DomainException("err.forbidden");
+        if(year<2000 || year>9998 || month<1 || month>12 || string.IsNullOrWhiteSpace(reason))throw new DomainException("err.required");
+        if(new DateTime(year,month,1).AddMonths(1)>clock.Today)throw new DomainException("err.periodOpen");
+        if(!await repo.AnyAsync(repo.Query<Employee>().Where(e=>e.Id==employeeId)))throw new DomainException("err.notFound");
+        if(await IsLockedAsync(employeeId,year,month))throw new DomainException("err.attendanceLocked");
+        if(await repo.AnyAsync(repo.Query<AttendanceCorrection>().Where(c=>c.EmployeeId==employeeId && c.Date.Year==year && c.Date.Month==month && c.Status==RequestStatus.Pending)))throw new DomainException("err.pendingCorrection");
+        var emp=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==employeeId));emp!.LeaveRequestStamp=Guid.NewGuid().ToString("N");
+        repo.Add(new AttendancePeriodLock{EmployeeId=employeeId,Year=year,Month=month,At=clock.UtcNow,Actor=me.Email,Reason=reason.Trim()});audit.Log("Lock","AttendancePeriod",employeeId,$"{year}-{month:00}: {reason.Trim()}");await repo.SaveAsync();
+    }
+    private async Task RequireUnlockedAsync(int employeeId,DateTime day){var emp=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==employeeId))??throw new DomainException("err.notFound");if(await IsLockedAsync(employeeId,day.Year,day.Month))throw new DomainException("err.attendanceLocked");emp.LeaveRequestStamp=Guid.NewGuid().ToString("N");}
     public async Task<List<AttendanceEvidence>> EvidenceAsync(int employeeId,int year,int month)
     {
         if(!await scope.CanSeeAsync(employeeId)) throw new DomainException("err.forbidden");
@@ -46,6 +60,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var e = await MeAsync();
         if (!e.IsWorking) throw new DomainException("err.terminated");
         var today = clock.Today;
+        await RequireUnlockedAsync(e.Id,today);
         if (await repo.AnyAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == today && r.CheckIn != null)))
             throw new DomainException("err.duplicateCheckIn");
         var existing = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == today));
@@ -63,6 +78,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         if (SettingsService.DeviceMode) throw new DomainException("err.deviceMode");
         var e = await MeAsync();
         var rec = await TodayRecordAsync();
+        await RequireUnlockedAsync(e.Id,clock.Today);
         if (rec?.CheckIn == null) throw new DomainException("err.noCheckIn");
         if (rec.CheckOut != null) throw new DomainException("err.duplicateCheckOut");
         var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
@@ -73,11 +89,13 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         await repo.SaveAsync();
     }
 
-    public Task AddManualAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source) => repo.AtomicAsync(()=>AddManualCoreAsync(employeeId,date,checkIn,checkOut,source));
-    private async Task AddManualCoreAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source)
+    public Task AddManualAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source,string? reason=null) => repo.AtomicAsync(()=>AddManualCoreAsync(employeeId,date,checkIn,checkOut,source,reason));
+    private async Task AddManualCoreAsync(int employeeId, DateTime date, DateTime? checkIn, DateTime? checkOut, AttendanceSource source,string? reason)
     {
         if (!me.Can(Perm.AttManage)) throw new DomainException("err.forbidden");
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == employeeId)) ?? throw new DomainException("err.notFound");
+        await RequireUnlockedAsync(employeeId,date);
+        if(string.IsNullOrWhiteSpace(reason))throw new DomainException("err.reasonRequired");
         if (date.Date > clock.Today) throw new DomainException("err.future");
         if (checkIn == null) throw new DomainException("err.checkinRequired");
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == employeeId && r.Date == date.Date));
@@ -87,7 +105,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         rec.CheckIn = checkIn; rec.CheckOut = checkOut; rec.Source = source; rec.IsExcused = false; rec.ExcuseNote = null;
         rec.Recompute(await ShiftOfAsync(e));
         if (isNew) repo.Add(rec);
-        repo.Add(AttendanceEvidence.Capture(rec,"ManualEntry",me.Email,clock.UtcNow));
+        repo.Add(AttendanceEvidence.Capture(rec,"ManualEntry",me.Email,clock.UtcNow,reason.Trim()));
         audit.Log("Create", "Attendance", $"{e.Code}/{date:yyyy-MM-dd}", $"{source} in={checkIn:HH:mm} out={checkOut:HH:mm}");
         await repo.SaveAsync();
     }
@@ -96,6 +114,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     public Task ExcuseAbsenceAsync(int employeeId, DateTime date, string? note) => repo.AtomicAsync(()=>ExcuseAbsenceCoreAsync(employeeId,date,note));
     private async Task ExcuseAbsenceCoreAsync(int employeeId, DateTime date, string? note)
     {
+        await RequireUnlockedAsync(employeeId,date);
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == employeeId)) ?? throw new DomainException("err.notFound");
         var manager = e.ManagerId != null && e.ManagerId == me.EmployeeId;
         if (!manager && !me.Can(Perm.AttManage)) throw new DomainException("err.forbidden");
@@ -196,6 +215,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
     {
         var e = await MeAsync();
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == date.Date));
+        await RequireUnlockedAsync(e.Id,date);
         var c = AttendanceCorrection.Create(e, date, rec?.CheckIn, rec?.CheckOut, newIn, newOut, reason, clock.Today);
         c.Route = await flows.RouteForAsync("Correction", e, 0);
         c.Employee = e; c.AttachmentToken = attToken; c.AttachmentName = attName;

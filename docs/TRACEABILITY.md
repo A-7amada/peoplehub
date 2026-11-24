@@ -19,7 +19,7 @@
 | ATT-004 | Raw punch ledger and idempotent processing | P0 | Implemented: append-only punches, normalized batch/retry dedupe and unique idempotency key; concurrent losing request may require retry |
 | ATT-005 | Flexible hours | P1 | Open |
 | ATT-006 | Remote attendance/geofencing | P2 | Open |
-| ATT-007 | Approved attendance period locking | P1 | Open |
+| ATT-007 | Approved attendance period locking | P1 | Implemented completed-month lock, reason, no reopening, mutation guards and retained late raw punches; broader financial-period coordination remains open |
 | ATT-008 | Reasoned manual corrections with original evidence | P0 | Implemented: approved correction retains before/after, reason and original raw punches |
 | ATT-009 | Branch/group holiday calendars | P1 | Open |
 | ATT-010 | Category/shift grace periods | P1 | Partial: shift grace existing, categories open |
@@ -107,3 +107,5 @@ Attendance evidence follow-up: 130 tests pass. New tests cover same-batch duplic
 Privacy/auth follow-up: 138 tests pass. No role grants or reviewer threshold were assumed. Thresholds freeze after first submitted review. Password lockout is a technical demo safeguard (5 failures/15 minutes), not an owner business-policy decision or production security certification. Both provider migrations generated.
 
 Employment scheduling follow-up: 143 tests pass. Future assignment/status schedules preserve the current employee until due, apply once, retain effective history and can be cancelled before due. One pending schedule per employee avoids ambiguous conflicting plans. Backdating, retro-pay, temporary transfer return, full historical allocations and durable multi-instance scheduler are not claimed complete.
+
+Attendance lock follow-up: manual entries now require a reason. Completed months can be approved/locked with an append-only lock record. Pending corrections block locking. Locked summaries reject manual/excuse/correction changes; delayed device punches remain raw without rewriting the locked projection. Employee revision contention protects cross-request locking races; PostgreSQL parallel stress remains unverified.

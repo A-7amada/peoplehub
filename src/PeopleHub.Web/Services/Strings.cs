@@ -14,6 +14,9 @@ public partial class Loc
         A("notif.cancelled","Approved leave cancelled","تم إلغاء إجازة معتمدة");
         A("err.pendingSchedule","Cancel the pending employment schedule before editing this record.","ألغ التغيير الوظيفي المجدول قبل تعديل هذا السجل.");
         A("permg.Performance privacy","Performance privacy","خصوصية الأداء");
+        A("err.attendanceLocked","This attendance period is locked.","فترة الحضور مغلقة ولا تقبل التعديل.");
+        A("err.periodOpen","Only completed months can be locked.","يمكن إغلاق الشهور المكتملة فقط.");
+        A("err.pendingCorrection","Decide pending attendance corrections before locking this month.","يجب البت في التصحيحات المعلقة قبل إغلاق الشهر.");
         // app & shell
         A("app.name", "PeopleHub", "بيبل هَب");
         A("demo.pill", "Demo project", "مشروع تجريبي");

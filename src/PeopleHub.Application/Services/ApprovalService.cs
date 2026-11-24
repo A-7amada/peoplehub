@@ -119,6 +119,8 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
                 audit.Log("Update", "LeaveBalance", l.EmployeeId, $"-{l.Days} days ({l.LeaveType?.Name})");
                 break;
             case AttendanceCorrection c:
+                c.Employee!.LeaveRequestStamp=Guid.NewGuid().ToString("N");
+                if(await repo.AnyAsync(repo.Query<AttendancePeriodLock>().Where(x=>x.EmployeeId==c.EmployeeId && x.Year==c.Date.Year && x.Month==c.Date.Month))) throw new DomainException("err.attendanceLocked");
                 var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == c.EmployeeId && r.Date == c.Date));
                 var shift = (await repo.ToListAsync(repo.Query<Shift>())).FirstOrDefault(s => s.Id == c.Employee!.ShiftId) ?? (await repo.ToListAsync(repo.Query<Shift>())).First();
                 var isNew = rec == null;

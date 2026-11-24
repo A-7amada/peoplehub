@@ -102,12 +102,14 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
         var punches = (await repo.ToListAsync(repo.Query<DevicePunch>())).Where(p => p.EmployeeId != null).GroupBy(p => (p.EmployeeId!.Value, p.Time.Date));
         var shifts = await repo.ToListAsync(repo.Query<Shift>().OrderBy(s => s.Id));
         var recs = await repo.ToListAsync(repo.Query<AttendanceRecord>());
+        var locks=await repo.ToListAsync(repo.Query<AttendancePeriodLock>());
         foreach (var g in punches)
         {
-            var (eid, day) = g.Key; var times = g.Select(p => p.Time).OrderBy(t => t).ToList();
+            var (eid, day) = g.Key; if(locks.Any(x=>x.EmployeeId==eid && x.Year==day.Year && x.Month==day.Month)) continue; var times = g.Select(p => p.Time).OrderBy(t => t).ToList();
             var rec = recs.FirstOrDefault(r => r.EmployeeId == eid && r.Date == day);
             if (rec != null && rec.Source == AttendanceSource.Manual && rec.CheckIn != null) continue;
             var emp = emps.First(e => e.Id == eid);
+            emp.LeaveRequestStamp=Guid.NewGuid().ToString("N");
             var isNew = rec == null; rec ??= new AttendanceRecord { EmployeeId = eid, Date = day };
             var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
             rec.CheckIn = times[0]; rec.CheckOut = times.Count > 1 && times[^1] > times[0].AddMinutes(1) ? times[^1] : null; rec.Source = AttendanceSource.Fingerprint;

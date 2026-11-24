@@ -82,3 +82,14 @@ public class EmploymentChange
  public DateTime? AppliedAt {get;set;}
  public bool Cancelled {get;set;}
 }
+
+public class AttendancePeriodLock
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public int Year {get;set;}
+ public int Month {get;set;}
+ public string Actor {get;set;}="";
+ public string Reason {get;set;}="";
+ public DateTime At {get;set;}
+}

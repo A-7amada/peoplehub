@@ -19,6 +19,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
             ViewBag.Summary = (await svc.SummariesAsync([ViewBag.Emp], y, m))[eid.Value];
             ViewBag.Own = eid == me.EmployeeId;
             ViewBag.Evidence=await svc.EvidenceAsync(eid.Value,y,m);
+            ViewBag.Locked=await svc.IsLockedAsync(eid.Value,y,m);
             return View(await svc.MonthAsync(eid.Value, y, m));
         }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }
@@ -32,14 +33,15 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
         return View(await svc.DailyAsync(d, dept));
     }
 
+    [HttpPost]public Task<IActionResult> Lock(int employeeId,int year,int month,string reason)=>Do(()=>svc.LockAsync(employeeId,year,month,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id=employeeId,year,month}));
     [HttpPost] public Task<IActionResult> CheckIn() => Do(svc.CheckInAsync, "msg.checkedIn", () => Back("/Attendance"));
     [HttpPost] public Task<IActionResult> CheckOut() => Do(svc.CheckOutAsync, "msg.checkedOut", () => Back("/Attendance"));
 
     [HttpPost]
-    public Task<IActionResult> Manual(int employeeId, DateTime date, string? checkIn, string? checkOut, AttendanceSource source)
+    public Task<IActionResult> Manual(int employeeId, DateTime date, string? checkIn, string? checkOut, AttendanceSource source,string? reason)
     {
         DateTime? T(string? s) => TimeSpan.TryParse(s, out var t) ? date.Date + t : null;
-        return Do(() => svc.AddManualAsync(employeeId, date, T(checkIn), T(checkOut), source), "msg.saved", () => RedirectToAction(nameof(Daily), new { date }));
+        return Do(() => svc.AddManualAsync(employeeId, date, T(checkIn), T(checkOut), source,reason), "msg.saved", () => RedirectToAction(nameof(Daily), new { date }));
     }
 
     [HttpPost]
