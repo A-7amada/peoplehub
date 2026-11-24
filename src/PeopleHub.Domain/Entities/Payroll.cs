@@ -36,7 +36,7 @@ public class AdvanceRequest : Approvable
 
     public static AdvanceRequest Create(Employee e, decimal amount, int installments, int year, int month, string? reason)
     {
-        if (amount <= 0) throw new DomainException("err.advanceAmount");
+        if (amount <= 0 || decimal.Round(amount,2)!=amount || year is <2000 or >9998 || month is <1 or >12) throw new DomainException("err.advanceAmount");
         if (installments is < 1 or > 24) throw new DomainException("err.installments");
         if (amount > e.BasicSalary * 3) throw new DomainException("err.advanceLimit");
         return new AdvanceRequest { EmployeeId = e.Id, Amount = amount, Installments = installments, StartYear = year, StartMonth = month,

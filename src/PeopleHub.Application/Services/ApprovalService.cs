@@ -150,12 +150,15 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         }
     }
 
-    public async Task RequestAdvanceAsync(decimal amount, int installments, int startYear, int startMonth, string? reason)
+    public Task RequestAdvanceAsync(decimal amount,int installments,int startYear,int startMonth,string? reason)=>repo.AtomicAsync(()=>RequestAdvanceCoreAsync(amount,installments,startYear,startMonth,reason));
+    private async Task RequestAdvanceCoreAsync(decimal amount, int installments, int startYear, int startMonth, string? reason)
     {
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == (me.EmployeeId ?? -1))) ?? throw new DomainException("err.forbidden");
         if (await repo.AnyAsync(repo.Query<AdvanceRequest>().Where(x => x.EmployeeId == e.Id && (x.Status == RequestStatus.Pending || (x.Status == RequestStatus.Approved && x.Paid < x.Amount)))))
             throw new DomainException("err.advanceOpen");
+        if(!e.IsWorking||startYear*12+startMonth<clock.Today.Year*12+clock.Today.Month||reason?.Length>2000)throw new DomainException("err.required");
         var adv = AdvanceRequest.Create(e, amount, installments, startYear, startMonth, reason);
+        e.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         await flows.RouteRequestAsync("Advance",adv,e,amount);
         adv.Employee = e;
         repo.Add(adv);
