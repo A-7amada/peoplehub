@@ -165,3 +165,26 @@ public class EmployeeShiftDay
  public string Actor {get;set;}="";
  public DateTime At {get;set;}
 }
+
+public class CompanyAsset
+{
+ public int Id {get;set;}
+ public string Tag {get;set;}="";
+ public string Name {get;set;}="";
+ public string Serial {get;set;}="";
+ public string Status {get;set;}="Available";
+ public int? AssignedEmployeeId {get;set;}
+ public DateTime? DueOn {get;set;}
+ public string Condition {get;set;}="";
+}
+public class AssetMovement
+{
+ public int Id {get;set;}
+ public int AssetId {get;set;}
+ public int? EmployeeId {get;set;}
+ public string Kind {get;set;}="";
+ public string Condition {get;set;}="";
+ public string Evidence {get;set;}="";
+ public string Actor {get;set;}="";
+ public DateTime At {get;set;}
+}

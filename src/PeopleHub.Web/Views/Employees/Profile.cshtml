@@ -10,7 +10,7 @@
   <div><h1>@T.Name(e.FullName, e.FullNameAr)</h1><div class="muted">@T.Name(e.JobTitle!.Name, e.JobTitle.NameAr) · @T.Name(e.Department!.Name, e.Department.NameAr) · @T.Name(e.Branch!.Name, e.Branch.NameAr)</div>
    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">@Ui.Chip(T.E(e.Status), Ui.StatusTone(e.Status))<span class="chip chip-gray">@e.Code</span><span class="chip chip-violet">@T.E(e.EmploymentType)</span></div></div>
   <div style="margin-inline-start:auto;display:flex;gap:10px">@if (hr) { <a class="btn" href="/Employees/Edit/@e.Id">@T["emp.edit"]</a> }<a class="btn" href="/Attendance?id=@e.Id">@Ui.Icon("clock", 16) @T["nav.attendance"]</a></div></div></div>
-<div class="tabs"><a class="@Tab("shifts")" href="?tab=shifts">@(T.IsAr?"جدول الورديات":"Shift calendar")</a>@if(hr||self){<a class="@Tab("documents")" href="?tab=documents">@(T.IsAr?"المستندات":"Documents")</a>}<a class="@Tab("lifecycle")" href="?tab=lifecycle">@(T.IsAr?"دورة الموظف":"Lifecycle")</a><a class="@Tab("overview")" href="?tab=overview">@T["emp.tab.overview"]</a><a class="@Tab("contracts")" href="?tab=contracts">@T["emp.tab.contracts"]</a><a class="@Tab("history")" href="?tab=history">@T["emp.tab.history"]</a><a class="@Tab("leave")" href="?tab=leave">@T["nav.leave"]</a>@if (Model.CanSeeSalary) { <a class="@Tab("pay")" href="?tab=pay">@T["emp.tab.pay"]</a> }</div>
+<div class="tabs">@if(hr||self){<a class="@Tab("assets")" href="?tab=assets">@(T.IsAr?"العهد والأصول":"Assets")</a>}<a class="@Tab("shifts")" href="?tab=shifts">@(T.IsAr?"جدول الورديات":"Shift calendar")</a>@if(hr||self){<a class="@Tab("documents")" href="?tab=documents">@(T.IsAr?"المستندات":"Documents")</a>}<a class="@Tab("lifecycle")" href="?tab=lifecycle">@(T.IsAr?"دورة الموظف":"Lifecycle")</a><a class="@Tab("overview")" href="?tab=overview">@T["emp.tab.overview"]</a><a class="@Tab("contracts")" href="?tab=contracts">@T["emp.tab.contracts"]</a><a class="@Tab("history")" href="?tab=history">@T["emp.tab.history"]</a><a class="@Tab("leave")" href="?tab=leave">@T["nav.leave"]</a>@if (Model.CanSeeSalary) { <a class="@Tab("pay")" href="?tab=pay">@T["emp.tab.pay"]</a> }</div>
 
 @if (tab == "overview") {
 <div class="grid g2">
@@ -75,3 +75,5 @@
 @if(tab=="documents"){<partial name="_Documents" model="((List<EmployeeDocument>)ViewBag.Documents,e.Id)" />}
 
 @if(tab=="shifts"){<partial name="_Shifts" model="((List<EmployeeShiftDay>)ViewBag.ShiftDays,e.Id)" />}
+
+@if(tab=="assets"){<partial name="_Assets" model="((AssetView)ViewBag.Assets,e.Id)" />}

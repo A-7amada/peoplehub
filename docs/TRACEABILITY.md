@@ -11,7 +11,7 @@
 | EMP-005 | Historical department, title, manager, shift and salary assignments | P0 | Partial: current history plus future assignment scheduling/cancellation; backdating and full historical payroll allocations remain open |
 | EMP-006 | Probation and confirmation | P1 | Implemented explicit probation end and reasoned final decision, no invented duration |
 | EMP-007 | Temporary/permanent transfers | P0 | Partial: current and future permanent transfer history, temporary return schedule open |
-| EMP-008 | Clearance and asset handover | P1 | Partial: clearance tasks with completion evidence; asset inventory/handover records remain open |
+| EMP-008 | Clearance and asset handover | P1 | Implemented clearance tasks and separate asset assignment/return with condition and receipt evidence; clearance is not auto-approved |
 | EMP-009 | HR custom fields | P1 | Implemented HR-only typed text/date/number fields, validation and audit |
 | ATT-001 | Rotating/multiple shifts | P1 | Implemented dated employee shift assignments and configurable shift definitions; repeating rotation generator open |
 | ATT-002 | Overnight shifts | P1 | Implemented cross-midnight device pairing, manual/correction checkout normalization and previous-night self checkout; post-shift delayed punches beyond end remain exceptions |
@@ -57,7 +57,7 @@
 | PER-003 | Employee result acknowledgement and appeal | P1 | Open |
 | PER-004 | Separate feedback identity/comment/aggregate privacy and reviewer threshold | P0 | Implemented configurable separate grants and threshold gate; owner policy values remain unset. Existing finalized scores preserved |
 | PER-005 | PIP milestones and trends | P1 | Partial: development items existing |
-| HR-001 | Asset assignment, handover, condition, return, maintenance | P1 | Open |
+| HR-001 | Asset assignment, handover, condition, return, maintenance | P1 | Implemented inventory, unique tags, explicit assignment/return, maintenance/release/retirement and append-only movement evidence |
 | HR-002 | Training needs, budgets, approval, certificates/expiry/effectiveness | P1 | Open |
 | HR-003 | Requisitions, interviews, offers and onboarding | P1 | Open |
 | HR-004 | Benefits plans/dependents/eligibility/enrolment/cost allocation | P1 | Open |
@@ -113,3 +113,5 @@ Attendance lock follow-up: manual entries now require a reason. Completed months
 Lifecycle follow-up: 152 tests pass. Employee lifecycle screen inspected in EN/AR. No default checklist, probation length, benefits eligibility or automatic termination/payment is assumed. Document repository/expiry, asset inventory and broader operational modules remain open.
 
 Shift follow-up: 160 tests pass including private document and overnight tests. Dated shift override takes precedence over effective employment history, then current shift fallback. Raw timestamps stay unchanged. Shift pattern and grace/late limits are explicit configuration. No break deductions or flexible-hours formula was invented.
+
+Asset follow-up: 164 tests pass (160 regression plus 4 asset tests). Registration, assignment and receipt evidence exercised locally through MVC forms; EN/AR viewport screenshots inspected. HR controls inventory/movements; employee sees only own assigned assets/history. Return validates the holder. No automatic clearance, deduction, valuation or depreciation. PostgreSQL schema generated, live asset migration not yet deployed.
