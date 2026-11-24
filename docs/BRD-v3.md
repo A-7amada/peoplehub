@@ -27,15 +27,15 @@ Requirement IDs and priorities are normative in TRACEABILITY.md. No documented f
 ## 9. Business rules
 - Egyptian workweek excludes Friday and Saturday. Existing holiday list supplements it.
 - Leave balance is checked at submission and deducted at final approval, not reserved. Final approval rechecks availability. Approved future leave cancellation requires a reason and restores exactly once. Started leave cannot be cancelled by this workflow. Accrual/negative balance policy beyond current no-negative rule requires explicit configuration design.
-- Current assignment changes take effect on their recording date, from inclusive/to exclusive. Same-day entries preserve sequence. Future/backdated assignments and period cost allocations remain open.
+- Current assignment changes take effect on their recording date, from inclusive/to exclusive. Same-day entries preserve sequence. Future assignment/status changes and temporary assignment linked returns are implemented. Backdated changes and period cost allocations remain open.
 - Current payroll includes active/on-leave employees hired by month-end. Monthly eligibility and proration expansion remains open and must not be described as implemented.
 - Only Draft payroll can recalculate or adjust. Recalculation preserves earlier calculation evidence. HR review then Finance approval then final approval remain sequential. Final payroll cannot reopen. Creator and final approver must differ. Marking paid records demo state, not proof of bank receipt. Export never marks a run paid.
 - EG-DEMO-2026-v1 is the sole currently implemented demo calculation policy. Its exact coefficients/brackets are recorded in each new snapshot. It is not specialist-validated, including high-income exceptions, termination and statutory limits. No automatic switch of tax law by calendar year is claimed.
 - Published performance does not automatically pay or promote an employee. Explicit award handoff remains required.
-- Pending approval routes retain their route snapshot, but current manager resolution is existing behavior; changed-manager and unavailable-approver policies remain open.
+- Pending approval routes retain their route snapshot, but current manager resolution is existing behavior; explicit administrator reassignment of the current pending stage handles an unavailable approver with retained history. Automatic absence detection and escalation remain open.
 
 ## 10. Workflow requirements
-Sequential any-one-of-roles or direct-manager steps, no self-approval, delegation within existing limits. Parallel/all/quorum/SLA/escalation requirements remain open. A label saying enterprise workflow does not implement these semantics.
+Sequential any-one-of-roles or direct-manager steps, no self-approval, dated delegation, immutable observed definition hashes, retained original routes, administrator pending-stage reassignment and per-kind required approval comments. Parallel/all/quorum/SLA/escalation requirements remain open. A label saying enterprise workflow does not implement these semantics.
 
 ## 11. Reporting
 Preserve CSV/XLSX and builder reports. New snapshots retain organizational and financial inputs at calculation time. Full historical organizational reporting remains open.
@@ -47,7 +47,7 @@ Use authenticated, versioned adapters, external reference IDs, idempotency, retr
 Proposed production targets from the review, not measured service promises: normal-request p95<=2s, monthly availability99.9%,1000 concurrent users, RPO15min/RTO4h, daily backup with restore verification, WCAG2.2AA and agreed current major browsers. Each target needs an environment, workload, instrumented test and owner agreement before acceptance. Free hosting does not meet an enterprise availability promise.
 
 ## 14. Security and compliance
-Sensitive fields must be independently authorized. The current batch closes employee-edit salary/bank leakage. Identity/medical-specific permissions, encryption/key custody, malware scanning, backup encryption, session inventory and per-account lockout remain explicit work. Application append-only guards are not cryptographic protection against a database owner. Never expose passwords/secrets in exports beyond controlled backups.
+Sensitive fields must be independently authorized. The current batch closes employee-edit salary/bank leakage. Separate identity, bank-view/bank-edit and leave-evidence grants, sensitive profile/history/export redaction, session inventory/revocation and password lockout are implemented with the limits in TRACEABILITY.md. New sensitive grants remain unset for non-SystemAdmin roles until owner configuration. Broader privacy audit, encryption/key custody, malware scanning and encrypted backup remain open. Application append-only guards are not cryptographic protection against a database owner. Never expose passwords/secrets in exports beyond controlled backups.
 
 ## 15. Assumptions and constraints
 Fictional single-company demo; no legal payroll certification; no production employee data. Keep modular monolith architecture. Do not add infrastructure merely for appearance.
@@ -67,3 +67,6 @@ Legal payroll/leave rules, retention/deletion periods, encryption-key custody, e
 
 ## 18. Traceability
 See TRACEABILITY.md for every review area, current status and remaining work. Automated tests and live scenario results are implementation evidence, not substitutes for production verification.
+
+## 19. Baseline reconciliation, 24 November 2026
+Updates above reconcile delivered scheduling/security/workflow behavior, not completion of the expansion roadmap. The feature matrix remains authoritative for Open and Partial requirements. Latest verification: 216 automated tests; PostgreSQL parallel race stress and production NFR targets remain unverified.
