@@ -23,6 +23,7 @@ public record PermDef(string Key, string Group, string En, string Ar);
 /// <summary>The permission catalog: every page or action that can be granted to a role.</summary>
 public static class Perm
 {
+    public const string FeedbackIdentity="perf.feedback.identity", FeedbackComments="perf.feedback.comments", FeedbackAggregate="perf.feedback.aggregate";
     public const string ScopeCompany = "scope.company", ScopeTeam = "scope.team",
         EmpManage = "emp.manage", EmpPay = "emp.pay", EmpSalary = "emp.salary", OrgManage = "org.manage",
         AttManage = "attendance.manage", AttTeam = "attendance.team", LeaveAdmin = "leave.admin", AdvManage = "advances.manage",
@@ -33,6 +34,9 @@ public static class Perm
 
     public static readonly PermDef[] Catalog =
     [
+        new(FeedbackIdentity,"Performance privacy","View 360 reviewer identity","عرض هوية مقيمي 360"),
+        new(FeedbackComments,"Performance privacy","View individual 360 comments and scores","عرض تعليقات ودرجات مقيمي 360"),
+        new(FeedbackAggregate,"Performance privacy","View 360 aggregates (threshold applies)","عرض متوسطات 360 بعد اكتمال الحد الأدنى"),
         new(ScopeCompany, "Data scope", "See every employee's data (company-wide)", "رؤية بيانات كل الموظفين (على مستوى الشركة)"),
         new(ScopeTeam, "Data scope", "See own team and department", "رؤية فريقه وإدارته"),
         new(EmpManage, "Employees", "Create and edit employees, contracts, history", "إضافة وتعديل الموظفين والعقود والسجل"),

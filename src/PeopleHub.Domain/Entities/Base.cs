@@ -27,6 +27,9 @@ public class AppUser
     public int Id { get; set; }
     public string Email { get; set; } = "";
     public string PasswordHash { get; set; } = "";
+    public int FailedLoginCount { get; set; }
+    public DateTime? LockedUntil { get; set; }
+    public DateTime? LastFailedLoginAt { get; set; }
     /// <summary>Comma separated roles (a user can hold several).</summary>
     public string RoleList { get; set; } = Roles.Employee;
     public int? EmployeeId { get; set; }

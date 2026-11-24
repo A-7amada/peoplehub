@@ -1,14 +1,15 @@
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Application.Services;
 
-public record PerfTools(List<Feedback360> Feedback, List<Employee> Employees, List<CompetencyTemplate> Templates, List<CompetencyItem> Items, List<TrainingCourse> Courses, List<PerfBonus> Bonuses, decimal? FeedbackAverage);
+public record FeedbackView(string? ReviewerName,string? ReviewerNameAr,int? Score,string? Comment,bool Submitted);
+public record PerfTools(List<FeedbackView> Feedback, List<Employee> Employees, List<CompetencyTemplate> Templates, List<CompetencyItem> Items, List<TrainingCourse> Courses, List<PerfBonus> Bonuses, decimal? FeedbackAverage);
 public partial class PerfService
 {
     private async Task<decimal?> ScoreAsync(PerfAppraisal a, List<PerfGoal> goals)
     {
         var c = a.Cycle ?? await CycleAsync(a.CycleId);
         var f = (await repo.ToListAsync(repo.Query<Feedback360>().Where(f => f.AppraisalId == a.Id))).Where(f => f.Score != null).ToList();
-        decimal? avg = f.Count == 0 ? null : f.Average(f => (decimal)f.Score!.Value);
+        decimal? avg = c.MinimumFeedbackReviewers is > 0 && f.Count >= c.MinimumFeedbackReviewers ? f.Average(f => (decimal)f.Score!.Value) : null;
         return PerfFormula.Calculate(PerfCalc.GoalScore(goals), a.ManagerScore, avg, c.GoalWeight, c.ManagerWeight, c.FeedbackWeight);
     }
 
@@ -25,12 +26,26 @@ public partial class PerfService
     {
         var v = await GetAsync(id);
         var f = await repo.ToListAsync(repo.Query<Feedback360>().Where(f => f.AppraisalId == id));
-        bool canSee = v.A.EmployeeId != me.EmployeeId || v.A.Cycle!.Status == CycleStatus.Closed;
-        decimal? avg = canSee && f.Any(f => f.Score != null) ? f.Where(f => f.Score != null).Average(f => (decimal)f.Score!.Value) : null;
-        // Raw reviewer names and comments are HR/direct manager only, never part of the employee view.
-        if (v.A.EmployeeId == me.EmployeeId) f = new();
+        bool self=v.A.EmployeeId==me.EmployeeId;
+        var complete=f.Where(x=>x.SubmittedAt!=null && x.Score!=null).ToList();
+        var threshold=v.A.Cycle!.MinimumFeedbackReviewers;
+        bool canAggregate=me.Can(Perm.FeedbackAggregate) && (!self || v.A.Cycle.Status==CycleStatus.Closed);
+        decimal? avg=canAggregate && threshold is > 0 && complete.Count>=threshold ? complete.Average(x=>(decimal)x.Score!.Value) : null;
+        bool identity=!self && me.Can(Perm.FeedbackIdentity), comments=!self && me.Can(Perm.FeedbackComments);
+        var views=identity || comments ? f.Select(x=>new FeedbackView(identity?x.Reviewer?.FullName:null,identity?x.Reviewer?.FullNameAr:null,comments?x.Score:null,comments?x.Comment:null,x.SubmittedAt!=null)).ToList() : new List<FeedbackView>();
         var employees = await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active));
-        return new(f, employees, await repo.ToListAsync(repo.Query<CompetencyTemplate>()), await repo.ToListAsync(repo.Query<CompetencyItem>()), await repo.ToListAsync(repo.Query<TrainingCourse>()), await repo.ToListAsync(repo.Query<PerfBonus>().Where(b => b.AppraisalId == id)), avg);
+        return new(views, employees, await repo.ToListAsync(repo.Query<CompetencyTemplate>()), await repo.ToListAsync(repo.Query<CompetencyItem>()), await repo.ToListAsync(repo.Query<TrainingCourse>()), await repo.ToListAsync(repo.Query<PerfBonus>().Where(b => b.AppraisalId == id)), avg);
+    }
+
+    public async Task ConfigureFeedbackPrivacyAsync(int cycleId,int minimum)
+    {
+        if(!me.Can(Perm.AdmRoles)) throw new DomainException("err.forbidden");
+        var c=await CycleAsync(cycleId);
+        if(c.Status!=CycleStatus.Open || minimum is <1 or >100) throw new DomainException("err.required");
+        var appraisalIds=(await repo.ToListAsync(repo.Query<PerfAppraisal>().Where(a=>a.CycleId==cycleId))).Select(a=>a.Id).ToList();
+        if(await repo.AnyAsync(repo.Query<Feedback360>().Where(f=>f.SubmittedAt!=null && appraisalIds.Contains(f.AppraisalId)))) throw new DomainException("err.forbidden");
+        c.MinimumFeedbackReviewers=minimum;
+        audit.Log("PrivacyPolicy","PerfCycle",cycleId,$"minimum reviewers={minimum}; role grants managed separately");await repo.SaveAsync();
     }
 
     public async Task NominateAsync(int id, int reviewerEmployeeId)

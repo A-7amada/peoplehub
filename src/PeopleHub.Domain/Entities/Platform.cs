@@ -85,6 +85,7 @@ public class PerfCycle { public int Id { get; set; } public string Name { get; s
     public DateTime? CalibrationOn { get; set; } public DateTime? CloseOn { get; set; }
     public bool AutoPhases { get; set; } public bool Reminders { get; set; } = true;
     public int GoalWeight { get; set; } = 70; public int ManagerWeight { get; set; } = 30; public int FeedbackWeight { get; set; }
+    public int? MinimumFeedbackReviewers { get; set; }
     public CycleStatus Status { get; set; } }
 public class PerfGoal
 {

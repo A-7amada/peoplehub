@@ -55,7 +55,7 @@
 | PER-001 | Grade competency framework and rating configuration | P1 | Open |
 | PER-002 | Multiple cycles | P1 | Existing |
 | PER-003 | Employee result acknowledgement and appeal | P1 | Open |
-| PER-004 | Separate feedback identity/comment/aggregate privacy and reviewer threshold | P0 | Open |
+| PER-004 | Separate feedback identity/comment/aggregate privacy and reviewer threshold | P0 | Implemented configurable separate grants and threshold gate; owner policy values remain unset. Existing finalized scores preserved |
 | PER-005 | PIP milestones and trends | P1 | Partial: development items existing |
 | HR-001 | Asset assignment, handover, condition, return, maintenance | P1 | Open |
 | HR-002 | Training needs, budgets, approval, certificates/expiry/effectiveness | P1 | Open |
@@ -67,7 +67,7 @@
 | SEC-003 | Session expiry/revocation/device management | P0 | Partial:8h expiry/security stamp existing, session inventory open |
 | SEC-004 | Sensitive-field encryption at rest | P0 | Open: key management required |
 | SEC-005 | Append-only audit history | P0 | Implemented repository guard; database-owner tampering not prevented |
-| SEC-006 | Failed-login lockout and suspicious detection | P0 | Partial: auth rate limit existing, per-account lockout open |
+| SEC-006 | Failed-login lockout and suspicious detection | P0 | Implemented password lockout after five failures for 15 minutes plus audit; broader anomaly detection open |
 | SEC-007 | Retention/deletion/access policies | P0 | Open: owner policy decisions required |
 | SEC-008 | Malware scan, signatures/private attachments | P0 | Partial: private scoped storage and size/extension checks existing, scan open |
 | SEC-009 | Encrypted backup and controlled restore | P0 | Open: encryption/key custody/restore drill |
@@ -103,3 +103,5 @@
 Acceptance is feature-level. A successful deployment of batch1 does not close batches2-4.
 
 Attendance evidence follow-up: 130 tests pass. New tests cover same-batch duplicate, database uniqueness, append-only punch/evidence guards, partial-ingestion rollback, retained original/history, read scope, correction evidence and failed final leave-approval rollback. Both provider migrations generated; local SQLite upgrade and EN/AR attendance evidence inspected. PostgreSQL integration race stress not run.
+
+Privacy/auth follow-up: 138 tests pass. No role grants or reviewer threshold were assumed. Thresholds freeze after first submitted review. Password lockout is a technical demo safeguard (5 failures/15 minutes), not an owner business-policy decision or production security certification. Both provider migrations generated.

@@ -135,8 +135,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int?>("EmployeeId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastFailedLoginAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1940,6 +1949,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.Property<int>("ManagerWeight")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("MinimumFeedbackReviewers")
                         .HasColumnType("integer");
 
                     b.Property<string>("Name")

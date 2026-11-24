@@ -2,8 +2,8 @@
 @{var a=Model.A;var tools=(PerfTools)ViewBag.Tools;Func<string,string,string>X=(e,b)=>T.IsAr?b:e;bool hr=Context.User.Claims.Any(x=>x.Type==System.Security.Claims.ClaimTypes.Role && PermissionCache.Has(new[]{x.Value},Perm.TalentManage));}
 <div class="grid g2" style="margin-top:18px">
 <div class="card"><div class="card-h"><h2>360 @X("feedback", "تقييم")</h2><span>@(tools.FeedbackAverage?.ToString("0.00")??"-") / 5</span></div><div class="card-b">
-<p class="faint small">@X("Names/comments are HR and direct-manager only. Employee sees the average after publication. Not anonymous.", "الأسماء والتعليقات للموارد البشرية والمدير المباشر فقط. الموظف يرى المتوسط بعد النشر. ليس مجهول الهوية.")</p>
-@foreach(var f in tools.Feedback){<p><b>@T.Name(f.Reviewer!.FullName,f.Reviewer.FullNameAr)</b> · @(f.Score?.ToString()??X("Pending", "معلق"))<br>@f.Comment</p>}
+<p class="faint small">@X("Identity, individual feedback and aggregates require separate role grants. Aggregate scores and weighted calculation wait for the cycle's configured minimum reviewer count. An unset threshold does not publish a score. This is not an anonymity guarantee.", "الهوية والتعليقات والمتوسطات لها صلاحيات منفصلة. المتوسط والحساب الموزون ينتظران الحد الأدنى المحدد للدورة. بدون حد معتمد لا ينشر المتوسط. هذا لا يضمن إخفاء الهوية.")</p>
+@foreach(var f in tools.Feedback){<p><b>@(f.ReviewerName==null?X("Identity restricted","الهوية محجوبة"):T.Name(f.ReviewerName,f.ReviewerNameAr??""))</b> · @(f.Score?.ToString()??(f.Submitted?X("Submitted", "تم الإرسال"):X("Pending", "معلق")))<br>@f.Comment</p>}
 @if(Model.CanManage){<form method="post" action="/Perf/Nominate" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@a.Id"><select name="reviewerEmployeeId">@foreach(var e in tools.Employees.Where(e=>e.Id!=a.EmployeeId)){<option value="@e.Id">@T.Name(e.FullName,e.FullNameAr)</option>}</select><button class="btn btn-primary">@X("Invite reviewer", "دعوة مقيم")</button></form>}
 </div></div>
 <div class="card"><div class="card-h"><h2>@X("Competencies and training", "الكفاءات والتدريب")</h2></div><div class="card-b">

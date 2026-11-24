@@ -124,8 +124,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("EmployeeId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("FailedLoginCount")
+                        .HasColumnType("INTEGER");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastFailedLoginAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LockedUntil")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
@@ -1855,6 +1864,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ManagerWeight")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("MinimumFeedbackReviewers")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")

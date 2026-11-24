@@ -12,6 +12,7 @@ public partial class Loc
         A("err.payrollSelfFinal","The payroll creator cannot be the final approver.","منشئ دورة المرتبات لا يمكنه اعتمادها نهائيا.");
         A("err.payrollImmutable","Final payroll is immutable. Record a reasoned adjustment in a later period.","دورة المرتبات النهائية لا تعدل. سجل التصحيح بسبب موثق في فترة لاحقة.");
         A("notif.cancelled","Approved leave cancelled","تم إلغاء إجازة معتمدة");
+        A("perm.Performance privacy","Performance privacy","خصوصية الأداء");
         // app & shell
         A("app.name", "PeopleHub", "بيبل هَب");
         A("demo.pill", "Demo project", "مشروع تجريبي");

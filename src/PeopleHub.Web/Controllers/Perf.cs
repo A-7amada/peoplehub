@@ -35,6 +35,7 @@ public class PerfController(Loc loc, PerfService svc, ICurrentUser me, PayrollSe
     [HttpPost] public Task<IActionResult> ToggleDev(int id, int itemId) => Do(() => svc.ToggleDevAsync(itemId), "msg.saved", () => Ap(id));
 
     [HttpPost] public Task<IActionResult> Configure(int id, int goalWeight, int managerWeight, int feedbackWeight, bool autoPhases, DateTime calibrationOn, DateTime closeOn, bool reminders) => Do(() => svc.ConfigureAsync(id, goalWeight, managerWeight, feedbackWeight, autoPhases, calibrationOn, closeOn, reminders), "msg.saved", () => Redirect("/Perf?cycle=" + id));
+    [HttpPost] public Task<IActionResult> FeedbackPrivacy(int cycleId,int minimum) => Do(()=>svc.ConfigureFeedbackPrivacyAsync(cycleId,minimum),"msg.saved",()=>Redirect("/Perf?cycle="+cycleId));
     public async Task<IActionResult> Feedback() => View(await svc.FeedbackInboxAsync());
     [HttpPost] public Task<IActionResult> SubmitFeedback(int id, int score, string? comment) => Do(() => svc.FeedbackAsync(id, score, comment), "msg.saved", () => Redirect("/Perf/Feedback"));
     [HttpPost] public Task<IActionResult> Nominate(int id, int reviewerEmployeeId) => Do(() => svc.NominateAsync(id, reviewerEmployeeId), "msg.saved", () => Ap(id));
