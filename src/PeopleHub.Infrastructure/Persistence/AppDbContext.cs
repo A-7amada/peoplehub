@@ -26,6 +26,8 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     public override Task<int> SaveChangesAsync(CancellationToken ct = default)
     {
+        if (ChangeTracker.Entries().Any(e => (e.Entity is PayrollCalculationSnapshot or LeaveTransaction or AuditLog) && e.State is EntityState.Modified or EntityState.Deleted))
+            throw new InvalidOperationException("Append-only business evidence cannot be edited or deleted.");
         foreach (var e in ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified))
             e.Property("Revision").CurrentValue = Guid.NewGuid().ToString("N");
         return base.SaveChangesAsync(ct);
@@ -41,6 +43,9 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<PayrollCalculationSnapshot>().HasIndex(x => new { x.RunId, x.Version }).IsUnique();
+        b.Entity<LeaveTransaction>();
+        b.Entity<EmployeeAssignment>();
         b.Entity<AppUser>().HasIndex(x => x.Email).IsUnique();
         b.Entity<Employee>(e =>
         {

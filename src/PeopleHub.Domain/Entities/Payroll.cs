@@ -63,6 +63,9 @@ public class PayrollRun
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? PaidAt { get; set; }
     public string? Note { get; set; }
+    public int CalculationVersion { get; set; }
+    public string? FinalizedBy { get; set; }
+    public bool AdvancesApplied { get; set; }
     public bool IsLocked => Status is PayrollStatus.Finalized or PayrollStatus.Paid;
 
     public void Review() => Move(PayrollStatus.Draft, PayrollStatus.HRReviewed);
@@ -106,6 +109,15 @@ public class PayrollLine
     public int RunId { get; set; }
     public int EmployeeId { get; set; }
     public Employee? Employee { get; set; }
+    public string EmployeeCodeSnapshot { get; set; } = "";
+    public string EmployeeNameSnapshot { get; set; } = "";
+    public string EmployeeNameArSnapshot { get; set; } = "";
+    public string DepartmentSnapshot { get; set; } = "";
+    public string DepartmentArSnapshot { get; set; } = "";
+    public string CostCenterSnapshot { get; set; } = "";
+    public string BankSnapshot { get; set; } = "";
+    public string IbanSnapshot { get; set; } = "";
+    public decimal FixedDeduction { get; set; }
     public decimal Basic { get; set; }
     public decimal Allowances { get; set; }
     public decimal Overtime { get; set; }

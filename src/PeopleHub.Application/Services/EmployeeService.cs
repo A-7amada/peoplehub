@@ -41,10 +41,16 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         return new EmployeeProfile(e, mgr?.FullName, mgr?.FullNameAr,
             await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.StartDate)),
             await repo.ToListAsync(repo.Query<StatusHistory>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.At)),
-            await repo.ToListAsync(repo.Query<CareerEvent>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.Date)),
+            await repo.ToListAsync(repo.Query<CareerEvent>().Where(c => c.EmployeeId == id && (c.Type != CareerEventType.SalaryChange || scope.CanSeeSalary(id))).OrderByDescending(c => c.Date)),
             scope.CanSeeSalary(id) ? await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == id)) : [],
             scope.CanSeeSalary(id),
             e.ShiftId is { } s ? await repo.FirstOrDefaultAsync(repo.Query<Shift>().Where(x => x.Id == s)) : null);
+    }
+
+    public async Task<List<EmployeeAssignment>> AssignmentsAsync(int id)
+    {
+        if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
+        return await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==id).OrderByDescending(x=>x.EffectiveFrom).ThenByDescending(x=>x.Id));
     }
 
     private void RequireHr()
@@ -57,6 +63,12 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         RequireHr();
         model.FullNameAr ??= ""; model.NationalId ??= ""; model.MaritalStatus ??= ""; model.Nationality ??= "Egyptian";
         model.Address ??= ""; model.Phone ??= ""; model.BankName ??= ""; model.Iban ??= ""; model.InsuranceNumber ??= "";
+        if (!me.Can(Perm.EmpPay))
+        {
+            var original=model.Id==0?null:await GetAsync(model.Id);
+            if (original==null && (model.BasicSalary!=0 || !string.IsNullOrEmpty(model.Iban) || !string.IsNullOrEmpty(model.BankName))) throw new DomainException("err.forbidden");
+            if (original!=null) {model.BasicSalary=original.BasicSalary;model.BankName=original.BankName;model.Iban=original.Iban;model.InsuranceNumber=original.InsuranceNumber;}
+        }
         model.Validate();
         if (!await repo.AnyAsync(repo.Query<Department>().Where(x => x.Id == model.DepartmentId)) ||
             !await repo.AnyAsync(repo.Query<Branch>().Where(x => x.Id == model.BranchId)) ||
@@ -76,12 +88,18 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
             repo.Add(model);
             audit.Log("Create", "Employee", model.Code, $"{model.FullName}, salary {model.BasicSalary}");
             await repo.SaveAsync();
+            repo.Add(EmployeeAssignment.Capture(model,model.HireDate.Date,me.Email,"Hired"));
             repo.Add(new StatusHistory { EmployeeId = model.Id, From = EmployeeStatus.Active, To = EmployeeStatus.Active, At = clock.UtcNow, ChangedBy = me.Email, Reason = "Hired" });
             await repo.SaveAsync();
             return;
         }
 
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == model.Id)) ?? throw new DomainException("err.notFound");
+        var assignmentChanged=e.BasicSalary!=model.BasicSalary || e.DepartmentId!=model.DepartmentId || e.BranchId!=model.BranchId || e.JobTitleId!=model.JobTitleId || e.ManagerId!=model.ManagerId || e.ShiftId!=model.ShiftId;
+        var prior=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==e.Id).OrderBy(x=>x.EffectiveFrom));
+        if (assignmentChanged && string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
+        if (assignmentChanged && prior.Count==0) {var baseline=EmployeeAssignment.Capture(e,today,me.Email,"Observed pre-change baseline; earlier effective dates unknown");baseline.EffectiveTo=today;repo.Add(baseline);}
+        if (assignmentChanged && prior.LastOrDefault() is {} last) last.EffectiveTo=today;
         void Event(CareerEventType t, string details) =>
             repo.Add(new CareerEvent { EmployeeId = e.Id, Type = t, Date = today, Details = details, RecordedBy = me.Email });
         var changes = new List<string>();
@@ -97,6 +115,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         e.Phone = model.Phone ?? ""; e.Email = model.Email; e.HireDate = model.HireDate; e.JobTitleId = model.JobTitleId; e.DepartmentId = model.DepartmentId;
         e.BranchId = model.BranchId; e.ManagerId = model.ManagerId; e.EmploymentType = model.EmploymentType; e.ShiftId = model.ShiftId;
         e.BankName = model.BankName ?? ""; e.Iban = model.Iban ?? ""; e.InsuranceNumber = model.InsuranceNumber ?? ""; e.BasicSalary = model.BasicSalary;
+        if (assignmentChanged) repo.Add(EmployeeAssignment.Capture(e,today,me.Email,reason!.Trim()));
         audit.Log("Update", "Employee", e.Code, changes.Count == 0 ? "profile fields" : string.Join("; ", changes) + (string.IsNullOrWhiteSpace(reason) ? "" : $" (reason: {reason})"));
         await repo.SaveAsync();
     }

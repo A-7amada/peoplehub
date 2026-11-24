@@ -933,6 +933,60 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("Employee");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("BasicSalary")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("JobTitleId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmployeeAssignment");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeSalaryComponent", b =>
                 {
                     b.Property<int>("Id")
@@ -1222,6 +1276,55 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("LeaveRequest");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.LeaveTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("Delta")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("LeaveTypeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("RequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaveTransaction");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.LeaveType", b =>
                 {
                     b.Property<int>("Id")
@@ -1407,6 +1510,57 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("PasswordReset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollCalculationSnapshot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("PolicyVersion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RunId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("PayrollCalculationSnapshot");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollLine", b =>
                 {
                     b.Property<int>("Id")
@@ -1430,17 +1584,52 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<double>("Allowances")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("BankSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<double>("Basic")
                         .HasColumnType("double precision");
 
                     b.Property<double>("Bonus")
                         .HasColumnType("double precision");
 
+                    b.Property<string>("CostCenterSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DepartmentArSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DepartmentSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EmployeeCodeSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("EmployeeNameArSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("EmployeeNameSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("FixedDeduction")
+                        .HasColumnType("double precision");
+
                     b.Property<double>("Gross")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("IbanSnapshot")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<double>("Insurance")
                         .HasColumnType("double precision");
@@ -1499,11 +1688,20 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<bool>("AdvancesApplied")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("CalculationVersion")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FinalizedBy")
                         .HasColumnType("text");
 
                     b.Property<int>("Month")

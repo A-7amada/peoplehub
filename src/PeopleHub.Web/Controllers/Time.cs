@@ -67,6 +67,7 @@ public class LeaveController(Loc loc, LeaveService svc, ApprovalService approval
         ViewBag.Types = await svc.TypesAsync();
         ViewBag.Balances = await svc.BalancesAsync(me.EmployeeId.Value, y);
         ViewBag.Today = clock.Today;
+        ViewBag.Ledger=await svc.TransactionsAsync(me.EmployeeId.Value,y);
         return View((await approvals.ListAsync("Leave", null, false)).Where(r => r.Employee.Id == me.EmployeeId).ToList());
     }
 
@@ -78,7 +79,7 @@ public class LeaveController(Loc loc, LeaveService svc, ApprovalService approval
     }
 
     [HttpPost]
-    public Task<IActionResult> CancelApproved(int id) => Do(() => svc.CancelApprovedAsync(id), "msg.saved", () => RedirectToAction(nameof(Index)));
+    public Task<IActionResult> CancelApproved(int id, string? reason) => Do(() => svc.CancelApprovedAsync(id,reason), "msg.saved", () => RedirectToAction(nameof(Index)));
 
     public async Task<IActionResult> Team()
     {

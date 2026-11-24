@@ -55,7 +55,7 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
 
     public async Task<IActionResult> Run(int id)
     {
-        try { var (run, lines, hist) = await svc.RunAsync(id); ViewBag.Lines = lines; ViewBag.History = hist; return View(run); }
+        try { var (run, lines, hist) = await svc.RunAsync(id); ViewBag.Lines = lines; ViewBag.History = hist; ViewBag.Snapshots=await svc.SnapshotsAsync(id); return View(run); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return RedirectToAction(nameof(Index)); }
     }
 
@@ -80,6 +80,12 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
     {
         try { var csv = await svc.BankFileAsync(id); return File(System.Text.Encoding.UTF8.GetBytes("\uFEFF" + csv), "text/csv", $"bank-transfer-{id}.csv"); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Same(id); }
+    }
+
+    public async Task<IActionResult> Snapshot(int id)
+    {
+        try {return File(System.Text.Encoding.UTF8.GetBytes(await svc.SnapshotFileAsync(id)),"application/json",$"payroll-snapshot-{id}.json");}
+        catch(DomainException) {return Forbidden();}
     }
 
     public async Task<IActionResult> MySlips() => View(await svc.MySlipsAsync());

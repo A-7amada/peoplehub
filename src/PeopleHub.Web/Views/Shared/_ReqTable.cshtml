@@ -14,5 +14,6 @@
     <form method="post" action="/Requests/Approve" asp-antiforgery="true" class="inline-form" style="justify-content:flex-end"><input type="hidden" name="kind" value="@r.Kind"><input type="hidden" name="id" value="@r.Id"><input type="text" name="comment" placeholder="@T["common.comment"]" style="width:130px">
      <button class="btn btn-sm btn-good">@Ui.Icon("check", 14) @T["req.approve"]</button><button class="btn btn-sm btn-bad" formaction="/Requests/Reject">@Ui.Icon("x", 14) @T["req.reject"]</button></form>
    } else if (r.CanCancel) { <form method="post" action="/Requests/Cancel" asp-antiforgery="true" style="margin:0"><input type="hidden" name="kind" value="@r.Kind"><input type="hidden" name="id" value="@r.Id"><button class="btn btn-sm">@T["req.cancel"]</button></form> }
+   @if (r.Kind=="Leave" && r.Status==RequestStatus.Approved && (Me.EmployeeId==r.Employee.Id || Me.Can(Perm.LeaveAdmin))) {<form method="post" action="/Leave/CancelApproved" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@r.Id"><input name="reason" required placeholder="@T["common.reason"]" style="width:120px"><button class="btn btn-sm btn-bad">@(T.IsAr?"إلغاء المعتمد":"Cancel approved")</button></form>}
   </td></tr> }
 </tbody></table></div> }

@@ -99,7 +99,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                 if (!me.Can(Perm.ReportsFin)) throw new DomainException("err.forbidden");
                 var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Year == year && r.Month == month));
                 var lines = run == null ? [] : await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == run.Id));
-                var byDept = lines.GroupBy(l => l.Employee!.Department?.Name ?? "").OrderBy(g => g.Key);
+                var byDept = lines.GroupBy(l => string.IsNullOrEmpty(l.EmployeeCodeSnapshot)?l.Employee!.Department?.Name ?? "":l.DepartmentSnapshot).OrderBy(g => g.Key);
                 return new("payroll", ["Department", "Employees", "Gross", "Deductions", "Net"],
                     byDept.Select(g => new List<string> { g.Key, g.Count().ToString(), F(g.Sum(l => l.Gross)), F(g.Sum(l => l.TotalDeductions)), F(g.Sum(l => l.Net)) }).ToList());
             default: // turnover

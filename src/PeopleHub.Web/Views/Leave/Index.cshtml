@@ -15,3 +15,5 @@
  <div class="field"><label>@T["leave.document"]</label><input type="file" name="file" accept=".pdf,.jpg,.jpeg,.png"><span class="faint small">@T["leave.docHint"]</span></div>
  <button class="btn btn-primary">@T["common.submit"]</button><p class="muted small">@T["leave.routeHint"]</p></form></div></div>
 </div>
+
+<partial name="_LeaveLedger" model="(List<LeaveTransaction>)ViewBag.Ledger" />

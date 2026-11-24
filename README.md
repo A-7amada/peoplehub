@@ -104,3 +104,7 @@ Round 6 supersedes the earlier fixed/manual-only limits: per-cycle goals/manager
 ## Hardening (round 7)
 
 PostgreSQL/SQLite migrations, optimistic concurrency, transactional performance awards, hashed reset tokens without UI disclosure, cookie invalidation, account rate limiting, automatic allowlisted mail delivery, and consistent archive export with tested empty-database restore. See [OPERATIONS.md](OPERATIONS.md). Free hosting still sleeps; provider setup and scheduled off-host backups are separate operational requirements.
+
+## Business baseline and review roadmap
+
+[BRD v3](docs/BRD-v3.md) separates the business baseline from historical implementation notes. [Feature traceability](docs/TRACEABILITY.md) records shipped, partial and open recommendations. Enterprise targets and legal payroll validation are not claimed.

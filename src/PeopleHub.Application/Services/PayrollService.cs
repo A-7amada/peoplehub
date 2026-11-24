@@ -1,5 +1,7 @@
 using System.Globalization;
 using System.Text;
+using System.Text.Json;
+using System.Security.Cryptography;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Interfaces;
 
@@ -7,6 +9,26 @@ namespace PeopleHub.Application.Services;
 
 public class PayrollService(IRepository repo, ICurrentUser me, AuditService audit, NotificationService notify, AttendanceService attendance, AppClock clock)
 {
+    private async Task SnapshotAsync(PayrollRun run, string action)
+    {
+        var lines = await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == run.Id).OrderBy(l => l.EmployeeId));
+        // Explicit projection excludes live navigations and secret credentials.
+        var payload = JsonSerializer.Serialize(new { run.Id, run.Year, run.Month, Status=run.Status.ToString(), Policy="EG-DEMO-2026-v1", Rules=new { PayrollCalculator.DaysPerMonth,PayrollCalculator.HoursPerDay,PayrollCalculator.InsuranceRate,PayrollCalculator.InsuranceMin,PayrollCalculator.InsuranceCap,PayrollCalculator.AnnualExemption,PayrollCalculator.MartyrsRate,AnnualBrackets="40000:0;55000:.10;70000:.15;200000:.20;400000:.225;600000:.25;above:.275" }, Lines=lines.Select(l=>new {l.EmployeeId,l.EmployeeCodeSnapshot,l.EmployeeNameSnapshot,l.EmployeeNameArSnapshot,l.DepartmentSnapshot,l.DepartmentArSnapshot,l.CostCenterSnapshot,l.BankSnapshot,l.IbanSnapshot,l.Basic,l.Allowances,l.FixedDeduction,l.AbsentDays,l.LateMinutes,l.OvertimeHours,l.Overtime,l.Bonus,l.Gross,l.LateDeduction,l.AbsenceDeduction,l.Insurance,l.Tax,l.Martyrs,l.AdvanceInstallment,l.OtherDeduction,l.TotalDeductions,l.Net,l.AdjustmentNote}) });
+        run.CalculationVersion++;
+        repo.Add(new PayrollCalculationSnapshot {RunId=run.Id,Version=run.CalculationVersion,Event=action,At=clock.UtcNow,Actor=me.Email,Payload=payload,Sha256=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(payload)))});
+    }
+    public async Task<List<PayrollCalculationSnapshot>> SnapshotsAsync(int id)
+    {
+        Require(Perm.PayView);
+        return await repo.ToListAsync(repo.Query<PayrollCalculationSnapshot>().Where(x=>x.RunId==id).OrderByDescending(x=>x.Version));
+    }
+    public async Task<string> SnapshotFileAsync(int id)
+    {
+        Require(Perm.PayExport);
+        var s=await repo.FirstOrDefaultAsync(repo.Query<PayrollCalculationSnapshot>().Where(x=>x.Id==id)) ?? throw new DomainException("err.notFound");
+        audit.Log("Export","PayrollSnapshot",id,"calculation evidence exported");await repo.SaveAsync();
+        return JsonSerializer.Serialize(new {s.Version,s.Event,s.PolicyVersion,s.At,s.Actor,s.Sha256,Calculation=JsonSerializer.Deserialize<JsonElement>(s.Payload)},new JsonSerializerOptions {WriteIndented=true});
+    }
     private void Require(string perm) { if (!me.Can(perm)) throw new DomainException("err.forbidden"); }
 
     public async Task<List<PayrollRun>> RunsAsync()
@@ -24,7 +46,8 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         return (run, lines.OrderBy(l => l.Employee?.Code).ToList(), hist);
     }
 
-    public async Task<int> CreateAsync(int year, int month)
+    public async Task<int> CreateAsync(int year,int month) {int id=0;await repo.AtomicAsync(async()=>id=await CreateCoreAsync(year,month));return id;}
+    private async Task<int> CreateCoreAsync(int year, int month)
     {
         Require(Perm.PayPrepare);
         if (month is < 1 or > 12 || year < 2000 || year > 9998) throw new DomainException("err.dates");
@@ -36,6 +59,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         repo.Add(new ApprovalAction { Kind = "Payroll", RequestId = run.Id, Actor = me.Email, Action = "Created", At = clock.UtcNow });
         audit.Log("Create", "PayrollRun", $"{year}-{month:00}", "run created from active employees, attendance and approved requests");
         await repo.SaveAsync();
+        await SnapshotAsync(run,"Created"); await repo.SaveAsync();
         return run.Id;
     }
 
@@ -54,28 +78,32 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
             var fixedDed = mine.Where(c => c.Component!.Type == ComponentType.Deduction).Sum(c => c.Amount);
             var inst = advances.Where(a => a.EmployeeId == e.Id && a.DueIn(run.Year, run.Month)).Sum(a => a.InstallmentFor());
             manual.TryGetValue(e.Id, out var m);
-            var line = new PayrollLine { RunId = run.Id, EmployeeId = e.Id, Employee = e, OvertimeHours = s.OvertimeWeightedHours, AdjustmentNote = m.Note };
+            var line = new PayrollLine { RunId = run.Id, EmployeeId = e.Id, Employee = e, OvertimeHours = s.OvertimeWeightedHours, AdjustmentNote = m.Note, EmployeeCodeSnapshot=e.Code,EmployeeNameSnapshot=e.FullName,EmployeeNameArSnapshot=e.FullNameAr,DepartmentSnapshot=e.Department?.Name ?? "",DepartmentArSnapshot=e.Department?.NameAr ?? "",CostCenterSnapshot=e.Department?.CostCenter ?? "",BankSnapshot=e.BankName,IbanSnapshot=e.Iban,FixedDeduction=fixedDed };
             PayrollCalculator.Apply(line, new PayrollInput(e.BasicSalary, allowances, 0, m.Bonus, s.DeductibleDays, s.LateMinutes, s.OvertimeWeightedHours, inst, fixedDed + m.Other));
             repo.Add(line);
         }
     }
 
-    public async Task RecalculateAsync(int runId)
+    public Task RecalculateAsync(int runId) => repo.AtomicAsync(()=>RecalculateCoreAsync(runId));
+    private async Task RecalculateCoreAsync(int runId)
     {
         Require(Perm.PayPrepare);
         var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Id == runId)) ?? throw new DomainException("err.notFound");
         if (run.Status != PayrollStatus.Draft) throw new DomainException("err.payrollState");
         var old = await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == runId));
         var comps = await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>());
-        var manual = old.ToDictionary(l => l.EmployeeId, l => (l.Bonus, l.OtherDeduction - comps.Where(c => c.EmployeeId == l.EmployeeId && c.Component?.Type == ComponentType.Deduction).Sum(c => c.Amount), l.AdjustmentNote));
+        var manual = old.ToDictionary(l => l.EmployeeId, l => (l.Bonus, Math.Max(0,l.OtherDeduction - (string.IsNullOrEmpty(l.EmployeeCodeSnapshot)?comps.Where(c=>c.EmployeeId==l.EmployeeId && c.Component?.Type==ComponentType.Deduction).Sum(c=>c.Amount):l.FixedDeduction)), l.AdjustmentNote));
+        await SnapshotAsync(run,"BeforeRecalculation");
         foreach (var l in old) repo.Remove(l);
         await repo.SaveAsync();
         await BuildLinesAsync(run, manual);
+        await repo.SaveAsync(); await SnapshotAsync(run,"Recalculated");
         audit.Log("Recalculate", "PayrollRun", $"{run.Year}-{run.Month:00}", "lines rebuilt, manual adjustments kept");
         await repo.SaveAsync();
     }
 
-    public async Task AdjustLineAsync(int lineId, decimal bonus, decimal otherDeduction, string? note)
+    public Task AdjustLineAsync(int lineId, decimal bonus, decimal otherDeduction, string? note) => repo.AtomicAsync(()=>AdjustLineCoreAsync(lineId,bonus,otherDeduction,note));
+    private async Task AdjustLineCoreAsync(int lineId, decimal bonus, decimal otherDeduction, string? note)
     {
         Require(Perm.PayPrepare);
         var l = await repo.FirstOrDefaultAsync(repo.Query<PayrollLine>().Where(x => x.Id == lineId)) ?? throw new DomainException("err.notFound");
@@ -83,10 +111,11 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         if (run.IsLocked || run.Status != PayrollStatus.Draft) throw new DomainException("err.payrollLocked");
         if (bonus < 0 || otherDeduction < 0) throw new DomainException("err.salary");
         if (string.IsNullOrWhiteSpace(note)) throw new DomainException("err.reasonRequired");
-        var fixedDed = (await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == l.EmployeeId))).Where(c => c.Component?.Type == ComponentType.Deduction).Sum(c => c.Amount);
+        var fixedDed = string.IsNullOrEmpty(l.EmployeeCodeSnapshot) ? (await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c=>c.EmployeeId==l.EmployeeId))).Where(c=>c.Component?.Type==ComponentType.Deduction).Sum(c=>c.Amount) : l.FixedDeduction;
         var before = $"bonus {l.Bonus}, other {l.OtherDeduction}, net {l.Net}";
         PayrollCalculator.Apply(l, new PayrollInput(l.Basic, l.Allowances, 0, bonus, l.AbsentDays, l.LateMinutes, l.OvertimeHours, l.AdvanceInstallment, fixedDed + otherDeduction));
         l.AdjustmentNote = note.Trim();
+        await repo.SaveAsync(); await SnapshotAsync(run,"Adjusted");
         audit.Log("Adjust", "PayrollLine", lineId, $"{before} -> bonus {bonus}, other {otherDeduction}, net {l.Net}; {note}");
         await repo.SaveAsync();
     }
@@ -116,14 +145,17 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         await repo.SaveAsync();
     }
 
-    public async Task FinalizeAsync(int id)
+    public Task FinalizeAsync(int id) => repo.AtomicAsync(()=>FinalizeCoreAsync(id));
+    private async Task FinalizeCoreAsync(int id)
     {
         Require(Perm.PayFinalize);
         var r = await LoadRunAsync(id);
-        r.Finalize();
+        if (string.Equals(r.CreatedBy,me.Email,StringComparison.OrdinalIgnoreCase)) throw new DomainException("err.payrollSelfFinal");
+        r.Finalize(); r.FinalizedBy=me.Email;
+        await SnapshotAsync(r,"Finalized");
         var lines = await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == id));
         var advances = await repo.ToListAsync(repo.Query<AdvanceRequest>().Where(a => a.Status == RequestStatus.Approved));
-        foreach (var l in lines.Where(l => l.AdvanceInstallment > 0))
+        foreach (var l in lines.Where(l => !r.AdvancesApplied && l.AdvanceInstallment > 0))
         {
             var left = l.AdvanceInstallment;
             foreach (var a in advances.Where(a => a.EmployeeId == l.EmployeeId && a.DueIn(r.Year, r.Month)).OrderBy(a => a.CreatedAt))
@@ -133,6 +165,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
                 if (left <= 0) break;
             }
         }
+        r.AdvancesApplied=true;
         foreach (var l in lines) await notify.NotifyEmployeeAsync(l.EmployeeId, "notif.payslip", $"{r.Year}-{r.Month:00}", "/Payroll/MySlips");
         Trail(r, "Finalized", "run closed and locked");
         await repo.SaveAsync();
@@ -155,8 +188,8 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
     public async Task ReopenAsync(int id, string? reason)
     {
         Require(Perm.PayReopen);
-        var r = await LoadRunAsync(id); r.Reopen(reason); Trail(r, "Reopened", reason);
-        await repo.SaveAsync();
+        var r = await LoadRunAsync(id);
+        throw new DomainException("err.payrollImmutable");
     }
 
     public async Task<string> BankFileAsync(int id)
@@ -166,7 +199,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         if (!run.IsLocked) throw new DomainException("err.payrollState");
         var sb = new StringBuilder("Code,Name,Bank,IBAN,Net,Currency\n");
         foreach (var l in lines)
-            sb.AppendLine(string.Join(',', Csv(l.Employee!.Code), Csv(l.Employee.FullName), Csv(l.Employee.BankName), Csv(l.Employee.Iban), l.Net.ToString("0.00", CultureInfo.InvariantCulture), "EGP"));
+            sb.AppendLine(string.Join(',', Csv(string.IsNullOrEmpty(l.EmployeeCodeSnapshot)?l.Employee!.Code:l.EmployeeCodeSnapshot), Csv(string.IsNullOrEmpty(l.EmployeeNameSnapshot)?l.Employee!.FullName:l.EmployeeNameSnapshot), Csv(string.IsNullOrEmpty(l.EmployeeCodeSnapshot)?l.Employee!.BankName:l.BankSnapshot), Csv(string.IsNullOrEmpty(l.EmployeeCodeSnapshot)?l.Employee!.Iban:l.IbanSnapshot), l.Net.ToString("0.00", CultureInfo.InvariantCulture), "EGP"));
         audit.Log("Export", "PayrollRun", $"{run.Year}-{run.Month:00}", "bank transfer file generated");
         await repo.SaveAsync();
         return sb.ToString();

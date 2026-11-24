@@ -28,8 +28,10 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         {
             var eid = id ?? me.EmployeeId ?? throw new DomainException("err.notFound");
             var p = await svc.ProfileAsync(eid);
+            ViewBag.Assignments=await svc.AssignmentsAsync(eid);
             ViewBag.Tab = tab; ViewBag.Components = await svc.ComponentsAsync();
             ViewBag.Balances = tab == "leave" ? await leave.BalancesAsync(eid, clock.Today.Year) : [];
+            ViewBag.Ledger=tab=="leave" ? await leave.TransactionsAsync(eid,clock.Today.Year) : [];
             ViewBag.Types = await leave.TypesAsync();
             ViewBag.Year = clock.Today.Year;
             ViewBag.Today = clock.Today;
@@ -43,6 +45,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     {
         await Lists();
         var e = id == null ? new Employee { HireDate = clock.Today, Email = "" } : await svc.GetAsync(id.Value);
+        if (e != null && !me.Can(Perm.EmpPay)) { e=System.Text.Json.JsonSerializer.Deserialize<Employee>(System.Text.Json.JsonSerializer.Serialize(e))!;e.BasicSalary=0;e.BankName="";e.Iban=""; }
         return e == null ? NotFound() : View(e);
     }
 
@@ -50,7 +53,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     public async Task<IActionResult> Edit(Employee model, string? reason)
     {
         try { await svc.SaveAsync(model, reason); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Profile), new { id = model.Id == 0 ? (await svc.SearchAsync(new(model.Email, null, null, null))).FirstOrDefault()?.Id : model.Id }); }
-        catch (DomainException ex) { TempData["err"] = L[ex.Message]; await Lists(); return View(model); }
+        catch (DomainException ex) { TempData["err"] = L[ex.Message]; if(!me.Can(Perm.EmpPay)){model.BasicSalary=0;model.Iban="";model.BankName="";} await Lists(); return View(model); }
     }
 
     [RequirePerm(Perm.EmpManage), HttpPost]

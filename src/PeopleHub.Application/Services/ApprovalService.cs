@@ -111,7 +111,10 @@ public class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser m
         {
             case LeaveRequest l:
                 var bal = await repo.FirstOrDefaultAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == l.EmployeeId && b.LeaveTypeId == l.LeaveTypeId && b.Year == l.StartDate.Year));
+                if(l.LeaveType?.DeductsBalance==true && bal!=null && !await repo.AnyAsync(repo.Query<LeaveTransaction>().Where(x=>x.EmployeeId==l.EmployeeId && x.LeaveTypeId==l.LeaveTypeId && x.Year==l.StartDate.Year)))
+                    repo.Add(new LeaveTransaction {EmployeeId=l.EmployeeId,LeaveTypeId=l.LeaveTypeId,Year=l.StartDate.Year,Delta=bal.Remaining,Kind="Baseline",Reason="Pre-upgrade balance; earlier transactions unknown",Actor=me.Email,At=clock.UtcNow});
                 l.ApplyToBalance(bal);
+                if(l.LeaveType?.DeductsBalance==true) repo.Add(new LeaveTransaction {EmployeeId=l.EmployeeId,LeaveTypeId=l.LeaveTypeId,Year=l.StartDate.Year,RequestId=l.Id,Delta=-l.Days,Kind="Approved",Reason="Final approval",Actor=me.Email,At=clock.UtcNow});
                 audit.Log("Update", "LeaveBalance", l.EmployeeId, $"-{l.Days} days ({l.LeaveType?.Name})");
                 break;
             case AttendanceCorrection c:

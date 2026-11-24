@@ -25,12 +25,15 @@
  <div class="field"><label>@T["emp.shift"]</label><select name="ShiftId">@foreach (var s in shifts) { <option value="@s.Id" selected="@(Model.ShiftId == s.Id)">@T.Name(s.Name, s.NameAr)</option> }</select></div>
  <div class="field"><label>@T["emp.hireDate"]</label><input type="date" name="HireDate" value="@Model.HireDate.ToString("yyyy-MM-dd")"></div>
 </div></div>
+@if (Me.Can(Perm.EmpPay)) {
 <div class="card"><div class="card-h"><h2>@T["emp.bank"]</h2></div><div class="card-b form-grid">
  <div class="field"><label>@T["emp.basic"]</label><input type="number" step="0.01" min="0" name="BasicSalary" value="@Model.BasicSalary.ToString(System.Globalization.CultureInfo.InvariantCulture)"></div>
  <div class="field"><label>@T["emp.insurance"]</label><input type="text" name="InsuranceNumber" value="@Model.InsuranceNumber" dir="ltr"></div>
  <div class="field"><label>@T["emp.bankName"]</label><input type="text" name="BankName" value="@Model.BankName"></div>
  <div class="field"><label>IBAN</label><input type="text" name="Iban" value="@Model.Iban" dir="ltr"></div>
-</div></div></div>
+</div></div>
+}
+</div>
 <div class="card" style="align-self:start"><div class="card-h"><h2>@T["common.save"]</h2></div><div class="card-b">
  @if (Model.Id != 0) { <div class="field"><label>@T["common.reason"]</label><input type="text" name="reason" placeholder="@T["emp.reasonHint"]"></div> }
  <button class="btn btn-primary" style="width:100%;justify-content:center">@T["common.save"]</button>

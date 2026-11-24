@@ -9,6 +9,9 @@ public partial class Loc
         var m = new Dictionary<string, (string, string)>();
         void A(string k, string en, string ar) => m[k] = (en, ar);
 
+        A("err.payrollSelfFinal","The payroll creator cannot be the final approver.","منشئ دورة المرتبات لا يمكنه اعتمادها نهائيا.");
+        A("err.payrollImmutable","Final payroll is immutable. Record a reasoned adjustment in a later period.","دورة المرتبات النهائية لا تعدل. سجل التصحيح بسبب موثق في فترة لاحقة.");
+        A("notif.cancelled","Approved leave cancelled","تم إلغاء إجازة معتمدة");
         // app & shell
         A("app.name", "PeopleHub", "بيبل هَب");
         A("demo.pill", "Demo project", "مشروع تجريبي");
@@ -153,7 +156,7 @@ public partial class Loc
         A("pay.attDed", "Late/absence", "تأخير/غياب"); A("pay.insurance", "Insurance", "التأمينات"); A("pay.tax", "Income tax", "ضريبة الدخل"); A("pay.advance", "Advance", "قسط سلفة"); A("pay.other", "Other", "أخرى");
         A("pay.slip", "Payslip", "قسيمة الراتب"); A("pay.note", "Adjustment note", "ملاحظة التعديل"); A("pay.history", "Run history", "سجل الدورة"); A("pay.controls", "Controls", "الضوابط");
         A("pay.sendBack", "Send back to draft", "إعادة للمسودة"); A("pay.reopen", "Reopen (exception)", "إعادة فتح (استثناء)");
-        A("pay.rulesNote", "Closed runs are locked. Reopening is an admin exception, needs a reason and is logged. Rates and tax slabs are illustrative, not Egyptian law.", "الدورات المغلقة مقفلة. إعادة الفتح استثناء للمدير ويتطلب سبباً ويُسجل. النسب والشرائح الضريبية توضيحية وليست القانون المصري.");
+        A("pay.rulesNote", "Final runs are locked and cannot reopen. Referenced later-period corrections remain planned. Demo rates and tax slabs need specialist validation.", "الدورات النهائية مقفلة ولا تعاد فتحها. التصحيحات المرجعية في فترة لاحقة لا تزال مخططة. النسب والشرائح التجريبية تحتاج مراجعة متخصصة.");
         A("pay.slipsSub", "Payslips appear after the run is finalized.", "تظهر القسائم بعد الاعتماد النهائي للدورة."); A("pay.print", "Print", "طباعة");
         A("pay.earnings", "Earnings", "المستحقات"); A("pay.deductionsTitle", "Deductions", "الخصومات"); A("pay.late", "Late", "تأخير"); A("pay.absence", "Absence days", "أيام الغياب");
         A("pay.watermark", "Demo payslip with fictional data. Not a real document.", "قسيمة تجريبية ببيانات وهمية. ليست مستنداً حقيقياً.");

@@ -888,6 +888,58 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("Employee");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeAssignment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("BasicSalary")
+                        .HasColumnType("REAL");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("EffectiveFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("EffectiveTo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("JobTitleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("ManagerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("EmployeeAssignment");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeSalaryComponent", b =>
                 {
                     b.Property<int>("Id")
@@ -1163,6 +1215,53 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("LeaveRequest");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.LeaveTransaction", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Delta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("LeaveTypeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("RequestId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("LeaveTransaction");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.LeaveType", b =>
                 {
                     b.Property<int>("Id")
@@ -1340,6 +1439,55 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("PasswordReset");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollCalculationSnapshot", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Event")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PolicyVersion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RunId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Version")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RunId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("PayrollCalculationSnapshot");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.PayrollLine", b =>
                 {
                     b.Property<int>("Id")
@@ -1361,17 +1509,52 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<double>("Allowances")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("BankSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<double>("Basic")
                         .HasColumnType("REAL");
 
                     b.Property<double>("Bonus")
                         .HasColumnType("REAL");
 
+                    b.Property<string>("CostCenterSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DepartmentArSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DepartmentSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmployeeCodeSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("EmployeeId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("EmployeeNameArSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("EmployeeNameSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("FixedDeduction")
+                        .HasColumnType("REAL");
+
                     b.Property<double>("Gross")
                         .HasColumnType("REAL");
+
+                    b.Property<string>("IbanSnapshot")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.Property<double>("Insurance")
                         .HasColumnType("REAL");
@@ -1428,11 +1611,20 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("AdvancesApplied")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CalculationVersion")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CreatedBy")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FinalizedBy")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Month")

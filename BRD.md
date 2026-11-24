@@ -1,3 +1,6 @@
+> Current business baseline: [docs/BRD-v3.md](docs/BRD-v3.md). Feature-level delivery status: [docs/TRACEABILITY.md](docs/TRACEABILITY.md).
+> This file is retained as historical combined specification and implementation history. Older matrices/limitations are superseded by the feature register, not proof of missing or shipped capability.
+
 # وثيقة متطلبات الأعمال (BRD)
 ## نظام PeopleHub لإدارة الموارد البشرية
 
