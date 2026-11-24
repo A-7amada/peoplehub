@@ -643,6 +643,159 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("AuditLog");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.BenefitCancellation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime>("EffectiveOn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("EnrollmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EnrollmentId")
+                        .IsUnique();
+
+                    b.ToTable("BenefitCancellation");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.BenefitEnrollment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CostCenter")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CoveredName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CoveredRelationship")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("DependentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EligibilityEvidence")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("EndsOn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("PlanId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<DateTime>("StartsOn")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "PlanId");
+
+                    b.ToTable("BenefitEnrollment");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.BenefitPlan", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Coverage")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("DependentsAllowed")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Eligibility")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<double>("EmployeeMonthly")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("EmployerMonthly")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("BenefitPlan");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Branch", b =>
                 {
                     b.Property<int>("Id")

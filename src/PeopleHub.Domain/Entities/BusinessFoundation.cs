@@ -280,3 +280,17 @@ public class CompetencyApplication
 {
  public int Id {get;set;}public int AppraisalId {get;set;}public int TemplateId {get;set;}public int? JobGrade {get;set;}public string TemplateName {get;set;}="";public string Content {get;set;}="";public string Sha256 {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+
+/// <summary>Recorded benefits plan, no insurer purchase or payroll instruction.</summary>
+public class BenefitPlan
+{
+ public int Id {get;set;}public string Name {get;set;}="";public string Provider {get;set;}="";public string Eligibility {get;set;}="";public string Coverage {get;set;}="";public bool DependentsAllowed {get;set;}public decimal EmployerMonthly {get;set;}public decimal EmployeeMonthly {get;set;}public string Currency {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
+public class BenefitEnrollment
+{
+ public int Id {get;set;}public int PlanId {get;set;}public int EmployeeId {get;set;}public int? DependentId {get;set;}public string CoveredName {get;set;}="";public string CoveredRelationship {get;set;}="";public DateTime StartsOn {get;set;}public DateTime EndsOn {get;set;}public string EligibilityEvidence {get;set;}="";public string CostCenter {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
+public class BenefitCancellation
+{
+ public int Id {get;set;}public int EnrollmentId {get;set;}public DateTime EffectiveOn {get;set;}public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
