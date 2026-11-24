@@ -24,6 +24,7 @@ else builder.Services.AddDbContext<AppDbContext>(o => o.UseSqlite($"Data Source=
 builder.Services.AddScoped<IRepository>(sp => sp.GetRequiredService<AppDbContext>());
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<AppClock>();
+builder.Services.AddSingleton<RequestMetrics>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, WebCurrentUser>();
 builder.Services.AddScoped<AccessScope>();
@@ -113,6 +114,15 @@ app.Use(async (ctx, next) => {
 });
 app.UseStaticFiles();
 app.UseRouting();
+app.Use(async (ctx,next)=>{
+    var metric=ctx.RequestServices.GetRequiredService<RequestMetrics>();
+    var endpoint=ctx.GetEndpoint();var action=endpoint?.Metadata.GetMetadata<Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor>();
+    var route=action==null?"unmatched":$"{action.ControllerName}/{action.ActionName}";
+    var started=metric.Begin(route);var status=500;
+    var trace=System.Diagnostics.Activity.Current?.TraceId.ToString()??ctx.TraceIdentifier;
+    ctx.Response.OnStarting(()=>{ctx.Response.Headers["X-Correlation-ID"]=trace;return Task.CompletedTask;});
+    try{await next();status=ctx.Response.StatusCode;}catch(DbUpdateConcurrencyException){status=409;throw;}finally{metric.End(route,started,status);app.Logger.LogInformation("HTTP {Route} status {Status} trace {Trace}",route,status,trace);}
+});
 app.UseRateLimiter();
 app.UseRequestLocalization();
 app.UseAuthentication();

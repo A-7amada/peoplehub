@@ -80,7 +80,7 @@
 | ARC-006 | Private object storage | P1 | Open |
 | ARC-007 | Integration outbox/domain events/idempotency/logs/retry/reconciliation/versioning | P1 | Partial: email outbox existing |
 | ARC-008 | Optimistic concurrency/database constraints | P0 | Existing, further race tests open |
-| ARC-009 | Read projections/metrics/tracing/health | P1 | Open |
+| ARC-009 | Read projections/metrics/tracing/health | P1 | Partial: public minimal live/database-ready endpoints, bounded in-process action metrics and correlation IDs/logs; durable telemetry, domain projections and external tracing remain open |
 | ENT-001 | Multiple legal entities, shared employees and intercompany payroll | P2 | Open |
 | ENT-002 | Legacy imports/validation/dedup/reconciliation/rollback | P1 | Partial: legacy performance import existing |
 | ENT-003 | Accounting/government/banking adapters | P2 | Open: external contracts and credentials |
@@ -127,3 +127,5 @@ Attendance exception follow-up: 181 tests pass (177 regression plus 4 exception 
 Leave calendar follow-up: 184 tests pass (181 regression plus 3 calendar tests). Month clipping, approved-only visibility, historical departments and scope boundaries verified. EN/AR and 390px viewport inspected. Narrow shell now uses a horizontal navigation strip rather than a full-height sidebar. Existing own/team/company permissions are not broadened.
 
 Rotation follow-up: 187 tests pass (184 regression plus 3 rotation tests). Explicit shift-ID pattern generates at most 93 dated rows atomically, rejects any overlap without replacement, records actor/reason and preserves individual editing. Calendar-day progression includes Friday/Saturday but does not redefine working days. Local MVC save and EN/AR forms inspected.
+
+Diagnostics follow-up: 190 tests pass (187 regression plus 3 counter tests). EN/AR dashboard and non-admin denial inspected. Health endpoints return minimal text, readiness checks database connectivity with timeout and no diagnostic secrets. Admin metrics are action-level aggregate counts/5xx/latency/in-flight, no raw path or query. State resets on process restart, no uptime or job-health guarantee.
