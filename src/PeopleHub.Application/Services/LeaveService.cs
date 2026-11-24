@@ -8,6 +8,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
     public async Task<List<LeaveTransaction>> TransactionsAsync(int id,int year)
     {
         if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
+        if(me.EmployeeId!=id&&!me.Can(Perm.LeaveEvidence))return [];
         return await repo.ToListAsync(repo.Query<LeaveTransaction>().Where(x=>x.EmployeeId==id && x.Year==year).OrderByDescending(x=>x.At));
     }
     private void Entry(int employeeId,int typeId,int year,int delta,string kind,string reason,int? request=null) => repo.Add(new LeaveTransaction {EmployeeId=employeeId,LeaveTypeId=typeId,Year=year,Delta=delta,Kind=kind,Reason=reason,RequestId=request,Actor=me.Email,At=clock.UtcNow});

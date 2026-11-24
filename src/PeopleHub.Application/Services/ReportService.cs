@@ -94,7 +94,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
             case "leave":
                 var bals = (await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.Year == year))).Where(b => emps.Any(e => e.Id == b.EmployeeId)).ToList();
                 return new("leave", ["Code", "Name", "Leave type", "Entitled", "Carried over", "Used", "Remaining"],
-                    bals.OrderBy(b => b.EmployeeId).Select(b => { var e = emps.First(x => x.Id == b.EmployeeId); return new List<string> { e.Code, e.FullName, b.LeaveType?.Name ?? "", b.Entitled.ToString(), b.CarriedOver.ToString(), b.Used.ToString(), b.Remaining.ToString() }; }).ToList());
+                    bals.OrderBy(b => b.EmployeeId).Select(b => { var e = emps.First(x => x.Id == b.EmployeeId); return new List<string> { e.Code, e.FullName, me.EmployeeId==e.Id||me.Can(Perm.LeaveEvidence)?b.LeaveType?.Name??"":"Private leave", b.Entitled.ToString(), b.CarriedOver.ToString(), b.Used.ToString(), b.Remaining.ToString() }; }).ToList());
             case "payroll":
                 if (!me.Can(Perm.ReportsFin)) throw new DomainException("err.forbidden");
                 var run = await repo.FirstOrDefaultAsync(repo.Query<PayrollRun>().Where(r => r.Year == year && r.Month == month));
