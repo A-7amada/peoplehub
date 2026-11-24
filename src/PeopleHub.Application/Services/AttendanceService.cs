@@ -102,7 +102,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         if (rec is { CheckIn: not null }) throw new DomainException("err.duplicateCheckIn");
         var isNew = rec == null;
         rec ??= new AttendanceRecord { EmployeeId = employeeId, Date = date.Date };
-        rec.CheckIn = checkIn; rec.CheckOut = checkOut; rec.Source = source; rec.IsExcused = false; rec.ExcuseNote = null;
+        rec.CheckIn = checkIn; rec.CheckOut = checkOut; rec.Source = AttendanceSource.Manual; rec.IsExcused = false; rec.ExcuseNote = null;
         rec.Recompute(await ShiftOfAsync(e));
         if (isNew) repo.Add(rec);
         repo.Add(AttendanceEvidence.Capture(rec,"ManualEntry",me.Email,clock.UtcNow,reason.Trim()));

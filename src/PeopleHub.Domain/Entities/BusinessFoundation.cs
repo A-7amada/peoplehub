@@ -93,3 +93,52 @@ public class AttendancePeriodLock
  public string Reason {get;set;}="";
  public DateTime At {get;set;}
 }
+
+public class EmployeeDependent
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public string Name {get;set;}="";
+ public string Relationship {get;set;}="";
+ public DateTime? BirthDate {get;set;}
+ public string Actor {get;set;}="";
+ public DateTime At {get;set;}
+}
+public class LifecycleTask
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public string Process {get;set;}="Onboarding";
+ public string Title {get;set;}="";
+ public int? AssignedEmployeeId {get;set;}
+ public DateTime DueOn {get;set;}
+ public string Status {get;set;}="Open";
+ public string CompletionNote {get;set;}="";
+ public DateTime? CompletedAt {get;set;}
+ public string CompletedBy {get;set;}="";
+}
+public class EmployeeProbation
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public DateTime EndsOn {get;set;}
+ public string Decision {get;set;}="Pending";
+ public DateTime? DecisionAt {get;set;}
+ public string Reason {get;set;}="";
+ public string Actor {get;set;}="";
+}
+public class HrFieldDefinition
+{
+ public int Id {get;set;}
+ public string Label {get;set;}="";
+ public string LabelAr {get;set;}="";
+ public string Kind {get;set;}="Text";
+ public bool Active {get;set;}=true;
+}
+public class EmployeeFieldValue
+{
+ public int Id {get;set;}
+ public int EmployeeId {get;set;}
+ public int FieldId {get;set;}
+ public string Value {get;set;}="";
+}

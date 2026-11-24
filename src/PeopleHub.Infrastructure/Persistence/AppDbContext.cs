@@ -44,6 +44,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void OnModelCreating(ModelBuilder b)
     {
+        b.Entity<EmployeeDependent>();b.Entity<LifecycleTask>();b.Entity<EmployeeProbation>().HasIndex(x=>x.EmployeeId).IsUnique();b.Entity<HrFieldDefinition>().HasIndex(x=>x.Label).IsUnique();b.Entity<EmployeeFieldValue>().HasIndex(x=>new{x.EmployeeId,x.FieldId}).IsUnique();
         b.Entity<AttendancePeriodLock>().HasIndex(x=>new{x.EmployeeId,x.Year,x.Month}).IsUnique();
         b.Entity<EmploymentChange>().HasIndex(x=>new{x.EmployeeId,x.EffectiveOn,x.Kind}).IsUnique();
         b.Entity<AttendanceEvidence>().HasIndex(x=>new{x.EmployeeId,x.Date});

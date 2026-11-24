@@ -17,6 +17,7 @@ public partial class Loc
         A("err.attendanceLocked","This attendance period is locked.","فترة الحضور مغلقة ولا تقبل التعديل.");
         A("err.periodOpen","Only completed months can be locked.","يمكن إغلاق الشهور المكتملة فقط.");
         A("err.pendingCorrection","Decide pending attendance corrections before locking this month.","يجب البت في التصحيحات المعلقة قبل إغلاق الشهر.");
+        A("notif.lifecycle","Employee lifecycle task assigned","تم إسناد مهمة في دورة الموظف");
         // app & shell
         A("app.name", "PeopleHub", "بيبل هَب");
         A("demo.pill", "Demo project", "مشروع تجريبي");

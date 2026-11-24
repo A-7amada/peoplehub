@@ -6,7 +6,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, LeaveService leave, AttendanceService att, AppClock clock, ICurrentUser me, EmploymentTimeline timeline, AccessScope access) : BaseController(loc)
+public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, LeaveService leave, AttendanceService att, AppClock clock, ICurrentUser me, EmploymentTimeline timeline, AccessScope access, EmployeeLifecycle lifecycle) : BaseController(loc)
 {
     private async Task Lists()
     {
@@ -30,6 +30,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
             await timeline.ApplyDueAsync();
             var p = await svc.ProfileAsync(eid);
             ViewBag.Scheduled=await timeline.ListAsync(eid,access);
+            if(tab=="lifecycle") ViewBag.Lifecycle=await lifecycle.GetAsync(eid);
             await Lists();
             ViewBag.Assignments=await svc.AssignmentsAsync(eid);
             ViewBag.Tab = tab; ViewBag.Components = await svc.ComponentsAsync();
@@ -58,6 +59,15 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         try { await svc.SaveAsync(model, reason); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Profile), new { id = model.Id == 0 ? (await svc.SearchAsync(new(model.Email, null, null, null))).FirstOrDefault()?.Id : model.Id }); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; if(!me.Can(Perm.EmpPay)){model.BasicSalary=0;model.Iban="";model.BankName="";} await Lists(); return View(model); }
     }
+
+    [HttpPost]public Task<IActionResult> AddDependent(int employeeId,string name,string relationship,DateTime? birthDate)=>Do(()=>lifecycle.AddDependentAsync(employeeId,name,relationship,birthDate),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+    [HttpPost]public Task<IActionResult> RemoveDependent(int id,int employeeId,string reason)=>Do(()=>lifecycle.RemoveDependentAsync(id,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+    [HttpPost]public Task<IActionResult> AddLifecycleTask(int employeeId,string process,string title,int? assignedEmployeeId,DateTime dueOn)=>Do(()=>lifecycle.AddTaskAsync(employeeId,process,title,assignedEmployeeId,dueOn),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+    [HttpPost]public Task<IActionResult> CompleteLifecycleTask(int id,int employeeId,string note)=>Do(()=>lifecycle.CompleteTaskAsync(id,note),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+    [HttpPost]public Task<IActionResult> SetProbation(int employeeId,DateTime endsOn,string reason)=>Do(()=>lifecycle.SetProbationAsync(employeeId,endsOn,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+    [HttpPost]public Task<IActionResult> DecideProbation(int employeeId,string decision,string reason)=>Do(()=>lifecycle.DecideProbationAsync(employeeId,decision,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+    [HttpPost]public Task<IActionResult> AddField(int employeeId,string label,string? labelAr,string kind)=>Do(()=>lifecycle.AddFieldAsync(label,labelAr,kind),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+    [HttpPost]public Task<IActionResult> SetField(int employeeId,int fieldId,string value)=>Do(()=>lifecycle.SetFieldAsync(employeeId,fieldId,value),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
 
     [RequirePerm(Perm.EmpManage),HttpPost]
     public Task<IActionResult> Schedule(EmploymentChange change)=>Do(()=>timeline.ScheduleAsync(change),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=change.EmployeeId,tab="history"}));
