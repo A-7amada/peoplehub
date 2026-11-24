@@ -1,0 +1,61 @@
+@model EmployeeProfile
+@{
+  var e = Model.Employee; ViewData["Title"] = T.Name(e.FullName, e.FullNameAr); string tab = ViewBag.Tab;
+  bool hr = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager) || User.IsInRole(Roles.HRSpecialist);
+  bool self = User.FindFirst("emp")?.Value == e.Id.ToString();
+  var comps = (List<SalaryComponent>)ViewBag.Components; var bal = (List<LeaveBalance>)ViewBag.Balances; DateTime today = ViewBag.Today;
+  string Tab(string k) => tab == k ? "on" : "";
+}
+<div class="card" style="margin-bottom:20px"><div class="profile-hero">@Ui.Avatar(e, T, 72)
+  <div><h1>@T.Name(e.FullName, e.FullNameAr)</h1><div class="muted">@T.Name(e.JobTitle!.Name, e.JobTitle.NameAr) · @T.Name(e.Department!.Name, e.Department.NameAr) · @T.Name(e.Branch!.Name, e.Branch.NameAr)</div>
+   <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">@Ui.Chip(T.E(e.Status), Ui.StatusTone(e.Status))<span class="chip chip-gray">@e.Code</span><span class="chip chip-violet">@T.E(e.EmploymentType)</span></div></div>
+  <div style="margin-inline-start:auto;display:flex;gap:10px">@if (hr) { <a class="btn" href="/Employees/Edit/@e.Id">@T["emp.edit"]</a> }<a class="btn" href="/Attendance?id=@e.Id">@Ui.Icon("clock", 16) @T["nav.attendance"]</a></div></div></div>
+<div class="tabs"><a class="@Tab("overview")" href="?tab=overview">@T["emp.tab.overview"]</a><a class="@Tab("contracts")" href="?tab=contracts">@T["emp.tab.contracts"]</a><a class="@Tab("history")" href="?tab=history">@T["emp.tab.history"]</a><a class="@Tab("leave")" href="?tab=leave">@T["nav.leave"]</a>@if (Model.CanSeeSalary) { <a class="@Tab("pay")" href="?tab=pay">@T["emp.tab.pay"]</a> }</div>
+
+@if (tab == "overview") {
+<div class="grid g2">
+ <div class="card"><div class="card-h"><h2>@T["emp.personal"]</h2></div><div class="card-b"><dl class="dl">
+  <dt>@T["emp.email"]</dt><dd dir="ltr" style="text-align:start">@e.Email</dd><dt>@T["emp.phone"]</dt><dd dir="ltr" style="text-align:start">@e.Phone</dd>
+  <dt>@T["emp.nationalId"]</dt><dd class="num">@(hr || self ? e.NationalId : "••••••••••" + (e.NationalId.Length > 4 ? e.NationalId[^4..] : ""))</dd><dt>@T["emp.birthDate"]</dt><dd>@(e.BirthDate == null ? "-" : T.Date(e.BirthDate.Value))</dd>
+  <dt>@T["emp.gender"]</dt><dd>@T.E(e.Gender)</dd><dt>@T["emp.marital"]</dt><dd>@T.E(e.MaritalStatus)</dd><dt>@T["emp.address"]</dt><dd>@e.Address</dd></dl>
+  @if (self) { <hr style="border:0;border-top:1px solid var(--line2);margin:18px 0"><form method="post" action="/Employees/MyContact" asp-antiforgery="true" class="inline-form"><input type="text" name="phone" value="@e.Phone" dir="ltr"><input type="text" name="address" value="@e.Address" placeholder="@T["emp.address"]"><button class="btn btn-sm">@T["common.save"]</button></form> }</div></div>
+ <div class="card"><div class="card-h"><h2>@T["emp.work"]</h2></div><div class="card-b"><dl class="dl">
+  <dt>@T["emp.manager"]</dt><dd>@(Model.ManagerName == null ? "-" : T.Name(Model.ManagerName, Model.ManagerNameAr ?? ""))</dd><dt>@T["emp.hireDate"]</dt><dd>@T.Date(e.HireDate)</dd>
+  <dt>@T["emp.shift"]</dt><dd>@(Model.Shift == null ? "-" : T.Name(Model.Shift.Name, Model.Shift.NameAr))</dd><dt>@T["emp.insurance"]</dt><dd class="num">@(hr || self ? e.InsuranceNumber : "-")</dd></dl></div></div>
+</div>
+}
+@if (tab == "contracts") {
+<div class="card"><div class="card-h"><h2>@T["emp.tab.contracts"]</h2></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["common.type"]</th><th>@T["common.from"]</th><th>@T["common.to"]</th><th>@T["common.status"]</th><th></th></tr></thead><tbody>
+@foreach (var c in Model.Contracts) { <tr><td>@T.E(c.Type)</td><td class="num">@T.Date(c.StartDate)</td><td class="num">@(c.EndDate == null ? "-" : T.Date(c.EndDate.Value))</td><td>@Ui.Chip(c.IsCurrent ? T["common.current"] : T["common.past"], c.IsCurrent ? "green" : "gray")</td>
+ <td class="right">@if (hr && c.IsCurrent && c.EndDate != null) { <form method="post" action="/Employees/RenewContract" asp-antiforgery="true" class="inline-form" style="justify-content:flex-end"><input type="hidden" name="id" value="@e.Id"><input type="hidden" name="contractId" value="@c.Id"><input type="date" name="newEnd" value="@c.EndDate.Value.AddYears(1).ToString("yyyy-MM-dd")"><button class="btn btn-sm">@T["emp.renew"]</button></form> }</td></tr> }
+</tbody></table></div></div>
+@if (hr) { <div class="card" style="margin-top:18px"><div class="card-h"><h2>@T["emp.newContract"]</h2></div><div class="card-b"><form method="post" action="/Employees/AddContract" asp-antiforgery="true" class="form-grid"><input type="hidden" name="id" value="@e.Id">
+ <div class="field"><label>@T["common.type"]</label><select name="type">@foreach (var t in Enum.GetValues<ContractType>()) { <option value="@((int)t)">@T.E(t)</option> }</select></div>
+ <div class="field"><label>@T["common.from"]</label><input type="date" name="start" value="@today.ToString("yyyy-MM-dd")"></div><div class="field"><label>@T["common.to"]</label><input type="date" name="end"></div><div class="field"><label>@T["common.notes"]</label><input type="text" name="notes"></div>
+ <div class="full"><button class="btn btn-primary">@T["common.save"]</button></div></form></div></div> }
+}
+@if (tab == "history") {
+<div class="grid g2">
+ <div class="card"><div class="card-h"><h2>@T["emp.career"]</h2></div><div class="card-b"><ul class="timeline">@foreach (var ev in Model.Events) { <li><b>@T.E(ev.Type)</b> <span class="faint small">· @T.Date(ev.Date)</span><div class="muted">@ev.Details</div></li> }</ul>
+  @if (hr) { <form method="post" action="/Employees/AddEvent" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@e.Id"><select name="type">@foreach (var t in Enum.GetValues<CareerEventType>()) { <option value="@((int)t)">@T.E(t)</option> }</select><input type="text" name="details" placeholder="@T["common.notes"]" style="flex:1"><button class="btn btn-sm">@T["common.add"]</button></form> }</div></div>
+ <div class="card"><div class="card-h"><h2>@T["emp.statusHistory"]</h2></div><div class="card-b"><ul class="timeline">@foreach (var h in Model.StatusHistory) { <li>@Ui.Chip(T.E(h.From), "gray") → @Ui.Chip(T.E(h.To), Ui.StatusTone(h.To)) <span class="faint small">· @T.Date(h.At)</span><div class="muted small">@h.ChangedBy @(string.IsNullOrEmpty(h.Reason) ? "" : "· " + h.Reason)</div></li> }
+  @if (Model.StatusHistory.Count == 0) { <li class="faint">@T["common.none"]</li> }</ul>
+  @if (hr && e.IsWorking) { <form method="post" action="/Employees/Status" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@e.Id"><select name="to">@foreach (var s in Enum.GetValues<EmployeeStatus>().Where(s => s != e.Status)) { <option value="@((int)s)">@T.E(s)</option> }</select><input type="text" name="reason" placeholder="@T["common.reason"]" style="flex:1"><button class="btn btn-sm">@T["emp.changeStatus"]</button></form> }</div></div>
+</div>
+}
+@if (tab == "leave") {
+<div class="card"><div class="card-h"><h2>@T["leave.balances"] @ViewBag.Year</h2></div><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["common.type"]</th><th>@T["leave.entitled"]</th><th>@T["leave.carried"]</th><th>@T["leave.used"]</th><th>@T["leave.remaining"]</th>@if (hr) { <th></th> }</tr></thead><tbody>
+@foreach (var b in bal) { <tr><td>@T.Name(b.LeaveType!.Name, b.LeaveType.NameAr)</td><td class="num">@b.Entitled</td><td class="num">@b.CarriedOver</td><td class="num">@b.Used</td><td class="num"><b>@b.Remaining</b></td>
+ @if (hr) { <td class="right"><form method="post" action="/Employees/AdjustBalance" asp-antiforgery="true" class="inline-form" style="justify-content:flex-end"><input type="hidden" name="id" value="@e.Id"><input type="hidden" name="typeId" value="@b.LeaveTypeId"><input type="number" name="entitled" value="@b.Entitled" style="width:70px"><input type="text" name="reason" placeholder="@T["common.reason"]" style="width:130px"><button class="btn btn-sm">@T["common.save"]</button></form></td> }</tr> }
+</tbody></table></div></div>
+}
+@if (tab == "pay" && Model.CanSeeSalary) {
+<div class="grid g2">
+ <div class="card"><div class="card-h"><h2>@T["emp.salary"]</h2></div><div class="card-b"><div class="kv"><span>@T["emp.basic"]</span><b class="num">@T.Money(e.BasicSalary)</b></div>
+  @foreach (var c in Model.Components) { <div class="kv"><span>@T.Name(c.Component!.Name, c.Component.NameAr) @Ui.Chip(T.E(c.Component.Type), c.Component.Type == ComponentType.Earning ? "green" : "red")</span><b class="num">@T.Money(c.Amount)</b></div> }
+  <div class="kv"><span>@T["emp.bankName"]</span><span>@e.BankName</span></div><div class="kv"><span>IBAN</span><span class="num" dir="ltr">@e.Iban</span></div></div></div>
+ @if (hr || User.IsInRole(Roles.PayrollOfficer)) { <div class="card"><div class="card-h"><h2>@T["emp.setComponent"]</h2></div><div class="card-b"><form method="post" action="/Employees/SetComponent" asp-antiforgery="true"><input type="hidden" name="id" value="@e.Id">
+  <div class="field"><label>@T["common.type"]</label><select name="componentId">@foreach (var c in comps) { <option value="@c.Id">@T.Name(c.Name, c.NameAr) (@T.E(c.Type))</option> }</select></div>
+  <div class="field"><label>@T["common.amount"]</label><input type="number" step="0.01" min="0" name="amount"></div><button class="btn btn-primary">@T["common.save"]</button></form></div></div> }
+</div>
+}

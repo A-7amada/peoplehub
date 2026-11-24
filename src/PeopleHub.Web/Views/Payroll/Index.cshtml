@@ -1,0 +1,14 @@
+@model List<PayrollRun>
+@{ ViewData["Title"] = T["nav.payroll"]; DateTime now = ViewBag.Now; bool prep = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.PayrollOfficer); }
+<div class="page-head"><div><h1>@T["nav.payroll"]</h1><div class="sub">@T["pay.sub"]</div></div><div class="actions"><a class="btn" href="/Payroll/MySlips">@Ui.Icon("file", 16) @T["pay.mySlips"]</a></div></div>
+<div class="grid g-main">
+<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["pay.period"]</th><th>@T["common.status"]</th><th>@T["pay.workflow"]</th><th></th></tr></thead><tbody>
+@foreach (var r in Model) { var order = new[] { PayrollStatus.Draft, PayrollStatus.HRReviewed, PayrollStatus.FinanceApproved, PayrollStatus.Finalized, PayrollStatus.Paid };
+ <tr><td><b>@r.Year-@r.Month.ToString("00")</b><div class="faint small">@r.CreatedBy</div></td><td>@Ui.Chip(T.E(r.Status), Ui.StatusTone(r.Status))</td>
+ <td><div class="steps">@foreach (var o in order) { <span class="step @(o <= r.Status ? "done" : o == r.Status + 1 ? "cur" : "")">@T.E(o)</span> }</div></td>
+ <td class="right"><a class="btn btn-sm" href="/Payroll/Run/@r.Id">@T["common.open"] @Ui.Icon("arrow", 14)</a></td></tr> }
+@if (Model.Count == 0) { <tr><td colspan="4" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>
+@if (prep) { <div class="card" style="align-self:start"><div class="card-h"><h2>@T["pay.newRun"]</h2></div><div class="card-b"><form method="post" action="/Payroll/Create" asp-antiforgery="true">
+ <div class="form-grid"><div class="field"><label>@T["adv.startYear"]</label><input type="number" name="year" value="@now.Year"></div><div class="field"><label>@T["adv.startMonth"]</label><input type="number" name="month" min="1" max="12" value="@now.Month"></div></div>
+ <button class="btn btn-primary">@T["pay.create"]</button><p class="muted small">@T["pay.createHint"]</p></form></div></div> }
+</div>

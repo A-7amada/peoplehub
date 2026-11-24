@@ -1,0 +1,18 @@
+@model List<RequestRow>
+@if (Model.Count == 0) { <div class="empty">@T["common.none"]</div> } else {
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["req.employee"]</th><th>@T["common.type"]</th><th>@T["req.details"]</th><th>@T["req.progress"]</th><th>@T["common.status"]</th><th></th></tr></thead><tbody>
+@foreach (var r in Model) {
+ var stages = r.Route.Split(',');
+ <tr>
+  <td><a class="person" href="/Employees/Profile/@r.Employee.Id">@Ui.Avatar(r.Employee, T)<span><div class="nm">@T.Name(r.Employee.FullName, r.Employee.FullNameAr)</div><div class="sb">@T.Date(r.CreatedAt)</div></span></a></td>
+  <td><b>@T["req.kind." + r.Kind]</b>@if (r.TypeName != "") { <div class="faint small">@T.Name(r.TypeName, r.TypeNameAr)</div> }</td>
+  <td class="small" style="max-width:300px"><bdi>@r.Detail</bdi> @if (!string.IsNullOrEmpty(r.Comment)) { <div class="faint">@r.Comment</div> }</td>
+  <td><div class="steps">@for (var i = 0; i < stages.Length; i++) { var cls = r.Status == RequestStatus.Approved || i < r.StageIndex ? "done" : r.Status == RequestStatus.Pending && i == r.StageIndex ? "cur" : r.Status == RequestStatus.Rejected && i == r.StageIndex ? "bad" : ""; <span class="step @cls">@T["stage." + stages[i]]</span> }</div></td>
+  <td>@Ui.Chip(T.E(r.Status), Ui.StatusTone(r.Status))</td>
+  <td class="right nowrap">
+   @if (r.CanAct) {
+    <form method="post" action="/Requests/Approve" asp-antiforgery="true" class="inline-form" style="justify-content:flex-end"><input type="hidden" name="kind" value="@r.Kind"><input type="hidden" name="id" value="@r.Id"><input type="text" name="comment" placeholder="@T["common.comment"]" style="width:130px">
+     <button class="btn btn-sm btn-good">@Ui.Icon("check", 14) @T["req.approve"]</button><button class="btn btn-sm btn-bad" formaction="/Requests/Reject">@Ui.Icon("x", 14) @T["req.reject"]</button></form>
+   } else if (r.CanCancel) { <form method="post" action="/Requests/Cancel" asp-antiforgery="true" style="margin:0"><input type="hidden" name="kind" value="@r.Kind"><input type="hidden" name="id" value="@r.Id"><button class="btn btn-sm">@T["req.cancel"]</button></form> }
+  </td></tr> }
+</tbody></table></div> }

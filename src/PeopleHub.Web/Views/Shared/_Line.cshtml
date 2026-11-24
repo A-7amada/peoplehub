@@ -1,0 +1,26 @@
+@model (List<ChartItem> Data, string Color, bool Pct)
+@{
+  var d = Model.Data; if (d.Count == 0) { return; }
+  double W = 560, H = 190, pl = 40, pr = 12, pt = 14, pb = 28;
+  var maxV = (double)d.Max(x => x.Value); var minV = Model.Pct ? Math.Max(0, (double)d.Min(x => x.Value) - 10) : 0; if (maxV <= minV) maxV = minV + 1;
+  if (Model.Pct) maxV = 100;
+  double X(int i) => pl + (d.Count == 1 ? 0.5 : i / (double)(d.Count - 1)) * (W - pl - pr);
+  double Y(decimal v) => pt + (1 - ((double)v - minV) / (maxV - minV)) * (H - pt - pb);
+  var inv = System.Globalization.CultureInfo.InvariantCulture;
+  var pts = string.Join(" ", d.Select((x, i) => X(i).ToString("0.#", inv) + "," + Y(x.Value).ToString("0.#", inv)));
+  var area = X(0).ToString("0.#", inv) + "," + (H - pb) + " " + pts + " " + X(d.Count - 1).ToString("0.#", inv) + "," + (H - pb);
+  var id = "g" + Guid.NewGuid().ToString("N")[..6];
+}
+<div class="chart"><svg viewBox="0 0 @W @H" dir="ltr">
+  <defs><linearGradient id="@id" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="@Model.Color" stop-opacity=".28"/><stop offset="1" stop-color="@Model.Color" stop-opacity="0"/></linearGradient></defs>
+  @for (var k = 0; k <= 3; k++) { var yy = pt + k * (H - pt - pb) / 3; var val = maxV - k * (maxV - minV) / 3;
+    <line x1="@pl" x2="@(W - pr)" y1="@yy.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" y2="@yy.ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" stroke="#eceef5"/>
+    var lbl = (val >= 1000 ? (val / 1000).ToString("0", System.Globalization.CultureInfo.InvariantCulture) + "k" : val.ToString("0")) + (Model.Pct ? "%" : "");
+    @:<text x="@(pl - 6)" y="@((yy + 4).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture))" text-anchor="end">@lbl</text>
+  }
+  <polygon points="@area" fill="url(#@id)"/>
+  <polyline points="@pts" fill="none" stroke="@Model.Color" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  @for (var i = 0; i < d.Count; i++) { <circle cx="@X(i).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" cy="@Y(d[i].Value).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" r="4" fill="#fff" stroke="@Model.Color" stroke-width="2.4"/>
+    @:<text x="@X(i).ToString("0.#", System.Globalization.CultureInfo.InvariantCulture)" y="@(H - 8)" text-anchor="middle">@d[i].Label</text>
+  }
+</svg></div>

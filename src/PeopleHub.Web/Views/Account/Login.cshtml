@@ -1,10 +1,34 @@
-<section class="card narrow">
-    <h1>@T["login.title"]</h1>
-    @if (ViewBag.Error == true) { <div class="flash err">@T["login.invalid"]</div> }
-    <form method="post" asp-antiforgery="true">
-        <label>@T["login.email"]<input name="email" type="email" autocomplete="username" required /></label>
-        <label>@T["login.password"]<input name="password" type="password" autocomplete="current-password" required /></label>
-        <button class="btn" type="submit">@T["login.submit"]</button>
+@{ ViewData["Title"] = T["login.title"]; var ar = T.IsAr; }
+<div class="login-wrap">
+  <section class="login-art">
+    <div class="brand"><span class="brand-mark">@Ui.Icon("users", 20)</span> PeopleHub</div>
+    <div><h2>@T["login.hero"]</h2><p style="margin-top:14px">@T["login.heroSub"]</p></div>
+    <div class="small" style="color:#aab0e8">@T["demo.fictional"]</div>
+  </section>
+  <section class="login-form"><div class="login-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:26px">
+      <span class="demo-pill" style="background:#fff7e0;color:#8a5d00;border-color:#f6d77a">@T["demo.pill"]</span>
+      <a href="/Account/Lang?to=@(ar ? "en" : "ar")&returnUrl=/Account/Login" class="btn btn-sm">@Ui.Icon("globe", 14) @T["nav.lang"]</a>
+    </div>
+    <h1 style="font-size:1.7rem;margin-bottom:6px">@T["login.title"]</h1>
+    <p class="muted" style="margin:0 0 22px">@T["login.sub"]</p>
+    @if (ViewBag.Error is string e) { <div class="flash err">@e</div> }
+    <form method="post" action="/Account/Login" asp-antiforgery="true">
+      <div class="field"><label>@T["login.email"]</label><input type="email" name="email" required autofocus dir="ltr" placeholder="name@peoplehub.local"></div>
+      <div class="field"><label>@T["login.password"]</label><input type="password" name="password" required dir="ltr"></div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">@T["login.submit"]</button>
     </form>
-    <p class="muted small"><strong>@T["login.demo"]</strong><br />@T["login.demoNote"]</p>
-</section>
+    <div class="demo-list"><b>@T["login.demo"]</b>
+      <table dir="ltr">
+        <tr><td><code>employee@peoplehub.local</code></td><td>@T["role.Employee"]</td></tr>
+        <tr><td><code>manager@peoplehub.local</code></td><td>@T["role.DepartmentManager"]</td></tr>
+        <tr><td><code>hrspecialist@peoplehub.local</code></td><td>@T["role.HRSpecialist"]</td></tr>
+        <tr><td><code>attendance@peoplehub.local</code></td><td>@T["role.AttendanceOfficer"]</td></tr>
+        <tr><td><code>payroll@peoplehub.local</code></td><td>@T["role.PayrollOfficer"]</td></tr>
+        <tr><td><code>finance@peoplehub.local</code></td><td>@T["role.FinanceManager"]</td></tr>
+        <tr><td><code>ceo@peoplehub.local</code></td><td>@T["role.TopManagement"]</td></tr>
+      </table>
+      <div class="muted" style="margin-top:8px">@T["login.demoNote"]</div>
+    </div>
+  </div></section>
+</div>

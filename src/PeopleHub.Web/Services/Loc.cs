@@ -1,9 +1,10 @@
 using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace PeopleHub.Web.Services;
 
 /// <summary>Tiny dictionary-based localizer (en / ar). Keeps the demo free of resource-file tooling.</summary>
-public class Loc
+public partial class Loc
 {
     public bool IsAr => CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ar";
     public string this[string key] => Map.TryGetValue(key, out var v) ? (IsAr ? v.ar : v.en) : key;
@@ -11,84 +12,14 @@ public class Loc
     public string Date(DateTime d) => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     public string Money(decimal m) => IsAr ? $"{m:N0} ج.م" : $"EGP {m:N0}";
 
-    private static readonly Dictionary<string, (string en, string ar)> Map = new()
+    /// <summary>Label for an enum value or a status/action word. Falls back to a spaced version of the name.</summary>
+    public string E(object value)
     {
-        ["app.name"] = ("PeopleHub", "بيبل هَب"),
-        ["app.tag"] = ("HR management demo", "نظام موارد بشرية تجريبي"),
-        ["nav.dashboard"] = ("Dashboard", "لوحة التحكم"),
-        ["nav.employees"] = ("Employees", "الموظفون"),
-        ["nav.leave"] = ("Leave", "الإجازات"),
-        ["nav.logout"] = ("Sign out", "تسجيل الخروج"),
-        ["nav.lang"] = ("العربية", "English"),
-        ["login.title"] = ("Sign in", "تسجيل الدخول"),
-        ["login.email"] = ("Email", "البريد الإلكتروني"),
-        ["login.password"] = ("Password", "كلمة المرور"),
-        ["login.submit"] = ("Sign in", "دخول"),
-        ["login.invalid"] = ("Invalid email or password.", "البريد أو كلمة المرور غير صحيحة."),
-        ["login.demo"] = ("Demo accounts", "حسابات تجريبية"),
-        ["login.demoNote"] = ("Employee demo: employee@peoplehub.local / Demo123! . The HR account password is set by the host.", "حساب الموظف التجريبي: employee@peoplehub.local / Demo123! . كلمة مرور حساب الموارد البشرية يحددها المستضيف."),
-        ["dash.headcount"] = ("Active headcount", "عدد الموظفين"),
-        ["dash.onLeave"] = ("On leave today", "في إجازة"),
-        ["dash.pending"] = ("Pending leave requests", "طلبات إجازة معلقة"),
-        ["dash.payroll"] = ("Monthly payroll", "إجمالي الرواتب الشهرية"),
-        ["dash.byDept"] = ("People by department", "الموظفون حسب القسم"),
-        ["dash.welcome"] = ("Welcome", "أهلاً"),
-        ["emp.search"] = ("Search name, email or title", "ابحث بالاسم أو البريد أو الوظيفة"),
-        ["emp.all"] = ("All", "الكل"),
-        ["emp.add"] = ("Add employee", "إضافة موظف"),
-        ["emp.edit"] = ("Edit", "تعديل"),
-        ["emp.name"] = ("Name (English)", "الاسم (إنجليزي)"),
-        ["emp.nameAr"] = ("Name (Arabic)", "الاسم (عربي)"),
-        ["emp.title"] = ("Job title", "المسمى الوظيفي"),
-        ["emp.dept"] = ("Department", "القسم"),
-        ["emp.hired"] = ("Hire date", "تاريخ التعيين"),
-        ["emp.salary"] = ("Monthly salary (EGP)", "الراتب الشهري (ج.م)"),
-        ["emp.status"] = ("Status", "الحالة"),
-        ["emp.balance"] = ("Annual leave balance", "رصيد الإجازة السنوية"),
-        ["emp.email"] = ("Email", "البريد الإلكتروني"),
-        ["emp.terminate"] = ("Terminate", "إنهاء الخدمة"),
-        ["emp.save"] = ("Save", "حفظ"),
-        ["emp.empty"] = ("No employees match.", "لا يوجد موظفون مطابقون."),
-        ["emp.days"] = ("days", "يوم"),
-        ["status.Active"] = ("Active", "نشط"),
-        ["status.OnLeave"] = ("On leave", "في إجازة"),
-        ["status.Terminated"] = ("Terminated", "منتهي الخدمة"),
-        ["status.Pending"] = ("Pending", "معلق"),
-        ["status.Approved"] = ("Approved", "موافق عليه"),
-        ["status.Rejected"] = ("Rejected", "مرفوض"),
-        ["status.Cancelled"] = ("Cancelled", "ملغي"),
-        ["type.Annual"] = ("Annual", "سنوية"),
-        ["type.Sick"] = ("Sick", "مرضية"),
-        ["type.Unpaid"] = ("Unpaid", "بدون أجر"),
-        ["leave.new"] = ("Request leave", "طلب إجازة"),
-        ["leave.type"] = ("Type", "النوع"),
-        ["leave.from"] = ("From", "من"),
-        ["leave.to"] = ("To", "إلى"),
-        ["leave.days"] = ("Working days", "أيام العمل"),
-        ["leave.reason"] = ("Reason", "السبب"),
-        ["leave.submit"] = ("Submit request", "إرسال الطلب"),
-        ["leave.approve"] = ("Approve", "موافقة"),
-        ["leave.reject"] = ("Reject", "رفض"),
-        ["leave.cancel"] = ("Cancel", "إلغاء"),
-        ["leave.employee"] = ("Employee", "الموظف"),
-        ["leave.empty"] = ("No leave requests.", "لا توجد طلبات إجازة."),
-        ["leave.note"] = ("Friday and Saturday are not counted as working days.", "الجمعة والسبت لا تحتسب من أيام العمل."),
-        ["leave.mybalance"] = ("Your annual balance", "رصيدك السنوي"),
-        ["ok.saved"] = ("Saved.", "تم الحفظ."),
-        ["err.name"] = ("Name is required.", "الاسم مطلوب."),
-        ["err.email"] = ("A valid email is required.", "يلزم بريد إلكتروني صحيح."),
-        ["err.salary"] = ("Salary cannot be negative.", "الراتب لا يمكن أن يكون سالباً."),
-        ["err.emailTaken"] = ("This email is already used by another employee.", "هذا البريد مستخدم لموظف آخر."),
-        ["err.alreadyTerminated"] = ("Already terminated.", "الموظف منتهي الخدمة بالفعل."),
-        ["err.terminated"] = ("A terminated employee cannot request leave.", "الموظف المنتهي خدمته لا يمكنه طلب إجازة."),
-        ["err.dates"] = ("End date must not be before the start date.", "تاريخ النهاية قبل تاريخ البداية."),
-        ["err.past"] = ("Only sick leave can start in the past.", "الإجازة المرضية فقط يمكن أن تبدأ في الماضي."),
-        ["err.noWorkingDays"] = ("The selected range has no working days.", "الفترة المختارة لا تحتوي أيام عمل."),
-        ["err.balance"] = ("Not enough annual leave balance.", "رصيد الإجازة السنوية لا يكفي."),
-        ["err.overlap"] = ("This overlaps another leave request.", "الطلب يتعارض مع إجازة أخرى."),
-        ["err.notPending"] = ("This request can no longer be changed.", "لا يمكن تغيير هذا الطلب."),
-        ["err.notFound"] = ("Record not found.", "السجل غير موجود."),
-        ["err.forbidden"] = ("Not allowed.", "غير مسموح."),
-        ["footer"] = ("Demo project with sample data. Not a production HR system.", "مشروع تجريبي ببيانات وهمية. ليس نظام موارد بشرية جاهزاً للإنتاج."),
-    };
+        var s = value.ToString() ?? "";
+        return Map.TryGetValue("enum." + s, out var v) ? (IsAr ? v.ar : v.en) : Regex.Replace(s, "(?<=[a-z])(?=[A-Z])", " ");
+    }
+
+    public string Col(string c) => Map.TryGetValue("col." + c, out var v) ? (IsAr ? v.ar : v.en) : c;
+    /// <summary>Report cells that hold a known status word are translated; everything else is shown as is.</summary>
+    public string Cell(string c) => Map.ContainsKey("enum." + c) ? E(c) : c;
 }

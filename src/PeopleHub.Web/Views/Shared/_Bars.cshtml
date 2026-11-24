@@ -1,0 +1,7 @@
+@model List<ChartItem>
+@{ var max = Math.Max(1, Model.Select(m => m.Value).DefaultIfEmpty(0).Max()); }
+<div class="bars">
+@foreach (var m in Model) {
+  <div class="bar-row"><span class="muted">@T.Name(m.Label, m.LabelAr)</span><div class="tr"><i style="width:@((int)(100 * m.Value / max))%"></i></div><b class="num">@m.Value.ToString("0")</b></div>
+}
+</div>

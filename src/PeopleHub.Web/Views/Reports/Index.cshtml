@@ -1,0 +1,8 @@
+@model ReportTable
+@{ ViewData["Title"] = T["nav.reports"]; string key = ViewBag.Key; int y = ViewBag.Year, m = ViewBag.Month; bool needsPeriod = key is "attendance" or "payroll" or "leave"; }
+<div class="page-head"><div><h1>@T["nav.reports"]</h1><div class="sub">@T["rep.sub"]</div></div><div class="actions"><a class="btn" href="/Reports/Csv?key=@key&year=@y&month=@m">@Ui.Icon("download", 16) CSV</a></div></div>
+<div class="card"><div class="filters"><div class="seg">@foreach (var k in ReportService.ReportKeys) { <a class="@(k == key ? "on" : "")" href="?key=@k&year=@y&month=@m">@T["rep." + k]</a> }</div>
+ @if (needsPeriod) { <form class="inline-form" method="get" style="margin-inline-start:auto"><input type="hidden" name="key" value="@key"><input type="number" name="year" value="@y" style="width:90px"><input type="number" name="month" min="1" max="12" value="@m" style="width:70px"><button class="btn">@T["common.filter"]</button></form> }</div>
+<div class="tbl-wrap"><table class="tbl"><thead><tr>@foreach (var c in Model.Columns) { <th>@T.Col(c)</th> }</tr></thead><tbody>
+@foreach (var r in Model.Rows) { <tr>@foreach (var c in r) { <td class="num">@T.Cell(c)</td> }</tr> }
+@if (Model.Rows.Count == 0) { <tr><td colspan="@Model.Columns.Count" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>

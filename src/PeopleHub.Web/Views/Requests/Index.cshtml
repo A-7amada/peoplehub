@@ -1,0 +1,16 @@
+@model List<RequestRow>
+@{ ViewData["Title"] = T["nav.requests"]; string scope = ViewBag.Scope; string? kind = ViewBag.Kind; int inbox = ViewBag.Inbox; }
+<div class="page-head"><div><h1>@T["nav.requests"]</h1><div class="sub">@T["req.sub"]</div></div><div class="actions"><a class="btn" href="/Requests/Advances">@Ui.Icon("wallet", 16) @T["req.advances"]</a></div></div>
+<div class="card"><div class="filters">
+ <div class="seg"><a class="@(scope == "mine" ? "on" : "")" href="?scope=mine">@T["req.mine"]</a><a class="@(scope == "inbox" ? "on" : "")" href="?scope=inbox">@T["req.inbox"] @(inbox > 0 ? $"({inbox})" : "")</a><a class="@(scope == "all" ? "on" : "")" href="?scope=all">@T["req.all"]</a></div>
+ <div class="seg">@foreach (var k in new[] { "", "Leave", "Overtime", "Correction", "Advance" }) { <a class="@((kind ?? "") == k ? "on" : "")" href="?scope=@scope&kind=@k">@(k == "" ? T["common.all"] : T["req.kind." + k])</a> }</div></div>
+<partial name="_ReqTable" model="Model" /></div>
+<div class="grid g2" style="margin-top:18px">
+ <div class="card"><div class="card-h"><h2>@T["att.requestOvertime"]</h2></div><div class="card-b"><form method="post" action="/Attendance/Overtime" asp-antiforgery="true" class="form-grid">
+  <div class="field"><label>@T["common.date"]</label><input type="date" name="date" value="@(((DateTime)ViewBag.Today).AddDays(-1).ToString("yyyy-MM-dd"))"></div><div class="field"><label>@T["att.hours"]</label><input type="number" name="hours" step="0.5" min="0.5" max="8" value="2"></div>
+  <div class="field full"><label>@T["common.reason"]</label><input type="text" name="reason" required></div><div class="full"><button class="btn btn-primary">@T["common.submit"]</button></div></form></div></div>
+ <div class="card"><div class="card-h"><h2>@T["att.requestCorrection"]</h2></div><div class="card-b"><form method="post" action="/Attendance/Correction" asp-antiforgery="true" class="form-grid">
+  <div class="field"><label>@T["common.date"]</label><input type="date" name="date" value="@(((DateTime)ViewBag.Today).AddDays(-1).ToString("yyyy-MM-dd"))"></div><div></div>
+  <div class="field"><label>@T["att.checkIn"]</label><input type="time" name="checkIn" value="09:00"></div><div class="field"><label>@T["att.checkOut"]</label><input type="time" name="checkOut" value="17:00"></div>
+  <div class="field full"><label>@T["common.reason"]</label><input type="text" name="reason" required></div><div class="full"><button class="btn btn-primary">@T["common.submit"]</button></div></form></div></div>
+</div>

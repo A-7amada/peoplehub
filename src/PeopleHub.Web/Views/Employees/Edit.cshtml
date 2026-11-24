@@ -1,19 +1,38 @@
 @model Employee
-@{ var depts = (List<Department>)ViewBag.Departments; }
-<h1>@(Model.Id == 0 ? T["emp.add"] : T["emp.edit"])</h1>
-<section class="card narrow wide">
-    @if (ViewBag.Error is string er) { <div class="flash err">@er</div> }
-    <form method="post" asp-antiforgery="true" class="formgrid">
-        <input type="hidden" name="Id" value="@Model.Id" />
-        <label>@T["emp.name"]<input name="FullName" value="@Model.FullName" required /></label>
-        <label>@T["emp.nameAr"]<input name="FullNameAr" value="@Model.FullNameAr" dir="rtl" /></label>
-        <label>@T["emp.email"]<input name="Email" type="email" value="@Model.Email" required /></label>
-        <label>@T["emp.title"]<input name="JobTitle" value="@Model.JobTitle" /></label>
-        <label>@T["emp.dept"]<select name="DepartmentId">@foreach (var d in depts) { <option value="@d.Id" selected="@(d.Id == Model.DepartmentId)">@T.Name(d.Name, d.NameAr)</option> }</select></label>
-        <label>@T["emp.hired"]<input name="HireDate" type="date" value="@Model.HireDate.ToString("yyyy-MM-dd")" /></label>
-        <label>@T["emp.salary"]<input name="MonthlySalary" type="number" min="0" step="0.01" value="@Model.MonthlySalary.ToString(System.Globalization.CultureInfo.InvariantCulture)" /></label>
-        <label>@T["emp.balance"]<input name="AnnualLeaveBalance" type="number" min="0" max="60" value="@Model.AnnualLeaveBalance" /></label>
-        <label>@T["emp.status"]<select name="Status">@foreach (var s in new[] { EmployeeStatus.Active, EmployeeStatus.OnLeave }) { <option value="@s" selected="@(s == Model.Status)">@T["status." + s]</option> }</select></label>
-        <div class="full"><button class="btn" type="submit">@T["emp.save"]</button> <a class="btn ghost" href="/Employees">&larr;</a></div>
-    </form>
-</section>
+@{ ViewData["Title"] = Model.Id == 0 ? T["emp.add"] : T["emp.edit"]; var depts = (List<Department>)ViewBag.Depts; var br = (List<Branch>)ViewBag.Branches; var titles = (List<JobTitle>)ViewBag.Titles; var shifts = (List<Shift>)ViewBag.Shifts; var mgrs = (List<Employee>)ViewBag.Managers; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1></div></div>
+<form method="post" action="/Employees/Edit" asp-antiforgery="true">
+<input type="hidden" name="Id" value="@Model.Id"><input type="hidden" name="Code" value="@Model.Code"><input type="hidden" name="Status" value="@((int)Model.Status)">
+<div class="grid g-main">
+<div class="stack">
+<div class="card"><div class="card-h"><h2>@T["emp.personal"]</h2></div><div class="card-b form-grid">
+ <div class="field"><label>@T["emp.nameEn"]</label><input type="text" name="FullName" value="@Model.FullName" required></div>
+ <div class="field"><label>@T["emp.nameAr"]</label><input type="text" name="FullNameAr" value="@Model.FullNameAr" dir="rtl"></div>
+ <div class="field"><label>@T["emp.nationalId"]</label><input type="text" name="NationalId" value="@Model.NationalId" maxlength="14" dir="ltr"></div>
+ <div class="field"><label>@T["emp.birthDate"]</label><input type="date" name="BirthDate" value="@Model.BirthDate?.ToString("yyyy-MM-dd")"></div>
+ <div class="field"><label>@T["emp.gender"]</label><select name="Gender">@foreach (var g in Enum.GetValues<Gender>()) { <option value="@((int)g)" selected="@(Model.Gender == g)">@T.E(g)</option> }</select></div>
+ <div class="field"><label>@T["emp.marital"]</label><select name="MaritalStatus">@foreach (var m in new[] { "Single", "Married" }) { <option value="@m" selected="@(Model.MaritalStatus == m)">@T.E(m)</option> }</select></div>
+ <div class="field"><label>@T["emp.phone"]</label><input type="text" name="Phone" value="@Model.Phone" dir="ltr"></div>
+ <div class="field"><label>@T["emp.email"]</label><input type="email" name="Email" value="@Model.Email" required dir="ltr"></div>
+ <div class="field full"><label>@T["emp.address"]</label><input type="text" name="Address" value="@Model.Address"></div>
+</div></div>
+<div class="card"><div class="card-h"><h2>@T["emp.work"]</h2></div><div class="card-b form-grid">
+ <div class="field"><label>@T["emp.department"]</label><select name="DepartmentId">@foreach (var d in depts) { <option value="@d.Id" selected="@(Model.DepartmentId == d.Id)">@T.Name(d.Name, d.NameAr)</option> }</select></div>
+ <div class="field"><label>@T["emp.title"]</label><select name="JobTitleId">@foreach (var t in titles) { <option value="@t.Id" selected="@(Model.JobTitleId == t.Id)">@T.Name(t.Name, t.NameAr)</option> }</select></div>
+ <div class="field"><label>@T["emp.branch"]</label><select name="BranchId">@foreach (var b in br) { <option value="@b.Id" selected="@(Model.BranchId == b.Id)">@T.Name(b.Name, b.NameAr)</option> }</select></div>
+ <div class="field"><label>@T["emp.manager"]</label><select name="ManagerId"><option value="">-</option>@foreach (var m in mgrs.Where(m => m.Id != Model.Id)) { <option value="@m.Id" selected="@(Model.ManagerId == m.Id)">@T.Name(m.FullName, m.FullNameAr)</option> }</select></div>
+ <div class="field"><label>@T["emp.employmentType"]</label><select name="EmploymentType">@foreach (var g in Enum.GetValues<EmploymentType>()) { <option value="@((int)g)" selected="@(Model.EmploymentType == g)">@T.E(g)</option> }</select></div>
+ <div class="field"><label>@T["emp.shift"]</label><select name="ShiftId">@foreach (var s in shifts) { <option value="@s.Id" selected="@(Model.ShiftId == s.Id)">@T.Name(s.Name, s.NameAr)</option> }</select></div>
+ <div class="field"><label>@T["emp.hireDate"]</label><input type="date" name="HireDate" value="@Model.HireDate.ToString("yyyy-MM-dd")"></div>
+</div></div>
+<div class="card"><div class="card-h"><h2>@T["emp.bank"]</h2></div><div class="card-b form-grid">
+ <div class="field"><label>@T["emp.basic"]</label><input type="number" step="0.01" min="0" name="BasicSalary" value="@Model.BasicSalary.ToString(System.Globalization.CultureInfo.InvariantCulture)"></div>
+ <div class="field"><label>@T["emp.insurance"]</label><input type="text" name="InsuranceNumber" value="@Model.InsuranceNumber" dir="ltr"></div>
+ <div class="field"><label>@T["emp.bankName"]</label><input type="text" name="BankName" value="@Model.BankName"></div>
+ <div class="field"><label>IBAN</label><input type="text" name="Iban" value="@Model.Iban" dir="ltr"></div>
+</div></div></div>
+<div class="card" style="align-self:start"><div class="card-h"><h2>@T["common.save"]</h2></div><div class="card-b">
+ @if (Model.Id != 0) { <div class="field"><label>@T["common.reason"]</label><input type="text" name="reason" placeholder="@T["emp.reasonHint"]"></div> }
+ <button class="btn btn-primary" style="width:100%;justify-content:center">@T["common.save"]</button>
+ <p class="muted small" style="margin-bottom:0">@T["emp.auditNote"]</p></div></div>
+</div></form>

@@ -1,0 +1,15 @@
+@model List<AdvanceRequest>
+@{ ViewData["Title"] = T["req.advances"]; var today = DateTime.Today; bool pay = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.PayrollOfficer) || User.IsInRole(Roles.FinanceManager); }
+<div class="page-head"><div><h1>@T["req.advances"]</h1><div class="sub">@T["adv.sub"]</div></div></div>
+<div class="grid g-main">
+<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["req.employee"]</th><th class="right">@T["common.amount"]</th><th>@T["adv.installments"]</th><th>@T["adv.repaid"]</th><th>@T["common.status"]</th>@if (pay) { <th></th> }</tr></thead><tbody>
+@foreach (var a in Model) { <tr><td><a class="person" href="/Employees/Profile/@a.EmployeeId">@Ui.Avatar(a.Employee, T)<span><div class="nm">@T.Name(a.Employee!.FullName, a.Employee.FullNameAr)</div><div class="sb">@a.Reason</div></span></a></td>
+ <td class="right num">@T.Money(a.Amount)</td><td class="num">@a.Installments × @T.Money(a.Monthly)<div class="faint small">@a.StartYear-@a.StartMonth.ToString("00")</div></td>
+ <td style="min-width:140px"><div class="progress"><i style="width:@((int)(a.Amount == 0 ? 0 : 100 * a.Paid / a.Amount))%"></i></div><div class="faint small num">@T.Money(a.Paid) / @T.Money(a.Amount)</div></td><td>@Ui.Chip(T.E(a.Status), Ui.StatusTone(a.Status))</td>
+ @if (pay) { <td class="right">@if (a.Status == RequestStatus.Approved && a.Remaining > 0) { <form method="post" action="/Requests/Settle" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@a.Id"><button class="btn btn-sm">@T["adv.settle"]</button></form> }</td> }</tr> }
+@if (Model.Count == 0) { <tr><td colspan="6" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>
+<div class="card" style="align-self:start"><div class="card-h"><h2>@T["adv.new"]</h2></div><div class="card-b"><form method="post" action="/Requests/Advance" asp-antiforgery="true">
+ <div class="field"><label>@T["common.amount"]</label><input type="number" name="amount" min="1" step="100" value="5000"></div><div class="field"><label>@T["adv.installments"]</label><input type="number" name="installments" min="1" max="24" value="3"></div>
+ <div class="form-grid"><div class="field"><label>@T["adv.startYear"]</label><input type="number" name="startYear" value="@today.AddMonths(1).Year"></div><div class="field"><label>@T["adv.startMonth"]</label><input type="number" name="startMonth" min="1" max="12" value="@today.AddMonths(1).Month"></div></div>
+ <div class="field"><label>@T["common.reason"]</label><input type="text" name="reason"></div><button class="btn btn-primary">@T["common.submit"]</button><p class="muted small">@T["adv.rule"]</p></form></div></div>
+</div>

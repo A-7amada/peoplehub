@@ -1,0 +1,6 @@
+@model List<(PayrollRun Run, PayrollLine Line)>
+@{ ViewData["Title"] = T["pay.mySlips"]; }
+<div class="page-head"><div><h1>@T["pay.mySlips"]</h1><div class="sub">@T["pay.slipsSub"]</div></div></div>
+<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["pay.period"]</th><th class="right">@T["pay.gross"]</th><th class="right">@T["pay.deductions"]</th><th class="right">@T["pay.net"]</th><th></th></tr></thead><tbody>
+@foreach (var (r, l) in Model) { <tr><td><b>@r.Year-@r.Month.ToString("00")</b></td><td class="right num">@T.Money(l.Gross)</td><td class="right num">@T.Money(l.TotalDeductions)</td><td class="right num"><b>@T.Money(l.Net)</b></td><td class="right"><a class="btn btn-sm" href="/Payroll/Slip/@l.Id">@T["pay.slip"]</a></td></tr> }
+@if (Model.Count == 0) { <tr><td colspan="5" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>

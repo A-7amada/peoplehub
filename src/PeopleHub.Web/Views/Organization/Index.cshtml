@@ -1,0 +1,25 @@
+@model OrgOverview
+@{ ViewData["Title"] = T["nav.organization"]; bool hr = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager) || User.IsInRole(Roles.HRSpecialist); var mgrs = (List<Employee>)ViewBag.Managers; var flat = new List<DeptNode>(); void Walk(DeptNode n) { flat.Add(n); n.Children.ForEach(Walk); } Model.Tree.ForEach(Walk); }
+<div class="page-head"><div><h1>@T["nav.organization"]</h1><div class="sub">@T["org.sub"]</div></div></div>
+<div class="grid g-main-r">
+<div class="card"><div class="card-h"><h2>@T["org.departments"]</h2></div><div class="card-b">
+@{ void Render(List<DeptNode> nodes) { } }
+<ul class="tree">@foreach (var n in Model.Tree) { <partial name="_OrgNode" model="n" /> }</ul></div></div>
+<div class="stack">
+ <div class="card"><div class="card-h"><h2>@T["org.branches"]</h2></div><div class="card-b tight"><table class="tbl"><tbody>@foreach (var b in Model.Branches) { <tr><td><b>@T.Name(b.Name, b.NameAr)</b><div class="faint small">@b.City</div></td><td class="right">@Ui.Chip(Model.BranchCounts.GetValueOrDefault(b.Id) + " " + T["org.people"], "blue")</td></tr> }</tbody></table></div></div>
+ <div class="card"><div class="card-h"><h2>@T["org.titles"]</h2></div><div class="card-b tight"><table class="tbl"><thead><tr><th>@T["emp.title"]</th><th>@T["org.grade"]</th><th class="right">@T["org.range"]</th></tr></thead><tbody>@foreach (var t in Model.Titles.OrderByDescending(t => t.Grade)) { <tr><td>@T.Name(t.Name, t.NameAr)<div class="faint small">@Model.TitleCounts.GetValueOrDefault(t.Id) @T["org.people"]</div></td><td class="num">@t.Grade</td><td class="right num small">@t.MinSalary.ToString("N0") - @t.MaxSalary.ToString("N0")</td></tr> }</tbody></table></div></div>
+</div></div>
+@if (hr) {
+<div class="grid g2" style="margin-top:18px">
+ <div class="card"><div class="card-h"><h2>@T["org.addDept"]</h2></div><div class="card-b"><form method="post" action="/Organization/AddDepartment" asp-antiforgery="true" class="form-grid">
+  <div class="field"><label>@T["emp.nameEn"]</label><input type="text" name="name" required></div><div class="field"><label>@T["emp.nameAr"]</label><input type="text" name="nameAr" dir="rtl"></div>
+  <div class="field"><label>@T["org.parent"]</label><select name="parentId"><option value="">-</option>@foreach (var n in flat) { <option value="@n.Dept.Id">@T.Name(n.Dept.Name, n.Dept.NameAr)</option> }</select></div>
+  <div class="field"><label>@T["org.manager"]</label><select name="managerId"><option value="">-</option>@foreach (var m in mgrs) { <option value="@m.Id">@T.Name(m.FullName, m.FullNameAr)</option> }</select></div>
+  <div class="field"><label>@T["org.costCenter"]</label><input type="text" name="costCenter"></div><div class="field"><label>@T["org.target"]</label><input type="number" name="target" value="3" min="0"></div>
+  <div class="full"><button class="btn btn-primary">@T["common.add"]</button></div></form></div></div>
+ <div class="card"><div class="card-h"><h2>@T["org.addTitle"]</h2></div><div class="card-b"><form method="post" action="/Organization/AddTitle" asp-antiforgery="true" class="form-grid">
+  <div class="field"><label>@T["emp.nameEn"]</label><input type="text" name="name" required></div><div class="field"><label>@T["emp.nameAr"]</label><input type="text" name="nameAr" dir="rtl"></div>
+  <div class="field"><label>@T["org.grade"]</label><input type="number" name="grade" value="3" min="1" max="12"></div><div class="field"><label>@T["common.notes"]</label><input type="text" name="description"></div>
+  <div class="field"><label>Min</label><input type="number" name="min" value="10000"></div><div class="field"><label>Max</label><input type="number" name="max" value="20000"></div>
+  <div class="full"><button class="btn btn-primary">@T["common.add"]</button></div></form></div></div>
+</div> }

@@ -1,0 +1,6 @@
+@model List<AppUser>
+@{ ViewData["Title"] = T["nav.users"]; }
+<div class="page-head"><div><h1>@T["nav.users"]</h1><div class="sub">@T["users.sub"]</div></div></div>
+<div class="card"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["login.email"]</th><th>@T["users.roles"]</th><th>@T["common.status"]</th></tr></thead><tbody>
+@foreach (var u in Model) { <tr><td dir="ltr" style="text-align:start">@u.Email</td><td>@foreach (var r in u.RoleArray) { <span class="chip chip-violet" style="margin-inline-end:4px">@T["role." + r]</span> }</td><td>@Ui.Chip(u.IsActive ? T["common.active"] : T["common.inactive"], u.IsActive ? "green" : "gray")</td></tr> }
+</tbody></table></div></div>

@@ -1,0 +1,6 @@
+@model DeptNode
+<li><div class="node"><span class="avatar" style="width:34px;height:34px;background:#eef0ff;color:#5b5bd6">@Ui.Icon("org", 16)</span>
+ <div><div class="t">@T.Name(Model.Dept.Name, Model.Dept.NameAr) @if (!Model.Dept.IsActive) { @Ui.Chip(T["common.inactive"], "gray") }</div>
+ <div class="s">@(Model.ManagerName == null ? "-" : T.Name(Model.ManagerName, Model.ManagerNameAr ?? "")) · @Model.Headcount / @Model.Dept.TargetHeadcount @T["org.people"] · @Model.Dept.CostCenter</div></div>
+ @if (User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager)) { <form method="post" action="/Organization/ToggleDepartment" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@Model.Dept.Id"><button class="btn btn-sm">@T[Model.Dept.IsActive ? "common.deactivate" : "common.activate"]</button></form> }</div>
+ @if (Model.Children.Count > 0) { <ul>@foreach (var c in Model.Children) { <partial name="_OrgNode" model="c" /> }</ul> }</li>

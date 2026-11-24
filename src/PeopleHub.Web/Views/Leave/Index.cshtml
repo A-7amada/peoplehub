@@ -1,44 +1,17 @@
-@model List<LeaveRequest>
-@{ var me = ViewBag.Me as Employee; bool hr = ViewBag.IsHr; }
-<h1>@T["nav.leave"]</h1>
-@if (me != null)
-{
-<section class="card">
-    <h2>@T["leave.new"] <span class="muted small">· @T["leave.mybalance"]: <b>@me.AnnualLeaveBalance</b> @T["emp.days"]</span></h2>
-    <form method="post" asp-antiforgery="true" action="/Leave/Request" class="inline">
-        <label>@T["leave.type"]<select name="type">@foreach (var x in Enum.GetValues<LeaveType>()) { <option value="@x">@T["type." + x]</option> }</select></label>
-        <label>@T["leave.from"]<input type="date" name="from" required /></label>
-        <label>@T["leave.to"]<input type="date" name="to" required /></label>
-        <label class="grow">@T["leave.reason"]<input name="reason" maxlength="200" /></label>
-        <button class="btn" type="submit">@T["leave.submit"]</button>
-    </form>
-    <p class="muted small">@T["leave.note"]</p>
-</section>
-}
-<div class="card tablewrap">
-@if (Model.Count == 0) { <p class="muted">@T["leave.empty"]</p> } else {
-<table>
-    <thead><tr>@if (hr) { <th>@T["leave.employee"]</th> }<th>@T["leave.type"]</th><th>@T["leave.from"]</th><th>@T["leave.to"]</th><th>@T["leave.days"]</th><th>@T["leave.reason"]</th><th>@T["emp.status"]</th><th></th></tr></thead>
-    <tbody>
-    @foreach (var l in Model)
-    {
-        <tr>
-            @if (hr) { <td><strong>@T.Name(l.Employee!.FullName, l.Employee.FullNameAr)</strong><br /><span class="muted small">@l.Employee.AnnualLeaveBalance @T["emp.days"]</span></td> }
-            <td>@T["type." + l.Type]</td><td>@T.Date(l.StartDate)</td><td>@T.Date(l.EndDate)</td><td>@l.Days</td><td>@l.Reason</td>
-            <td><span class="pill @l.Status">@T["status." + l.Status]</span></td>
-            <td class="actions">
-                @if (l.Status == LeaveStatus.Pending && hr)
-                {
-                    <form method="post" asp-antiforgery="true" action="/Leave/Approve/@l.Id"><button class="btn sm">@T["leave.approve"]</button></form>
-                    <form method="post" asp-antiforgery="true" action="/Leave/Reject/@l.Id"><button class="btn danger sm">@T["leave.reject"]</button></form>
-                }
-                @if (l.Status is LeaveStatus.Pending or LeaveStatus.Approved)
-                {
-                    <form method="post" asp-antiforgery="true" action="/Leave/Cancel/@l.Id"><button class="btn ghost sm">@T["leave.cancel"]</button></form>
-                }
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>}
+@model List<RequestRow>
+@{ ViewData["Title"] = T["nav.leave"]; var types = (List<LeaveType>)ViewBag.Types; var bal = (List<LeaveBalance>)ViewBag.Balances; DateTime today = ViewBag.Today; }
+<div class="page-head"><div><h1>@T["nav.leave"]</h1><div class="sub">@T["leave.sub"]</div></div><div class="actions"><a class="btn" href="/Leave/Team">@Ui.Icon("users", 16) @T["leave.team"]</a></div></div>
+<div class="grid g3" style="margin-bottom:18px">
+@foreach (var b in bal) { var tot = Math.Max(1, b.Entitled + b.CarriedOver); <div class="card kpi"><div class="lbl">@T.Name(b.LeaveType!.Name, b.LeaveType.NameAr)</div><div class="val">@b.Remaining <span class="faint small" style="font-weight:500">/ @tot @T["common.days"]</span></div><div class="progress" style="margin-top:10px"><i style="width:@(100 * b.Remaining / tot)%"></i></div></div> }
+</div>
+<div class="grid g-main">
+<div class="card"><div class="card-h"><h2>@T["leave.myRequests"]</h2></div>
+ <partial name="_ReqTable" model="Model" />
+</div>
+<div class="card" style="align-self:start"><div class="card-h"><h2>@T["leave.request"]</h2></div><div class="card-b"><form method="post" action="/Leave/Request" asp-antiforgery="true">
+ <div class="field"><label>@T["common.type"]</label><select name="typeId">@foreach (var t in types) { <option value="@t.Id">@T.Name(t.Name, t.NameAr)</option> }</select></div>
+ <div class="form-grid"><div class="field"><label>@T["common.from"]</label><input type="date" name="start" value="@today.AddDays(7).ToString("yyyy-MM-dd")" required></div><div class="field"><label>@T["common.to"]</label><input type="date" name="end" value="@today.AddDays(8).ToString("yyyy-MM-dd")" required></div></div>
+ <div class="field"><label>@T["common.reason"]</label><input type="text" name="reason"></div>
+ <div class="field"><label>@T["leave.document"]</label><input type="text" name="document" placeholder="medical-note.pdf"><span class="faint small">@T["leave.docHint"]</span></div>
+ <button class="btn btn-primary">@T["common.submit"]</button><p class="muted small">@T["leave.routeHint"]</p></form></div></div>
 </div>

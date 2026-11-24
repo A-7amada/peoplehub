@@ -1,39 +1,18 @@
 @model List<Employee>
-@{ var depts = (List<Department>)ViewBag.Departments; }
-<div class="row between"><h1>@T["nav.employees"]</h1><a class="btn" href="/Employees/Edit">@T["emp.add"]</a></div>
-<form method="get" class="filters">
-    <input name="q" value="@ViewBag.Q" placeholder="@T["emp.search"]" />
-    <select name="dept"><option value="">@T["emp.dept"]: @T["emp.all"]</option>
-        @foreach (var d in depts) { <option value="@d.Id" selected="@(ViewBag.Dept == d.Id)">@T.Name(d.Name, d.NameAr)</option> }
-    </select>
-    <select name="status"><option value="">@T["emp.status"]: @T["emp.all"]</option>
-        @foreach (var s in Enum.GetValues<EmployeeStatus>()) { <option value="@s" selected="@(ViewBag.Status == s)">@T["status." + s]</option> }
-    </select>
-    <button class="btn ghost" type="submit">OK</button>
-</form>
-<div class="card tablewrap">
-@if (Model.Count == 0) { <p class="muted">@T["emp.empty"]</p> } else {
-<table>
-    <thead><tr><th>@T["emp.name"]</th><th>@T["emp.title"]</th><th>@T["emp.dept"]</th><th>@T["emp.salary"]</th><th>@T["emp.balance"]</th><th>@T["emp.status"]</th><th></th></tr></thead>
-    <tbody>
-    @foreach (var e in Model)
-    {
-        <tr>
-            <td><strong>@T.Name(e.FullName, e.FullNameAr)</strong><br /><span class="muted small">@e.Email</span></td>
-            <td>@e.JobTitle</td>
-            <td>@T.Name(e.Department!.Name, e.Department.NameAr)</td>
-            <td>@T.Money(e.MonthlySalary)</td>
-            <td>@e.AnnualLeaveBalance @T["emp.days"]</td>
-            <td><span class="pill @e.Status">@T["status." + e.Status]</span></td>
-            <td class="actions">
-                <a class="btn ghost sm" href="/Employees/Edit/@e.Id">@T["emp.edit"]</a>
-                @if (e.Status != EmployeeStatus.Terminated)
-                {
-                    <form method="post" asp-antiforgery="true" action="/Employees/Terminate/@e.Id" onsubmit="return confirm('@T["emp.terminate"]?')"><button class="btn danger sm">@T["emp.terminate"]</button></form>
-                }
-            </td>
-        </tr>
-    }
-    </tbody>
-</table>}
-</div>
+@{ ViewData["Title"] = T["nav.employees"]; var f = (EmployeeFilter)ViewBag.Filter; var depts = (List<Department>)ViewBag.Depts; var br = (List<Branch>)ViewBag.Branches; bool hr = User.IsInRole(Roles.SystemAdmin) || User.IsInRole(Roles.HRManager) || User.IsInRole(Roles.HRSpecialist); bool pay = Model.Count > 0 && (hr || User.IsInRole(Roles.PayrollOfficer) || User.IsInRole(Roles.FinanceManager)); }
+<div class="page-head"><div><h1>@T["nav.employees"]</h1><div class="sub">@Model.Count @T["emp.found"]</div></div>
+<div class="actions"><a class="btn" href="/Reports/Csv?key=employees">@Ui.Icon("download", 16) CSV</a>@if (hr) { <a class="btn btn-primary" href="/Employees/Edit">@Ui.Icon("plus", 16) @T["emp.add"]</a> }</div></div>
+<div class="card"><form class="filters" method="get">
+  <div class="search">@Ui.Icon("search", 16)<input type="search" name="q" value="@f.Search" placeholder="@T["emp.search"]"></div>
+  <select name="dept"><option value="">@T["emp.allDepts"]</option>@foreach (var d in depts) { <option value="@d.Id" selected="@(f.DepartmentId == d.Id)">@T.Name(d.Name, d.NameAr)</option> }</select>
+  <select name="branch"><option value="">@T["emp.allBranches"]</option>@foreach (var b in br) { <option value="@b.Id" selected="@(f.BranchId == b.Id)">@T.Name(b.Name, b.NameAr)</option> }</select>
+  <select name="status"><option value="">@T["emp.allStatus"]</option>@foreach (var s in Enum.GetValues<EmployeeStatus>()) { <option value="@s" selected="@(f.Status == s)">@T.E(s)</option> }</select>
+  <button class="btn">@T["common.filter"]</button></form>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["emp.name"]</th><th>@T["emp.code"]</th><th>@T["emp.department"]</th><th>@T["emp.branch"]</th><th>@T["emp.hireDate"]</th>@if (pay) { <th class="right">@T["emp.basic"]</th> }<th>@T["common.status"]</th></tr></thead><tbody>
+@foreach (var e in Model) { <tr>
+ <td><a class="person" href="/Employees/Profile/@e.Id">@Ui.Avatar(e, T, 36)<span><div class="nm">@T.Name(e.FullName, e.FullNameAr)</div><div class="sb">@T.Name(e.JobTitle!.Name, e.JobTitle.NameAr)</div></span></a></td>
+ <td class="num muted">@e.Code</td><td>@T.Name(e.Department!.Name, e.Department.NameAr)</td><td>@T.Name(e.Branch!.Name, e.Branch.NameAr)</td><td class="num muted">@T.Date(e.HireDate)</td>
+ @if (pay) { <td class="right num">@T.Money(e.BasicSalary)</td> }
+ <td>@Ui.Chip(T.E(e.Status), Ui.StatusTone(e.Status))</td></tr> }
+@if (Model.Count == 0) { <tr><td colspan="7" class="empty">@T["common.none"]</td></tr> }
+</tbody></table></div></div>

@@ -1,16 +1,23 @@
-@model PeopleHub.Application.Services.DashboardStats
-@{ var me = ViewBag.Me as Employee; var max = Math.Max(1, Model.ByDepartment.Max(d => d.Count)); }
-<h1>@T["dash.welcome"]@(me != null ? ", " + T.Name(me.FullName, me.FullNameAr) : "")</h1>
-<div class="grid stats">
-    <div class="card stat"><span>@T["dash.headcount"]</span><b>@Model.Headcount</b></div>
-    <div class="card stat"><span>@T["dash.onLeave"]</span><b>@Model.OnLeave</b></div>
-    <div class="card stat"><span>@T["dash.pending"]</span><b>@Model.PendingLeaves</b></div>
-    @if (User.IsInRole(Roles.HR)) { <div class="card stat"><span>@T["dash.payroll"]</span><b class="sm">@T.Money(Model.MonthlyPayroll)</b></div> }
+@model DashboardData
+@{ ViewData["Title"] = T["nav.dashboard"]; var icons = new Dictionary<string,string>{["dash.headcount"]="users",["dash.presentToday"]="check",["dash.onLeave"]="calendar",["dash.pending"]="inbox",["dash.payroll"]="wallet"}; }
+<div class="page-head"><div><h1>@T["dash.welcome"], @User.Identity!.Name!.Split('@')[0]</h1><div class="sub">@(DateTime.Now.ToString("dddd, d MMMM yyyy", System.Globalization.CultureInfo.CurrentUICulture)) · @(Model.CompanyWide ? T["dash.scopeCompany"] : T["dash.scopeTeam"])</div></div>
+ <div class="actions"><a class="btn" href="/Leave">@Ui.Icon("calendar", 16) @T["leave.request"]</a><a class="btn btn-primary" href="/Attendance">@Ui.Icon("clock", 16) @T["att.checkInOut"]</a></div></div>
+<div class="grid g-kpi" style="margin-bottom:18px">
+@foreach (var k in Model.Kpis) {
+  <div class="card kpi t-@k.Tone"><div class="lbl">@T[k.Key]</div><div class="val">@k.Value</div><div class="sub">@Html.Raw(k.Sub ?? "&nbsp;")</div><span class="ico">@Ui.Icon(icons.GetValueOrDefault(k.Key, "chart"))</span></div>
+}
 </div>
-<section class="card">
-    <h2>@T["dash.byDept"]</h2>
-    @foreach (var d in Model.ByDepartment)
-    {
-        <div class="bar"><span>@T.Name(d.Dept, d.DeptAr)</span><div class="track"><i style="width:@(d.Count * 100 / max)%"></i></div><em>@d.Count</em></div>
-    }
-</section>
+<div class="grid g-main" style="margin-bottom:18px">
+  <div class="card"><div class="card-h"><h2>@T["dash.attTrend"]</h2><span class="sub">@T["dash.last7"]</span></div><div class="card-b">@await Html.PartialAsync("_Line", (Model.Attendance7Days, "#5b5bd6", true))</div></div>
+  <div class="card"><div class="card-h"><h2>@T["dash.byDept"]</h2></div><div class="card-b"><partial name="_Bars" model="Model.ByDepartment" /></div></div>
+</div>
+<div class="grid g3">
+  @if (Model.PayrollTrend.Count > 0) {
+  <div class="card"><div class="card-h"><h2>@T["dash.payTrend"]</h2><span class="sub">@T["dash.gross"]</span></div><div class="card-b">@await Html.PartialAsync("_Line", (Model.PayrollTrend, "#e0407a", false))</div></div> }
+  <div class="card"><div class="card-h"><h2>@T["dash.expiring"]</h2></div><div class="card-b tight">
+    @if (Model.Expiring.Count == 0) { <div class="empty">@T["dash.noneExpiring"]</div> }
+    else { <table class="tbl"><tbody>@foreach (var (c, e) in Model.Expiring) { <tr><td><a class="person" href="/Employees/Profile/@e.Id?tab=contracts">@Ui.Avatar(e, T)<span><div class="nm">@T.Name(e.FullName, e.FullNameAr)</div><div class="sb">@T["emp.contractEnds"] @T.Date(c.EndDate!.Value)</div></span></a></td><td class="right">@Ui.Chip((c.EndDate!.Value - DateTime.Today).Days + " " + T["common.days"], "amber")</td></tr> }</tbody></table> }</div></div>
+  <div class="card"><div class="card-h"><h2>@T["dash.newHires"]</h2></div><div class="card-b tight"><table class="tbl"><tbody>
+    @foreach (var e in Model.NewHires) { <tr><td><a class="person" href="/Employees/Profile/@e.Id">@Ui.Avatar(e, T)<span><div class="nm">@T.Name(e.FullName, e.FullNameAr)</div><div class="sb">@T.Name(e.JobTitle!.Name, e.JobTitle.NameAr)</div></span></a></td><td class="right faint small">@T.Date(e.HireDate)</td></tr> }
+  </tbody></table></div></div>
+</div>
