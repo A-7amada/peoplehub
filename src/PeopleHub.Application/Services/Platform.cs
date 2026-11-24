@@ -96,6 +96,8 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
         return added;
     }
 
+    public Task ReprocessAsync()=>repo.AtomicAsync(async()=>{if(!me.Can(Perm.AttManage))throw new DomainException("err.forbidden");await RebuildAsync(await repo.ToListAsync(repo.Query<Employee>()));audit.Log("Reprocess","Attendance", "retained punches", "Explicit reprocessing, manual and locked records preserved");await repo.SaveAsync();});
+
     /// <summary>First punch of the day is the check-in, the last (at least a minute later) the check-out. Records already approved by hand are not overwritten.</summary>
     private async Task RebuildAsync(List<Employee> emps)
     {
@@ -112,7 +114,7 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
         {
             var (eid, day) = g.Key; if(locks.Any(x=>x.EmployeeId==eid && x.Year==day.Year && x.Month==day.Month)) continue; var times = g.Select(p => p.Time).OrderBy(t => t).ToList();
             var rec = recs.FirstOrDefault(r => r.EmployeeId == eid && r.Date == day);
-            if (rec != null && rec.Source == AttendanceSource.Manual && rec.CheckIn != null) continue;
+            if (rec != null && (rec.IsExcused || (rec.Source == AttendanceSource.Manual && rec.CheckIn != null))) continue;
             var emp = emps.First(e => e.Id == eid);
             emp.LeaveRequestStamp=Guid.NewGuid().ToString("N");
             var isNew = rec == null; rec ??= new AttendanceRecord { EmployeeId = eid, Date = day };

@@ -15,7 +15,7 @@
 | EMP-009 | HR custom fields | P1 | Implemented HR-only typed text/date/number fields, validation and audit |
 | ATT-001 | Rotating/multiple shifts | P1 | Implemented dated employee shift assignments and configurable shift definitions; repeating rotation generator open |
 | ATT-002 | Overnight shifts | P1 | Implemented cross-midnight device pairing, manual/correction checkout normalization and previous-night self checkout; post-shift delayed punches beyond end remain exceptions |
-| ATT-003 | Missing punch exceptions | P1 | Partial: missing checkout displayed without invented time; exception inbox/reprocessing open |
+| ATT-003 | Missing punch exceptions | P1 | Implemented scoped missing-in/out recorded-day inbox after shift end, unmatched raw evidence and explicit idempotent reprocessing; arbitrary unknown-device mapping remains separate |
 | ATT-004 | Raw punch ledger and idempotent processing | P0 | Implemented: append-only punches, normalized batch/retry dedupe and unique idempotency key; concurrent losing request may require retry |
 | ATT-005 | Flexible hours | P1 | Open |
 | ATT-006 | Remote attendance/geofencing | P2 | Open |
@@ -121,3 +121,5 @@ Operational follow-up: 169 tests pass (165 regression and 4 scoped-calendar test
 Performance response follow-up: employee acknowledgement records receipt, not agreement; one appeal has a referenced HR disposition, with no self-review, no silent score rewrite and no payroll effect. Append-only response evidence and appraisal revision guard duplicate races. Local MVC appeal EN/AR inspected. Four dedicated tests pass; regular score correction after upheld appeal remains an explicit separate gap.
 
 Session follow-up: 177 tests pass (173 regression plus 4 session tests). Two isolated browser contexts exercised: owner revokes the other, its next request rejects while current remains valid; current revoke then rejects current request. EN/AR security page inspected. Session tokens are stored only as hashes. Old cookies without a session record are intentionally signed out on rollout. User-agent/IP are displayed as unverified hints, not device identity.
+
+Attendance exception follow-up: 181 tests pass (177 regression plus 4 exception tests). Missing punch inbox inspected in EN/AR. Overnight shifts are not flagged before next-day end. No record still uses the absence calendar. Reprocessing keeps manual, excused and locked records, preserves raw evidence and does not invent missing times. Unknown device IDs are visible only to attendance managers and are not silently remapped.

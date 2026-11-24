@@ -5,7 +5,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class AttendanceController(Loc loc, AttendanceService svc, OrgService org, EmployeeService emps, AppClock clock, ICurrentUser me, AttachmentService files) : BaseController(loc)
+public class AttendanceController(Loc loc, AttendanceService svc, OrgService org, EmployeeService emps, AppClock clock, ICurrentUser me, AttachmentService files,AttendanceExceptions exceptions,DeviceService device) : BaseController(loc)
 {
     public async Task<IActionResult> Index(int? year, int? month, int? id)
     {
@@ -25,6 +25,8 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return Redirect("/"); }
     }
 
+    public async Task<IActionResult> Exceptions(DateTime? from,DateTime? to){var end=(to??clock.Today).Date;var start=(from??end.AddDays(-30)).Date;ViewBag.From=start;ViewBag.To=end;try{return View(await exceptions.GetAsync(start,end));}catch(DomainException ex){TempData["err"]=L[ex.Message];return RedirectToAction(nameof(Index));}}
+    [HttpPost]public Task<IActionResult> Reprocess()=>Do(device.ReprocessAsync,"msg.saved",()=>RedirectToAction(nameof(Exceptions)));
     public async Task<IActionResult> Daily(DateTime? date, int? dept)
     {
         if (!me.Can(Perm.AttTeam)) return Forbidden();

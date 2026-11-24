@@ -36,6 +36,7 @@ builder.Services.AddScoped<EmployeeLifecycle>();
 builder.Services.AddScoped<AssetService>();
 builder.Services.AddScoped<HolidayService>();
 builder.Services.AddScoped<SessionService>();
+builder.Services.AddScoped<AttendanceExceptions>();
 builder.Services.AddScoped<EmployeeDocuments>();
 builder.Services.AddScoped<ShiftSchedule>();
 builder.Services.AddScoped<EmploymentTimeline>();
