@@ -38,11 +38,7 @@ public class TalentController(Loc loc, TalentService svc, OrgService org, Employ
     [HttpPost] public Task<IActionResult> AddCandidate(int jobId, string name, string? email, string? note) => Do(() => svc.AddCandidateAsync(jobId, name, email, note), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> Move(int id, bool reject) => Do(() => svc.MoveCandidateAsync(id, reject), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
 
-    public async Task<IActionResult> Performance()
-    {
-        ViewBag.Reviewable = (me.Can(Perm.TalentManage) || me.Can(Perm.ScopeTeam)) ? (await emps.ManagerCandidatesAsync()).Where(e => e.Id != me.EmployeeId).ToList() : new List<Employee>();
-        return View(await svc.ReviewsAsync());
-    }
+    public IActionResult Performance() => Redirect("/Perf");
     [HttpPost] public Task<IActionResult> AddReview(int employeeId, string period, string? goals, string? comment, int score) => Do(() => svc.AddReviewAsync(employeeId, period, goals, comment, score), "msg.saved", () => RedirectToAction(nameof(Performance)));
 
     public async Task<IActionResult> Training()

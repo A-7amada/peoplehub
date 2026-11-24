@@ -23,3 +23,12 @@ public class PerfTests
     [Fact] public void Bands_AndAdvice() { Assert.Equal("Outstanding", PerfCalc.Band(4.6m)); Assert.Equal("NeedsImprovement", PerfCalc.Band(2.4m)); Assert.Equal("ImprovementPlan", PerfCalc.Recommendation(2m)); Assert.Equal("PromotionReview+Bonus", PerfCalc.Recommendation(4.5m)); }
     [Fact] public void Weights_MustTotal100() { Assert.True(PerfCalc.WeightsOk(new[] { G(60, 1), G(40, 1) })); Assert.False(PerfCalc.WeightsOk(new[] { G(60, 1) })); }
 }
+
+public class PerfExtensionTests
+{
+    [Fact] public void WeightsRequire100() { Assert.True(PerfFormula.Valid(50,30,20)); Assert.False(PerfFormula.Valid(70,40,0)); Assert.False(PerfFormula.Valid(-10,100,10)); }
+    [Fact] public void FormulaUses360() => Assert.Equal(3.9m, PerfFormula.Calculate(4m,3,5m,50,30,20));
+    [Fact] public void MissingRequiredComponentStaysIncomplete() { Assert.Null(PerfFormula.Calculate(4m,3,null,50,30,20)); Assert.Null(PerfFormula.Calculate(null,3,null,70,30,0)); }
+    [Fact] public void ZeroWeightAllowsAbsentComponent() => Assert.Equal(4m, PerfFormula.Calculate(null,4,null,0,100,0));
+    [Fact] public void DatePhasesIncludeBoundary() { var cal=new DateTime(2026,6,1);var close=new DateTime(2026,6,8); Assert.Equal(CycleStatus.Open,PerfFormula.Phase(cal.AddDays(-1),cal,close)); Assert.Equal(CycleStatus.Calibration,PerfFormula.Phase(cal,cal,close));Assert.Equal(CycleStatus.Closed,PerfFormula.Phase(close,cal,close)); }
+}

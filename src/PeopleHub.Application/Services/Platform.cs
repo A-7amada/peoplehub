@@ -253,16 +253,7 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
         var all = await repo.ToListAsync(q);
         return all.Where(r => ids == null || ids.Contains(r.EmployeeId)).ToList();
     }
-    public async Task AddReviewAsync(int employeeId, string period, string? goals, string? comment, int score)
-    {
-        if (!me.Can(Perm.TalentManage) && !me.Can(Perm.ScopeTeam)) throw new DomainException("err.forbidden");
-        var ids = await scope.VisibleEmployeeIdsAsync(); if (ids != null && !ids.Contains(employeeId)) throw new DomainException("err.forbidden");
-        if (employeeId == me.EmployeeId) throw new DomainException("err.selfReview");
-        if (!PerformanceReview.ValidScore(score) || string.IsNullOrWhiteSpace(period)) throw new DomainException("err.required");
-        repo.Add(new PerformanceReview { EmployeeId = employeeId, Period = period.Trim(), Goals = goals?.Trim() ?? "", Comment = comment?.Trim() ?? "", Score = score, Reviewer = me.Email, CreatedAt = clock.UtcNow });
-        await notify.NotifyEmployeeAsync(employeeId, "notif.review", period, "/Talent/Performance");
-        audit.Log("Create", "Review", employeeId.ToString(), $"score {score}"); await repo.SaveAsync();
-    }
+    public Task AddReviewAsync(int employeeId, string period, string? goals, string? comment, int score) => throw new DomainException("err.usePerf");
 
     public Task<List<TrainingCourse>> CoursesAsync() => repo.ToListAsync(repo.Query<TrainingCourse>().OrderBy(c => c.Date));
     public Task<List<TrainingEnrollment>> EnrollmentsAsync() => repo.ToListAsync(repo.Query<TrainingEnrollment>());
@@ -315,10 +306,10 @@ public class ReportBuilderService(IRepository repo, AccessScope scope, ICurrentU
 
 public record AppraisalView(PerfAppraisal A, List<PerfGoal> Goals, List<DevItem> Dev, decimal? GoalScore, decimal? Computed, decimal? Final, bool CanSelf, bool CanManage, bool CanCalibrate, bool Visible);
 
-public class PerfService(IRepository repo, ICurrentUser me, AccessScope scope, AppClock clock, AuditService audit, NotificationService notify)
+public partial class PerfService(IRepository repo, ICurrentUser me, AccessScope scope, AppClock clock, AuditService audit, NotificationService notify)
 {
     private bool Hr => me.Can(Perm.TalentManage);
-    public Task<List<PerfCycle>> CyclesAsync() => repo.ToListAsync(repo.Query<PerfCycle>().OrderByDescending(c => c.Id));
+    public Task<List<PerfCycle>> CyclesAsync() => repo.ToListAsync(repo.Query<PerfCycle>().OrderBy(c => c.Name.StartsWith("Imported:")).ThenByDescending(c => c.Id));
 
     public async Task<PerfCycle> CycleAsync(int id) => await repo.FirstOrDefaultAsync(repo.Query<PerfCycle>().Where(c => c.Id == id)) ?? throw new DomainException("err.notFound");
 
@@ -349,7 +340,7 @@ public class PerfService(IRepository repo, ICurrentUser me, AccessScope scope, A
     private async Task SealAsync(PerfAppraisal a)
     {
         var goals = await repo.ToListAsync(repo.Query<PerfGoal>().Where(g => g.AppraisalId == a.Id));
-        if (a.ManagerDone) a.FinalScore ??= PerfCalc.Computed(PerfCalc.GoalScore(goals), a.ManagerScore);
+        if (a.ManagerDone) a.FinalScore ??= await ScoreAsync(a, goals);
     }
 
     public async Task<List<AppraisalView>> ListAsync(int cycleId)
@@ -370,10 +361,10 @@ public class PerfService(IRepository repo, ICurrentUser me, AccessScope scope, A
         var goals = await repo.ToListAsync(repo.Query<PerfGoal>().Where(g => g.AppraisalId == a.Id).OrderBy(g => g.Id));
         var dev = await repo.ToListAsync(repo.Query<DevItem>().Where(d => d.AppraisalId == a.Id).OrderBy(d => d.Id));
         var ids = await scope.VisibleEmployeeIdsAsync();
-        var cycle = a.Cycle ?? await CycleAsync(a.CycleId); var open = cycle.Status == CycleStatus.Open;
+        var cycle = a.Cycle ?? await CycleAsync(a.CycleId); var open = cycle.Status == CycleStatus.Open && (!cycle.AutoPhases || clock.Today >= cycle.Start.Date);
         bool self = a.EmployeeId == me.EmployeeId, mgr = a.Employee?.ManagerId == me.EmployeeId && !self;
         bool visible = Hr || self || mgr;
-        var gs = PerfCalc.GoalScore(goals); var comp = PerfCalc.Computed(gs, a.ManagerScore);
+        var gs = PerfCalc.GoalScore(goals); var comp = await ScoreAsync(a, goals);
         // before the cycle closes an employee sees only their own input, never the manager's score
         return new(a, goals, dev, gs, comp, a.FinalScore ?? (cycle.Status == CycleStatus.Closed ? comp : null),
             self && open && !a.SelfDone, (mgr || Hr) && !self && open, Hr && cycle.Status == CycleStatus.Calibration && !self, visible);
@@ -438,6 +429,7 @@ public class PerfService(IRepository repo, ICurrentUser me, AccessScope scope, A
     public async Task ToggleDevAsync(int itemId)
     {
         var d = await repo.FirstOrDefaultAsync(repo.Query<DevItem>().Where(x => x.Id == itemId)) ?? throw new DomainException("err.notFound");
+        if (d.CourseId != null) throw new DomainException("err.courseManaged");
         var v = await GetAsync(d.AppraisalId);
         if (!(Hr || v.A.EmployeeId == me.EmployeeId || v.A.Employee?.ManagerId == me.EmployeeId)) throw new DomainException("err.forbidden");
         d.Done = !d.Done; await repo.SaveAsync();

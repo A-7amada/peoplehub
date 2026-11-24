@@ -1,0 +1,19 @@
+@model AppraisalView
+@{var a=Model.A;var tools=(PerfTools)ViewBag.Tools;Func<string,string,string>X=(e,b)=>T.IsAr?b:e;bool hr=Context.User.Claims.Any(x=>x.Type==System.Security.Claims.ClaimTypes.Role && PermissionCache.Has(new[]{x.Value},Perm.TalentManage));}
+<div class="grid g2" style="margin-top:18px">
+<div class="card"><div class="card-h"><h2>360 @X("feedback", "تقييم")</h2><span>@(tools.FeedbackAverage?.ToString("0.00")??"-") / 5</span></div><div class="card-b">
+<p class="faint small">@X("Names/comments are HR and direct-manager only. Employee sees the average after publication. Not anonymous.", "الأسماء والتعليقات للموارد البشرية والمدير المباشر فقط. الموظف يرى المتوسط بعد النشر. ليس مجهول الهوية.")</p>
+@foreach(var f in tools.Feedback){<p><b>@T.Name(f.Reviewer!.FullName,f.Reviewer.FullNameAr)</b> · @(f.Score?.ToString()??X("Pending", "معلق"))<br>@f.Comment</p>}
+@if(Model.CanManage){<form method="post" action="/Perf/Nominate" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@a.Id"><select name="reviewerEmployeeId">@foreach(var e in tools.Employees.Where(e=>e.Id!=a.EmployeeId)){<option value="@e.Id">@T.Name(e.FullName,e.FullNameAr)</option>}</select><button class="btn btn-primary">@X("Invite reviewer", "دعوة مقيم")</button></form>}
+</div></div>
+<div class="card"><div class="card-h"><h2>@X("Competencies and training", "الكفاءات والتدريب")</h2></div><div class="card-b">
+@if(Model.CanManage && Model.Goals.Count==0){<form method="post" action="/Perf/ApplyTemplate" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@a.Id"><select name="templateId">@foreach(var t in tools.Templates){<option value="@t.Id">@t.Name</option>}</select><button class="btn">@X("Apply template", "تطبيق القالب")</button></form>}
+@if(Model.CanManage || hr){<form method="post" action="/Perf/LinkCourse" asp-antiforgery="true" class="inline-form" style="margin-top:12px"><input type="hidden" name="id" value="@a.Id"><select name="courseId">@foreach(var c in tools.Courses){<option value="@c.Id">@c.Title</option>}</select><button class="btn btn-primary">@X("Assign course", "إسناد دورة")</button></form>}
+<p class="faint small">@X("Course assignment creates an enrollment and development action. Completion follows Training.", "إسناد الدورة ينشئ تسجيلًا وإجراء تطوير، والإتمام يتبع صفحة التدريب.")</p>
+</div></div>
+</div>
+@if(a.Cycle!.Status==CycleStatus.Closed && Model.Final!=null){<div class="card" style="margin-top:18px"><div class="card-h"><h2>@X("Payroll award handoff", "تحويل مكافأة للمرتبات")</h2></div><div class="card-b">
+@foreach(var b in tools.Bonuses){<p>@b.Amount.ToString("N2") EGP · @b.Reason · @(b.PayrollLineId==null?X("Awaiting payroll", "بانتظار المرتبات"):X("Added to draft payroll", "أضيفت لمسودة المرتبات"))</p>}
+@if(hr && !Model.CanSelf && tools.Bonuses.Count==0){<form method="post" action="/Perf/ProposeBonus" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@a.Id"><input type="number" step="0.01" min="0.01" name="amount" placeholder="EGP" required><input type="text" name="reason" placeholder="@X("Reason", "السبب")" required><button class="btn btn-primary">@X("Propose award", "اقتراح مكافأة")</button></form>}
+<p class="faint small">@X("No automatic payout or salary change. Payroll must explicitly apply it to a draft run, then normal approvals follow.", "لا صرف أو تغيير راتب تلقائي. يضيفها مسؤول المرتبات لمسودة ثم تتبع الموافقات المعتادة.")</p>
+</div></div>}

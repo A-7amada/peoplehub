@@ -310,6 +310,8 @@ public static class SeedData
             db.Add(new DevItem { AppraisalId = a.Id, Action = "Complete Time Management course", Due = today.AddDays(30) });
         }
         await db.SaveChangesAsync();
+        var template = new CompetencyTemplate { Name = "Core behaviours / الكفاءات الأساسية" }; db.Add(template); await db.SaveChangesAsync();
+        db.AddRange(new CompetencyItem { TemplateId = template.Id, Title = "Delivery / الإنجاز", Behaviour = "Meets agreed commitments and quality standards", Weight = 40 }, new CompetencyItem { TemplateId = template.Id, Title = "Collaboration / التعاون", Behaviour = "Shares knowledge and supports the team", Weight = 30 }, new CompetencyItem { TemplateId = template.Id, Title = "Customer focus / التركيز على العميل", Behaviour = "Responds to feedback and improves service", Weight = 30 });
         // welcome notifications + sample audit entries
         var users = await db.Set<AppUser>().ToListAsync();
         foreach (var u in users)

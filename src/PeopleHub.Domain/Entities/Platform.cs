@@ -74,13 +74,18 @@ public static class Settlement
 }
 
 public enum CycleStatus { Open = 0, Calibration = 1, Closed = 2 }
-public class PerfCycle { public int Id { get; set; } public string Name { get; set; } = ""; public DateTime Start { get; set; } public DateTime End { get; set; } public CycleStatus Status { get; set; } }
+public class PerfCycle { public int Id { get; set; } public string Name { get; set; } = ""; public DateTime Start { get; set; } public DateTime End { get; set; }
+    public DateTime? CalibrationOn { get; set; } public DateTime? CloseOn { get; set; }
+    public bool AutoPhases { get; set; } public bool Reminders { get; set; } = true;
+    public int GoalWeight { get; set; } = 70; public int ManagerWeight { get; set; } = 30; public int FeedbackWeight { get; set; }
+    public CycleStatus Status { get; set; } }
 public class PerfGoal
 {
     public int Id { get; set; } public int AppraisalId { get; set; }
     public string Title { get; set; } = ""; public string Target { get; set; } = "";
     public int Weight { get; set; } public int Progress { get; set; }
     public int? SelfScore { get; set; } public int? ManagerScore { get; set; }
+    public bool IsCompetency { get; set; }
 }
 public class PerfAppraisal
 {
@@ -90,9 +95,10 @@ public class PerfAppraisal
     public int? SelfScore { get; set; } public string SelfComment { get; set; } = "";
     public int? ManagerScore { get; set; } public string ManagerComment { get; set; } = "";
     public bool SelfDone { get; set; } public bool ManagerDone { get; set; }
+    public int? LegacyReviewId { get; set; }
     public decimal? FinalScore { get; set; } public string CalibrationNote { get; set; } = "";
 }
-public class DevItem { public int Id { get; set; } public int AppraisalId { get; set; } public string Action { get; set; } = ""; public DateTime? Due { get; set; } public bool Done { get; set; } }
+public class DevItem { public int? CourseId { get; set; } public int Id { get; set; } public int AppraisalId { get; set; } public string Action { get; set; } = ""; public DateTime? Due { get; set; } public bool Done { get; set; } }
 
 /// <summary>Scoring rules: goals are weighted (weights should total 100), the manager's overall rating blends 70% goals and 30% overall judgement, and HR may calibrate the final score with a written reason.</summary>
 public static class PerfCalc
@@ -108,4 +114,31 @@ public static class PerfCalc
     /// <summary>Advisory only: a person decides on promotion, bonus or an improvement plan.</summary>
     public static string Recommendation(decimal s) => s >= 4.5m ? "PromotionReview+Bonus" : s >= 3.5m ? "Bonus" : s >= 2.5m ? "None" : "ImprovementPlan";
     public static bool WeightsOk(IEnumerable<PerfGoal> goals) => goals.Sum(g => g.Weight) == 100;
+}
+
+public class Feedback360
+{
+    public int Id { get; set; } public int AppraisalId { get; set; } public int ReviewerEmployeeId { get; set; }
+    public Employee? Reviewer { get; set; } public int? Score { get; set; } public string Comment { get; set; } = "";
+    public DateTime? SubmittedAt { get; set; }
+}
+public class CompetencyTemplate { public int Id { get; set; } public string Name { get; set; } = ""; }
+public class CompetencyItem { public int Id { get; set; } public int TemplateId { get; set; } public string Title { get; set; } = ""; public string Behaviour { get; set; } = ""; public int Weight { get; set; } }
+public class PerfReminder { public int Id { get; set; } public int CycleId { get; set; } public int EmployeeId { get; set; } public string Kind { get; set; } = ""; public DateTime Day { get; set; } }
+public class PerfBonus
+{
+    public int Id { get; set; } public int AppraisalId { get; set; } public int EmployeeId { get; set; }
+    public decimal Amount { get; set; } public string Reason { get; set; } = ""; public string ProposedBy { get; set; } = "";
+    public int? PayrollLineId { get; set; } public string? AppliedBy { get; set; } public DateTime? AppliedAt { get; set; }
+}
+public static class PerfFormula
+{
+    public static bool Valid(int goals, int manager, int feedback) => goals >= 0 && manager >= 0 && feedback >= 0 && goals + manager + feedback == 100;
+    // Missing components are not invented or silently reweighted.
+    public static decimal? Calculate(decimal? goals, int? manager, decimal? feedback, int gw, int mw, int fw)
+    {
+        if (!Valid(gw, mw, fw) || (gw > 0 && goals == null) || (mw > 0 && manager == null) || (fw > 0 && feedback == null)) return null;
+        return Math.Round(((goals ?? 0) * gw + (manager ?? 0) * mw + (feedback ?? 0) * fw) / 100m, 2);
+    }
+    public static CycleStatus Phase(DateTime today, DateTime calibration, DateTime close) => today >= close.Date ? CycleStatus.Closed : today >= calibration.Date ? CycleStatus.Calibration : CycleStatus.Open;
 }

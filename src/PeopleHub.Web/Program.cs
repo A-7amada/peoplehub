@@ -50,6 +50,7 @@ builder.Services.Configure<RequestLocalizationOptions>(o =>
     }) };
 });
 
+builder.Services.AddHostedService<PerfWorker>();
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
@@ -58,6 +59,7 @@ using (var scope = app.Services.CreateScope())
     await SeedData.InitializeAsync(db, hrPass, "Demo123!", scope.ServiceProvider.GetRequiredService<AppClock>().Today);
     await scope.ServiceProvider.GetRequiredService<SettingsService>().LoadAsync();
     await AdminService.ReloadCacheAsync(db);
+    await scope.ServiceProvider.GetRequiredService<PerfService>().MigrateLegacyAsync();
 }
 if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Home/Error");
 app.UseStaticFiles();

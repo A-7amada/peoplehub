@@ -215,6 +215,12 @@ public partial class Loc
         A("deleg.hint", "The delegate gets exactly the approval steps you hold (direct manager of your team, or your roles). Nobody can approve their own request, even as a delegate. You can revoke at any time.", "يحصل المفوَّض على نفس خطوات الموافقة التي تملكها (مدير مباشر لفريقك أو أدوارك). لا يستطيع أحد الموافقة على طلبه حتى كمفوَّض. يمكنك الإلغاء في أي وقت.");
         A("common.period", "Period", "الفترة"); A("org.chart", "Org chart", "الهيكل التنظيمي (شجرة)");
         A("err.managerFirst", "A manager rating is needed before calibration.", "تقييم المدير مطلوب قبل المعايرة.");
+        A("err.perfConfig", "Weights must total 100. Calibration must be on/after start and close after calibration.", "الأوزان يجب أن تساوي 100. المعايرة بعد البداية والإغلاق بعد المعايرة.");
+        A("err.duplicateFeedback", "This reviewer is already nominated.", "هذا المقيم مرشح بالفعل."); A("err.emptyGoals", "Apply a template to an empty, unrated goal list only.", "القالب يطبق على قائمة أهداف فارغة وغير مقيمة فقط.");
+        A("err.bonusExists", "An award already exists or was applied.", "المكافأة موجودة أو أضيفت بالفعل."); A("err.noPayrollLine", "No payroll line exists for this employee in that run.", "لا يوجد بند لهذا الموظف في مسير الراتب.");
+        A("err.courseManaged", "Complete the linked course from Training.", "أكمل الدورة المرتبطة من صفحة التدريب.");
+        A("notif.feedback", "You were invited to give 360 feedback", "دعوة لتقديم تقييم 360"); A("notif.trainingLink", "A development course was assigned", "تم إسناد دورة تطوير"); A("notif.perfReminder", "Performance action is pending", "إجراء أداء ينتظر استكماله");
+        A("err.usePerf", "Use the performance cycle module.", "استخدم موديول دورات الأداء.");
         // errors
         A("err.weights", "Goal weights cannot exceed 100% in total.", "مجموع أوزان الأهداف لا يمكن أن يتعدى 100%."); A("err.weights100", "Goal weights must total exactly 100% before rating.", "يجب أن يكون مجموع أوزان الأهداف 100% قبل التقييم.");
         A("err.calibNote", "Enter a score from 1 to 5 and a written reason.", "أدخل درجة من 1 إلى 5 وسبباً مكتوباً."); A("notif.perfCycle", "A new performance cycle is open", "دورة تقييم أداء جديدة مفتوحة"); A("notif.goal", "A new goal was set for you", "تم تحديد هدف جديد لك");
