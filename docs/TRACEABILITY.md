@@ -98,6 +98,8 @@
 | DOC-004 | Scenario-based acceptance criteria | P0 | Implemented this batch |
 | DOC-005 | Measurable NFR targets and test status | P0 | Proposed targets documented, not achieved guarantees |
 
+> **Phase 0 (Ahmed, 2026-11-25 22:50):** all 21 architecture decisions accepted. Blueprint: docs/architecture/BLUEPRINT.md. Decisions: docs/architecture/adr/. The 31-row module build is paused until Phase 0 allows resuming.
+
 ## Delivery batches
 
 1. Business foundation, current batch: snapshots, append-only evidence, same-actor finalization guard, immutable final runs, assignment-change history, leave ledger/cancellation and employee-edit financial boundary. Tests: BusinessFoundationTests.
