@@ -2,6 +2,9 @@
 
 24 November 2026. Each Open row is unfinished work, not a shipped capability. Partial means the exact remainder is still open. Sources and broader rationale: [external review](REVIEW-2026-11-24.md). Existing feature regressions: [module report](../MODULE-REGRESSION.md).
 
+
+> **Owner constraint (Ahmed, WhatsApp voice note 2026-11-25 ~16:27, relayed and checked against the message record; the audio is partly garbled but clearly says no paid database or paid hosting for now, close on the existing free setup):** rows that need paid services or paid external infrastructure are recorded as DEFERRED / owner decision "not now". They are not pursued and not built. Deferred rows: ATT-006, SEC-004, ARC-004, ARC-005, ARC-006, ENT-001, ENT-003, ENT-004, ENT-005, ENT-006 (classified by the builder; the owner may reclassify). SEC-007 and SEC-009 stay open as owner-policy rows; a free off-host backup idea for SEC-009 is proposed and not approved. The end state is: everything implementable on the free setup done and green, plus an itemized list of owner-decision rows and deferred rows.
+
 | ID | Requirement | Priority | Evidence/status |
 |---|---|---|---|
 | EMP-001 | Employee onboarding and offboarding checklists | P1 | Implemented explicit task creation, assignee, due date, completion evidence and audit; no automatic employment/payroll effect |
@@ -18,7 +21,7 @@
 | ATT-003 | Missing punch exceptions | P1 | Implemented scoped missing-in/out recorded-day inbox after shift end, unmatched raw evidence and explicit idempotent reprocessing; arbitrary unknown-device mapping remains separate |
 | ATT-004 | Raw punch ledger and idempotent processing | P0 | Implemented: append-only punches, normalized batch/retry dedupe and unique idempotency key; concurrent losing request may require retry |
 | ATT-005 | Flexible hours | P1 | Implemented explicitly configured daytime arrival window and required minutes on new shift definitions. Lateness from latest arrival, early departure/overtime from personal expected end, existing grace/absence threshold retained. Explicit dated assignment, no retroactive recomputation, break deductions, overnight flex or payroll formula change |
-| ATT-006 | Remote attendance/geofencing | P2 | Open |
+| ATT-006 | Remote attendance/geofencing | P2 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
 | ATT-007 | Approved attendance period locking | P1 | Implemented completed-month lock, reason, no reopening, mutation guards and retained late raw punches; broader financial-period coordination remains open |
 | ATT-008 | Reasoned manual corrections with original evidence | P0 | Implemented: approved correction retains before/after, reason and original raw punches |
 | ATT-009 | Branch/group holiday calendars | P1 | Implemented future global/branch/department calendars and historical-assignment scope in new leave requests and attendance; arbitrary groups and retroactive recalculation remain open |
@@ -65,7 +68,7 @@
 | SEC-001 | Field-level identity/salary/bank/medical access | P0 | Partial: implemented separate identity, bank-view, bank-edit and leave-evidence grants alongside salary permission; profile/edit/list/history redaction and tampered POST/file download guards; leave ledger/balance exports restricted to owner or evidence grant. New grants are unset for existing non-SystemAdmin roles pending owner configuration; broader export/service privacy audit remains open |
 | SEC-002 | Separation of duties | P0 | Implemented creator cannot finalize own run |
 | SEC-003 | Session expiry/revocation/device management | P0 | Implemented hashed per-login sessions, 8h absolute expiry, owner inventory/revocation, logout and credential-change invalidation; no verified physical-device binding |
-| SEC-004 | Sensitive-field encryption at rest | P0 | Open: key management required |
+| SEC-004 | Sensitive-field encryption at rest | P0 | Open: key management required. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
 | SEC-005 | Append-only audit history | P0 | Implemented repository guard; database-owner tampering not prevented |
 | SEC-006 | Failed-login lockout and suspicious detection | P0 | Implemented password lockout after five failures for 15 minutes plus audit; broader anomaly detection open |
 | SEC-007 | Retention/deletion/access policies | P0 | Open: owner policy decisions required |
@@ -75,18 +78,18 @@
 | ARC-001 | Modular monolith domain boundaries and policies | P1 | Existing layers; deeper policy extraction open |
 | ARC-002 | PostgreSQL/SQL Server | P0 | PostgreSQL existing |
 | ARC-003 | Explicit business transactions | P0 | Partial: payroll, attendance including overtime/correction submissions, device ingestion, final approvals, leave request/adjustment and employee save atomic; holiday and shift-definition creation now explicitly atomic with post-save/outer rollback and retry coverage; remaining service paths under review |
-| ARC-004 | Durable background scheduler | P1 | Open |
-| ARC-005 | Distributed cache/multi-instance | P2 | Open |
-| ARC-006 | Private object storage | P1 | Open |
+| ARC-004 | Durable background scheduler | P1 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
+| ARC-005 | Distributed cache/multi-instance | P2 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
+| ARC-006 | Private object storage | P1 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
 | ARC-007 | Integration outbox/domain events/idempotency/logs/retry/reconciliation/versioning | P1 | Partial: email outbox existing |
 | ARC-008 | Optimistic concurrency/database constraints | P0 | Existing, further race tests open |
 | ARC-009 | Read projections/metrics/tracing/health | P1 | Partial: public minimal live/database-ready endpoints, bounded in-process action metrics and correlation IDs/logs; durable telemetry, domain projections and external tracing remain open |
-| ENT-001 | Multiple legal entities, shared employees and intercompany payroll | P2 | Open |
+| ENT-001 | Multiple legal entities, shared employees and intercompany payroll | P2 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
 | ENT-002 | Legacy imports/validation/dedup/reconciliation/rollback | P1 | Partial: legacy performance import now atomic across cycles/appraisals/audit with source-ID idempotence and rollback/retry fault tests; source rows retained. Employee-management-only bounded UTF-8 CSV dry-run checks exact eight-column schema, formats, existing code/email conflicts, source duplicates and current organization references without retaining uploads or writing employees/accounts. No salary/bank/identity columns. Import staging/commit, mapping, historical reconciliation and rollback UI remain open |
-| ENT-003 | Accounting/government/banking adapters | P2 | Open: external contracts and credentials |
-| ENT-004 | SSO/federation | P2 | Open |
-| ENT-005 | Mobile/GPS attendance | P2 | Open |
-| ENT-006 | Workforce planning/succession/career/analytics/AI insights | P3 | Open |
+| ENT-003 | Accounting/government/banking adapters | P2 | Open: external contracts and credentials. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
+| ENT-004 | SSO/federation | P2 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
+| ENT-005 | Mobile/GPS attendance | P2 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
+| ENT-006 | Workforce planning/succession/career/analytics/AI insights | P3 | Open. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
 | DOC-001 | Separate baseline BRD from implementation history | P0 | Implemented this batch |
 | DOC-002 | Feature-level status matrix and traceability IDs | P0 | Implemented this batch |
 | DOC-003 | Versioned assumptions, risk and decisions | P0 | Implemented this batch |

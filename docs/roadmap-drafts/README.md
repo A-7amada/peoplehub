@@ -49,3 +49,4 @@ Each phase should have:
 - The exact legal, tax, social insurance, banking, and data-retention requirements must be confirmed for each target country.
 
 - Country packs (proposed direction by Ahmed, 2026-11-25): per-tenant country configuration for labor-law rules, consumed by every phase. Egypt only at first. See `COUNTRY-PACKS-Addendum.md`. Draft, not approved.
+- **Owner constraint (Ahmed, 2026-11-25 ~16:27):** no paid database or hosting for now; work closes on the existing free setup. Paid-infrastructure rows are deferred (see `docs/TRACEABILITY.md`). Roadmap phases that assume paid infrastructure (production database, durable jobs, object storage, SSO, multi-region) are therefore on hold, including SaaS production hosting, until he lifts this.
