@@ -35,7 +35,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
         return View(await svc.DailyAsync(d, dept));
     }
 
-    [HttpPost]public Task<IActionResult> Lock(int employeeId,int year,int month,string reason)=>Do(()=>svc.LockAsync(employeeId,year,month,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id=employeeId,year,month}));
+    [HttpPost,RequireStepUp]public Task<IActionResult> Lock(int employeeId,int year,int month,string reason)=>Do(()=>svc.LockAsync(employeeId,year,month,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id=employeeId,year,month}));
     [HttpPost] public Task<IActionResult> CheckIn() => Do(svc.CheckInAsync, "msg.checkedIn", () => Back("/Attendance"));
     [HttpPost] public Task<IActionResult> CheckOut() => Do(svc.CheckOutAsync, "msg.checkedOut", () => Back("/Attendance"));
 

@@ -83,7 +83,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     [RequirePerm(Perm.EmpManage),HttpPost]
     public Task<IActionResult> CancelSchedule(int id,int employeeId,string reason)=>Do(()=>timeline.CancelAsync(id,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="history"}));
 
-    [RequirePerm(Perm.EmpManage), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost, RequireStepUp]
     public Task<IActionResult> Status(int id, EmployeeStatus to, string? reason) => Do(() => svc.ChangeStatusAsync(id, to, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));
 
     [RequirePerm(Perm.EmpManage), HttpPost]
@@ -98,7 +98,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     public Task<IActionResult> AddEvent(int id, CareerEventType type, string? details) =>
         Do(() => svc.AddCareerEventAsync(id, type, details), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));
 
-    [HttpPost]
+    [HttpPost, RequireStepUp]
     public Task<IActionResult> SetComponent(int id, int componentId, decimal amount) =>
         Do(() => svc.SetComponentAsync(id, componentId, amount), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "pay" }));
 
@@ -106,7 +106,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     public Task<IActionResult> MyContact(string? phone, string? address) =>
         Do(() => svc.UpdateMyContactAsync(phone, address), "msg.saved", () => RedirectToAction(nameof(Profile), new { tab = "overview" }));
 
-    [RequirePerm(Perm.EmpManage), HttpPost]
+    [RequirePerm(Perm.EmpManage), HttpPost, RequireStepUp]
     public Task<IActionResult> AdjustBalance(int id, int typeId, int entitled, string? reason) =>
         Do(() => leave.AdjustBalanceAsync(id, typeId, clock.Today.Year, entitled, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "leave" }));
 }
