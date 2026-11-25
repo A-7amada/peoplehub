@@ -4,6 +4,8 @@ public enum RequestStatus { Pending = 0, Approved = 1, Rejected = 2, Cancelled =
 /// <summary>Route tokens: "Manager" means the employee's direct manager, anything else is a role code.</summary>
 public static class ApprovalStage
 {
+    public static string EmployeeToken(int id)=>"Employee#"+id.ToString(System.Globalization.CultureInfo.InvariantCulture);
+    public static int? EmployeeId(string? token)=>token!=null&&token.StartsWith("Employee#",StringComparison.Ordinal)&&int.TryParse(token[9..],System.Globalization.NumberStyles.None,System.Globalization.CultureInfo.InvariantCulture,out var id)&&id>0?id:null;
     public const string Manager = "Manager", HR = Roles.HRManager + "|" + Roles.HRSpecialist, Finance = Roles.FinanceManager;
 }
 

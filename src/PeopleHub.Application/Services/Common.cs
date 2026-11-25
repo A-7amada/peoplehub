@@ -72,6 +72,8 @@ public class NotificationService(IRepository repo, ICurrentUser me, AppClock clo
     {
         var stage = a.CurrentStage;
         if (stage == null) return;
+        if(ApprovalStage.EmployeeId(stage) is {} resolved)
+        {await NotifyEmployeeAsync(resolved,"notif.pendingApproval",details,"/Requests?scope=inbox");return;}
         if (stage == ApprovalStage.Manager)
         { if (a.Employee?.ManagerId is { } m) await NotifyEmployeeAsync(m, "notif.pendingApproval", details, "/Requests?scope=inbox"); }
         else await NotifyRolesAsync(stage.Replace('|', ','), "notif.pendingApproval", details, "/Requests?scope=inbox");

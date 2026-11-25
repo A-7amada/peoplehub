@@ -26,6 +26,8 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         if (a.EmployeeId == me.EmployeeId) return false; // nobody approves their own request
         if (me.IsInRole(Roles.SystemAdmin)) return true;
         if(Assigned(a) is {} assigned)return assigned.ToUserId==me.UserId && _activeUsers.Contains(me.UserId);
+        if(ApprovalStage.EmployeeId(stage) is {} resolved)
+            return _activeUsers.Contains(me.UserId)&&(me.EmployeeId==resolved||(_deleg??[]).Any(d=>d.FromEmployeeId==resolved));
         if (stage == ApprovalStage.Manager ? a.Employee?.ManagerId != null && a.Employee.ManagerId == me.EmployeeId : stage.Split('|').Any(me.IsInRole)) return true;
         // delegated rights: the delegator would have been allowed to act on this step
         foreach (var d in _deleg ?? [])

@@ -31,10 +31,16 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
     {
         var definition=(await ListAsync()).FirstOrDefault(x=>x.Kind==kind);
         var steps=definition?.Steps??[];
-        var json=JsonSerializer.Serialize(new{Kind=kind,RoutingSemantics="sequential-any-role-v1",Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold})});
+        var json=JsonSerializer.Serialize(new{Kind=kind,RoutingSemantics="sequential-any-role-department-snapshot-v2",Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold})});
         var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
+        var route=RoutePlanner.Build(steps,employee,size,alwaysEscalate);
+        foreach(var token in route.Split(','))if(ApprovalStage.EmployeeId(token) is {} resolved)
+        {
+            var target=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==resolved));
+            if(target?.IsWorking!=true||!await repo.AnyAsync(repo.Query<AppUser>().Where(u=>u.EmployeeId==resolved&&u.IsActive)))throw new DomainException("err.departmentApprover");
+        }
         if(!await repo.AnyAsync(repo.Query<WorkflowRevision>().Where(x=>x.Kind==kind&&x.Hash==hash)))repo.Add(new WorkflowRevision{Kind=kind,Hash=hash,DefinitionJson=json,ObservedAt=DateTime.UtcNow});
-        request.Route=RoutePlanner.Build(steps,employee,size,alwaysEscalate);request.WorkflowRevisionHash=hash;
+        request.Route=route;request.WorkflowRevisionHash=hash;
     }
     public Task<List<WorkflowRevision>> RevisionsAsync(){Require();return repo.ToListAsync(repo.Query<WorkflowRevision>().OrderByDescending(x=>x.ObservedAt).Take(100));}
 
@@ -57,8 +63,12 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
     {
         Require();
         var w = await LoadAsync(kind);
+        if(!Enum.IsDefined(type)||threshold is <0 or >100000000)throw new DomainException("err.required");
         var codes = (roles ?? []).Where(r => !string.IsNullOrWhiteSpace(r)).Distinct().ToArray();
         if (type == ApproverType.Role && codes.Length == 0) throw new DomainException("err.roleRequired");
+        var knownRoles=(await repo.ToListAsync(repo.Query<Role>())).Select(r=>r.Code).ToHashSet();
+        if(type==ApproverType.Role&&codes.Any(r=>!knownRoles.Contains(r)))throw new DomainException("err.roleRequired");
+        if(type==ApproverType.DepartmentManager&&w.Steps.Any(s=>s.Approver==type))throw new DomainException("err.dupDepartmentManager");
         if (w.Steps.Count >= 6) throw new DomainException("err.maxSteps");
         if (type == ApproverType.DirectManager && w.Steps.Any(s => s.Approver == ApproverType.DirectManager)) throw new DomainException("err.dupManager");
         var step = new WorkflowStep { WorkflowId = w.Id, Order = (w.Steps.Count == 0 ? 0 : w.Steps.Max(s => s.Order)) + 1, Approver = type,

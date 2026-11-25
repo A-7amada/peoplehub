@@ -122,7 +122,7 @@ public static class PermissionCache
     public static (string En, string Ar)? NameOf(string code) => _names.TryGetValue(code, out var n) ? n : null;
 }
 
-public enum ApproverType { DirectManager = 0, Role = 1 }
+public enum ApproverType { DirectManager = 0, Role = 1, DepartmentManager = 2 }
 
 /// <summary>One approval cycle per request kind (Leave, Overtime, Correction, Advance).</summary>
 public class WorkflowDefinition
@@ -147,7 +147,7 @@ public class WorkflowStep
     /// </summary>
     public decimal? Threshold { get; set; }
     /// <summary>The route token stored on requests: "Manager" or the role code.</summary>
-    public string Token => Approver == ApproverType.DirectManager ? ApprovalStage.Manager : RoleCode ?? "";
+    public string Token => Approver switch {ApproverType.DirectManager=>ApprovalStage.Manager,ApproverType.DepartmentManager=>"DepartmentManager",_=>RoleCode??""};
 }
 
 /// <summary>Builds the route of a new request from the configured steps. Pure, so it is unit-tested.</summary>
@@ -161,7 +161,14 @@ public static class RoutePlanner
         {
             if (s.Approver == ApproverType.DirectManager && e.ManagerId == null) continue;      // no manager: skip
             if (s.Threshold is { } t && !(size > t || alwaysEscalate)) continue;               // below the threshold
-            if (!route.Contains(s.Token)) route.Add(s.Token);
+            var token=s.Token;
+            if(s.Approver==ApproverType.DepartmentManager)
+            {
+                var manager=e.Department?.ManagerId;
+                if(manager is not >0||manager==e.Id)throw new DomainException("err.departmentApprover");
+                token=ApprovalStage.EmployeeToken(manager.Value);
+            }
+            if (!route.Contains(token)) route.Add(token);
         }
         if (route.Count == 0)
         {
