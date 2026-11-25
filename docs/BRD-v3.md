@@ -94,3 +94,7 @@ Original submitters may retain one immutable appeal for each employee-visible in
 
 ### Employee import validation boundary
 Employee managers may upload a bounded UTF-8 CSV for dry-run checks only: exact eight-column nonfinancial schema, maximum256KiB/200data rows, format/duplicate/current-reference checks. Uploads use an in-memory multipart buffer and are not retained; no employee, account, salary, balance or history record is written. Results are not approval or an import guarantee. Execution, staging, mapping, historical reconciliation and rollback remain open.
+
+
+### Salary template category eligibility
+New immutable salary structures may restrict eligibility to FullTime, PartTime or Contractor, in addition to job grade. An omitted category, including every pre-upgrade template, stays unrestricted. Explicit individual application rechecks current grade/category and never changes employment category. Current salary/component effects remain explicit, today-only, with retained evidence; no automatic payroll recalculation or publication lifecycle is implied.

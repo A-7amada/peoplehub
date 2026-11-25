@@ -321,7 +321,7 @@ public class ApprovalReminder
 /// <summary>Immutable explicit grade compensation template. No automatic salary rule.</summary>
 public class SalaryStructure
 {
- public int Id {get;set;}public string Name {get;set;}="";public int JobGrade {get;set;}public decimal Basic {get;set;}public string ComponentsJson {get;set;}="{}";public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+ public int Id {get;set;}public string Name {get;set;}="";public int JobGrade {get;set;}public EmploymentType? EmploymentCategory {get;set;}public decimal Basic {get;set;}public string ComponentsJson {get;set;}="{}";public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
 }
 public class SalaryStructureApplication
 {

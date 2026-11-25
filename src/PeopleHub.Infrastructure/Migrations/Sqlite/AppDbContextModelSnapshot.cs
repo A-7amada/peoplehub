@@ -3861,6 +3861,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("EmploymentCategory")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("JobGrade")
                         .HasColumnType("INTEGER");
 

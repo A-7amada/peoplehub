@@ -4034,6 +4034,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("EmploymentCategory")
+                        .HasColumnType("integer");
+
                     b.Property<int>("JobGrade")
                         .HasColumnType("integer");
 
