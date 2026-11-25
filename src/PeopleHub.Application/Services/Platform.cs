@@ -261,6 +261,7 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
     public Task<AppUser?> ByIdAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == id && x.IsActive));
 }
 
+public record TrainingParticipant(int Id,int CourseId,int EmployeeId,string FullName,string FullNameAr,bool Completed);
 public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope, AppClock clock, AuditService audit, NotificationService notify)
 {
     private void Need() { if (!me.Can(Perm.TalentManage)) throw new DomainException("err.forbidden"); }
@@ -306,9 +307,9 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
     public Task AddReviewAsync(int employeeId, string period, string? goals, string? comment, int score) => throw new DomainException("err.usePerf");
 
     public Task<List<TrainingCourse>> CoursesAsync() => repo.ToListAsync(repo.Query<TrainingCourse>().OrderBy(c => c.Date));
-    public async Task<List<TrainingEnrollment>> EnrollmentsAsync() {
+    public async Task<List<TrainingParticipant>> EnrollmentsAsync() {
         var ids = me.Can(Perm.TalentManage) ? null : await scope.VisibleEmployeeIdsAsync();
-        return await repo.ToListAsync(repo.Query<TrainingEnrollment>().Where(e => ids == null || ids.Contains(e.EmployeeId)));
+        return await repo.ToListAsync(repo.Query<TrainingEnrollment>().Where(e => ids == null || ids.Contains(e.EmployeeId)).Select(e=>new TrainingParticipant(e.Id,e.CourseId,e.EmployeeId,e.Employee!.FullName,e.Employee.FullNameAr,e.Completed)));
     }
     public async Task AddCourseAsync(string title, string? titleAr, int hours, DateTime date,string? need=null,decimal? budget=null,string? currency=null)
     { Need(); if (string.IsNullOrWhiteSpace(title)||title.Length>200||hours<=0||hours>1000||date.Date<clock.Today||date.Year>9998||string.IsNullOrWhiteSpace(need)||need.Length>2000||budget<0||budget>1000000000||budget!=null&&(currency==null||currency.Length!=3||!currency.All(x=>x>='A'&&x<='Z'))) throw new DomainException("err.required"); repo.Add(new TrainingCourse { Title=title.Trim(),TitleAr=titleAr?.Trim()??"",Hours=hours,Date=date.Date,Need=need.Trim(),PlannedBudget=budget,Currency=budget==null?"":currency!,ApprovalStatus="Pending",CreatedByUserId=me.UserId });audit.Log("ProposeCourse","Training",title,"Pending course approval, planning only, no spending");await repo.SaveAsync(); }
