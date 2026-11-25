@@ -32,7 +32,10 @@ public static class PostgresArchive
         await db.Database.MigrateAsync();await db.Database.OpenConnectionAsync();var conn=(NpgsqlConnection)db.Database.GetDbConnection();
         await using var tx=await conn.BeginTransactionAsync();
         var tables=db.Model.GetEntityTypes().Select(e=>e.GetTableName()!).Distinct().Order().ToArray();
-        foreach(var table in tables) { using var c=new NpgsqlCommand($"SELECT EXISTS(SELECT 1 FROM {Q(table)})",conn,tx);if((bool)(await c.ExecuteScalarAsync())!)throw new InvalidOperationException("Restore refused: target is not empty"); }
+        // The migration seeds tenant 1 (the default tenant). That seed row is not data: the archive carries its own Tenant rows.
+        const string SeedTenant = "\"Id\"=1 AND \"Slug\"='demo' AND \"Name\"='Demo company'";
+        foreach(var table in tables) { using var c=new NpgsqlCommand(table=="Tenant"?$"SELECT EXISTS(SELECT 1 FROM {Q(table)} WHERE NOT ({SeedTenant}))":$"SELECT EXISTS(SELECT 1 FROM {Q(table)})",conn,tx);if((bool)(await c.ExecuteScalarAsync())!)throw new InvalidOperationException("Restore refused: target is not empty"); }
+        using(var c=new NpgsqlCommand($"DELETE FROM \"Tenant\" WHERE {SeedTenant}",conn,tx))await c.ExecuteNonQueryAsync();
         // EF migrations define FKs; archive table ordering must follow dependencies.
         using(var c=new NpgsqlCommand("SET CONSTRAINTS ALL DEFERRED",conn,tx))await c.ExecuteNonQueryAsync();
         var remaining=db.Model.GetEntityTypes().ToList();var ordered=new List<string>();
