@@ -112,9 +112,9 @@ public partial class PerfService
         var c = await repo.FirstOrDefaultAsync(repo.Query<TrainingCourse>().Where(c => c.Id == courseId)) ?? throw new DomainException("err.notFound");
         if(c.ApprovalStatus is not("Approved" or "Legacy"))throw new DomainException("err.forbidden");
         v.A.ResponseStamp=Guid.NewGuid().ToString("N");
+        var employee=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==v.A.EmployeeId))??throw new DomainException("err.notFound");
         if (!await repo.AnyAsync(repo.Query<TrainingEnrollment>().Where(e => e.CourseId == courseId && e.EmployeeId == v.A.EmployeeId)))
         {
-            var employee=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==v.A.EmployeeId))??throw new DomainException("err.notFound");
             employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
             repo.Add(new TrainingEnrollment { CourseId = courseId, EmployeeId = v.A.EmployeeId });
         }

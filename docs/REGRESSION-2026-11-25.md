@@ -74,3 +74,5 @@ Performance-transaction checkpoint: five failure/success cases passed, then28 fo
 Test inventory audit:375 discoverable cases on the performance-transaction build. The five established full-suite partitions plus the new PerformanceAtomicTests cover each listed case exactly once, with no missing or duplicated test filter matches. This audits partition coverage, not execution of a new full375-case run.
 
 Full performance-transaction checkpoint:375 cases passed in five nonoverlapping partitions (88+50+52+78+107), against22a1ca3 source plus docs-only follow-up. New local review adds talent permission checks to recruitment read services and employee revision touches within both enrolment paths, not a database uniqueness or PostgreSQL stress claim.
+
+Talent permission/enrolment follow-up:42 focused training/regression cases passed and6talent MVC checks passed. Employee revision must load before duplicate query in both enrolment paths; final ordering review corrected linked-course loading. Performance GET routes no longer invoke global phase/notice maintenance; scheduled worker owns it, so changes can wait up to the next awake15minute cycle.
