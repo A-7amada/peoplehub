@@ -31,6 +31,7 @@ builder.Services.AddScoped<AccessScope>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<IntegrationOutbox>();
+builder.Services.AddScoped<ScheduledJobs>();
 builder.Services.AddScoped<OperationsProjection>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<OrgService>();

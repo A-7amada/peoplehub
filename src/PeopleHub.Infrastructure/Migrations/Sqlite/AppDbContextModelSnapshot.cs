@@ -4043,6 +4043,53 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("SalaryStructureApplication");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.ScheduledJobState", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ConsecutiveFailures")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("LastError")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastFinishedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LastStartedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastStatus")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LeaseUntil")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<long>("RunCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("ScheduledJobState");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Shift", b =>
                 {
                     b.Property<int>("Id")

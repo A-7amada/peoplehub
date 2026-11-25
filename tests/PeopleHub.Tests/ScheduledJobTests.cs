@@ -1,0 +1,16 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Services;
+using PeopleHub.Domain.Entities;
+namespace PeopleHub.Tests;
+/// <summary>ARC-004 durable run state and lease. SQLite only.</summary>
+public class ScheduledJobTests
+{
+ class Clock:TimeProvider{public DateTimeOffset Now=new(2026,11,25,10,0,0,TimeSpan.Zero);public override DateTimeOffset GetUtcNow()=>Now;}
+ static async Task<AppDbContext> Open(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.EnsureCreatedAsync();return d;}
+ [Fact]public async Task LeaseBlocksSecondClaimUntilCompletionAndRecordsSuccess(){await using var d=await Open();var c=new Clock();var j=new ScheduledJobs(d,new AppClock(c));Assert.True(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(10)));Assert.False(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(10)));Assert.True(await j.TryClaimAsync("J2",TimeSpan.FromMinutes(10)));await j.CompleteAsync("J1",null);var s=(await j.ListAsync()).Single(x=>x.Name=="J1");Assert.Equal("Succeeded",s.LastStatus);Assert.Equal(1,s.RunCount);Assert.False(s.Leased);Assert.True(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(10)));}
+ [Fact]public async Task CrashedRunIsReleasedWhenLeasePasses(){await using var d=await Open();var c=new Clock();var j=new ScheduledJobs(d,new AppClock(c));Assert.True(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(10)));c.Now=c.Now.AddMinutes(9);Assert.False(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(10)));c.Now=c.Now.AddMinutes(2);Assert.True(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(10)));}
+ [Fact]public async Task FailureRecordsOnlyTypeAndCountsConsecutiveFailuresUntilSuccess(){await using var d=await Open();var j=new ScheduledJobs(d,new AppClock(new Clock()));for(var i=0;i<2;i++){Assert.True(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(1)));await j.CompleteAsync("J1",new InvalidOperationException("secret employee data"));}var s=(await j.ListAsync()).Single();Assert.Equal("Failed",s.LastStatus);Assert.Equal(2,s.ConsecutiveFailures);Assert.Equal("InvalidOperationException",s.LastError);Assert.DoesNotContain("secret",s.LastError);Assert.True(await j.TryClaimAsync("J1",TimeSpan.FromMinutes(1)));await j.CompleteAsync("J1",null);s=(await j.ListAsync()).Single();Assert.Equal(0,s.ConsecutiveFailures);Assert.Equal("",s.LastError);Assert.Equal(3,s.RunCount);}
+ [Fact]public async Task DuplicateFirstClaimLosesCleanly(){await using var d=await Open();var j1=new ScheduledJobs(d,new AppClock(new Clock()));d.Add(new ScheduledJobState{Name="J1",LeaseUntil=new DateTime(2099,1,1,0,0,0,DateTimeKind.Utc),LastStatus="Running"});await d.SaveChangesAsync();Assert.False(await j1.TryClaimAsync("J1",TimeSpan.FromMinutes(1)));}
+ [Fact]public async Task StoredFilesSummaryCountsBothFileTablesAndReturnsNoContent(){await using var d=await Open();d.Add(new Attachment{FileName="a.pdf",ContentType="application/pdf",Data=new byte[1000],OwnerEmployeeId=1});await d.SaveChangesAsync();var o=new OperationsProjection(d,new AppClock(new Clock()),new IntegrationOutbox(d,new AppClock(new Clock()),[]));var f=await o.StoredFilesAsync();Assert.Equal(1,f.Count);Assert.Equal(1000,f.Bytes);}
+}

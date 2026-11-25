@@ -4222,6 +4222,55 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("SalaryStructureApplication");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.ScheduledJobState", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ConsecutiveFailures")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastError")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LastFinishedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<DateTime?>("LastStartedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("LastStatus")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("LeaseUntil")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<long>("RunCount")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("ScheduledJobState");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Shift", b =>
                 {
                     b.Property<int>("Id")

@@ -20,11 +20,11 @@ public class PerfWorker(IServiceScopeFactory scopes, ILogger<PerfWorker> log) : 
     protected override async Task ExecuteAsync(CancellationToken stop)
     {
         (string Name,Func<IServiceProvider,Task> Run)[] jobs=[
-            ("DocumentExpiry",sp=>sp.GetRequiredService<EmployeeDocuments>().AlertAsync()),
-            ("TrainingExpiry",sp=>sp.GetRequiredService<TrainingExpiry>().AlertAsync()),
-            ("ApprovalReminders",sp=>sp.GetRequiredService<ApprovalReminders>().RunAsync()),
-            ("EmploymentSchedule",sp=>sp.GetRequiredService<EmploymentTimeline>().ApplyDueAsync()),
-            ("PerformanceMaintenance",sp=>sp.GetRequiredService<PerfService>().MaintainAsync())];
+            ("DocumentExpiry",JobTracker.Track(scopes,"DocumentExpiry",sp=>sp.GetRequiredService<EmployeeDocuments>().AlertAsync())),
+            ("TrainingExpiry",JobTracker.Track(scopes,"TrainingExpiry",sp=>sp.GetRequiredService<TrainingExpiry>().AlertAsync())),
+            ("ApprovalReminders",JobTracker.Track(scopes,"ApprovalReminders",sp=>sp.GetRequiredService<ApprovalReminders>().RunAsync())),
+            ("EmploymentSchedule",JobTracker.Track(scopes,"EmploymentSchedule",sp=>sp.GetRequiredService<EmploymentTimeline>().ApplyDueAsync())),
+            ("PerformanceMaintenance",JobTracker.Track(scopes,"PerformanceMaintenance",sp=>sp.GetRequiredService<PerfService>().MaintainAsync()))];
         while (!stop.IsCancellationRequested)
         {
             await RunJobsAsync(scopes,jobs,(name,ex)=>log.LogWarning(ex,"Maintenance job {Job} deferred",name),stop);
