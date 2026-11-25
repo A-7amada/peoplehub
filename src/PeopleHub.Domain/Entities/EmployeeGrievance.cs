@@ -9,3 +9,13 @@ public class EmployeeGrievanceResponse
 {
  public int Id{get;set;} public int GrievanceId{get;set;} public int ActorUserId{get;set;} public string Actor{get;set;}=""; public string Note{get;set;}=""; public DateTime At{get;set;}
 }
+/// <summary>Immutable appeal of an employee-visible response, not an investigation or legal appeal.</summary>
+public class EmployeeGrievanceAppeal
+{
+ public int Id{get;set;} public int GrievanceId{get;set;} public int ResponseId{get;set;} public string Note{get;set;}=""; public int ActorUserId{get;set;} public string Actor{get;set;}=""; public DateTime At{get;set;}
+}
+/// <summary>Independent internal disposition. Does not overwrite the original response.</summary>
+public class EmployeeGrievanceAppealDecision
+{
+ public int Id{get;set;} public int AppealId{get;set;} public int GrievanceId{get;set;} public string Decision{get;set;}=""; public string Note{get;set;}=""; public int ActorUserId{get;set;} public string Actor{get;set;}=""; public DateTime At{get;set;}
+}

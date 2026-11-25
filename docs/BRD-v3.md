@@ -86,3 +86,7 @@ Active accounts linked to Active/OnLeave employees may submit their own immutabl
 
 ### Annual course estimate planning boundary
 The training-management audience can inspect a read-only annual course-estimate summary by scheduled calendar year, approval state and currency. Each course counts once; missing or unusable estimates are reported separately, not treated as zero. Rejected plans and legacy approval-unknown records remain distinct. There is no currency conversion, department allocation, enforced cap, spending authorization or actual-expenditure claim. HR-002 remains Partial.
+
+
+### Internal grievance response appeals
+Original submitters may retain one immutable appeal for each employee-visible intake response. A different relations manager, excluding responder and subject identities, records one reasoned employee-visible disposition: response upheld or reconsideration recommended. A recommendation never executes a sanction or changes the original records. No private investigation details, case access, notification, legal deadline or served notice is created. Investigation/discipline appeals and legal process review remain open.
