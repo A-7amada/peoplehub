@@ -25,19 +25,31 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         return (await repo.ToListAsync(q.OrderBy(e => e.Code))).Select(VisibleCopy).ToList();
     }
 
-    public async Task<Dictionary<int, Employee>> LookupAsync() =>
+    private async Task<Dictionary<int, Employee>> LookupAsync() =>
         (await repo.ToListAsync(repo.Query<Employee>())).ToDictionary(e => e.Id);
 
     public async Task<List<Employee>> ManagerCandidatesAsync() =>
         (await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.FullName))).Select(VisibleCopy).ToList();
 
-    public Task<Employee?> GetAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e => e.Id == id));
+    private Task<Employee?> LoadAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e => e.Id == id));
 
+    public async Task<Employee?> GetAsync(int id)
+    {
+        if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
+        var e=await LoadAsync(id);
+        return e==null?null:VisibleCopy(e);
+    }
+    public async Task<Employee?> SettlementEmployeeAsync(int id)
+    {
+        if(!me.Can(Perm.EmpPay)) throw new DomainException("err.forbidden");
+        var e=await LoadAsync(id);
+        return e==null?null:new Employee{Id=e.Id,Code=e.Code,FullName=e.FullName,FullNameAr=e.FullNameAr,HireDate=e.HireDate,BasicSalary=e.BasicSalary};
+    }
     public async Task<EmployeeProfile> ProfileAsync(int id)
     {
         if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
-        var e = await GetAsync(id) ?? throw new DomainException("err.notFound");
-        var mgr = e.ManagerId is { } m ? await GetAsync(m) : null;
+        var e = await LoadAsync(id) ?? throw new DomainException("err.notFound");
+        var mgr = e.ManagerId is { } m ? await LoadAsync(m) : null;
         var visible=VisibleCopy(e);
         return new EmployeeProfile(visible, mgr?.FullName, mgr?.FullNameAr,
             (await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.StartDate))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Notes="";return copy;}).ToList(),
@@ -61,7 +73,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     }
     public async Task<Employee?> EditModelAsync(int id)
     {
-        RequireHr();var e=await GetAsync(id);if(e==null)return null;
+        RequireHr();var e=await LoadAsync(id);if(e==null)return null;
         e=System.Text.Json.JsonSerializer.Deserialize<Employee>(System.Text.Json.JsonSerializer.Serialize(e))!;
         if(!me.Can(Perm.EmpIdentity)){e.NationalId="";e.BirthDate=null;e.Address="";e.InsuranceNumber="";e.MaritalStatus="";}
         if(!me.Can(Perm.EmpBankEdit)||!me.Can(Perm.EmpPay)){e.BankName="";e.Iban="";}
@@ -88,11 +100,11 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         model.Address ??= ""; model.Phone ??= ""; model.BankName ??= ""; model.Iban ??= ""; model.InsuranceNumber ??= "";
         if (!me.Can(Perm.EmpPay))
         {
-            var original=model.Id==0?null:await GetAsync(model.Id);
+            var original=model.Id==0?null:await LoadAsync(model.Id);
             if (original==null && model.BasicSalary!=0) throw new DomainException("err.forbidden");
             if (original!=null) {model.BasicSalary=original.BasicSalary;}
         }
-        var protectedOriginal=model.Id==0?null:await GetAsync(model.Id);
+        var protectedOriginal=model.Id==0?null:await LoadAsync(model.Id);
         if(!me.Can(Perm.EmpBankEdit)||!me.Can(Perm.EmpPay))
         {
             if(protectedOriginal==null&&(!string.IsNullOrEmpty(model.Iban)||!string.IsNullOrEmpty(model.BankName)))throw new DomainException("err.forbidden");
@@ -158,7 +170,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     /// <summary>Employees may update only their own contact details.</summary>
     public async Task UpdateMyContactAsync(string? phone, string? address)
     {
-        var e = await GetAsync(me.EmployeeId ?? throw new DomainException("err.forbidden")) ?? throw new DomainException("err.notFound");
+        var e = await LoadAsync(me.EmployeeId ?? throw new DomainException("err.forbidden")) ?? throw new DomainException("err.notFound");
         audit.Log("Update", "Employee", e.Code, $"contact: phone '{e.Phone}' -> '{phone}'");
         e.Phone = phone?.Trim() ?? ""; e.Address = address?.Trim() ?? "";
         await repo.SaveAsync();
@@ -168,7 +180,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     {
         RequireHr();
         if (to is EmployeeStatus.Terminated or EmployeeStatus.Resigned or EmployeeStatus.Suspended && string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
-        var e = await GetAsync(id) ?? throw new DomainException("err.notFound");
+        var e = await LoadAsync(id) ?? throw new DomainException("err.notFound");
         if(await repo.AnyAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==e.Id && !x.Cancelled && x.AppliedAt==null))) throw new DomainException("err.pendingSchedule");
         var from = e.Status;
         repo.Add(e.ChangeStatus(to, me.Email, reason, clock.UtcNow));
@@ -179,7 +191,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     public Task AddContractAsync(int employeeId, ContractType type, DateTime start, DateTime? end, string? notes) => repo.AtomicAsync(async()=>
     {
         RequireHr();
-        var employee=await GetAsync(employeeId)??throw new DomainException("err.notFound");
+        var employee=await LoadAsync(employeeId)??throw new DomainException("err.notFound");
         employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         var old = await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == employeeId && c.IsCurrent));
         var c = Contract.Create(employeeId, type, start, end, notes);
@@ -193,7 +205,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     {
         RequireHr();
         var c = await repo.FirstOrDefaultAsync(repo.Query<Contract>().Where(x => x.Id == contractId)) ?? throw new DomainException("err.notFound");
-        var employee=await GetAsync(c.EmployeeId)??throw new DomainException("err.notFound");
+        var employee=await LoadAsync(c.EmployeeId)??throw new DomainException("err.notFound");
         employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         var nc = c.Renew(newEnd);
         repo.Add(nc);
@@ -215,7 +227,7 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
     {
         if (!me.Can(Perm.EmpPay)) throw new DomainException("err.forbidden");
         if (amount < 0 || amount>100000000 || decimal.Round(amount,2)!=amount) throw new DomainException("err.salary");
-        var employee=await GetAsync(employeeId)??throw new DomainException("err.notFound");
+        var employee=await LoadAsync(employeeId)??throw new DomainException("err.notFound");
         if(!await repo.AnyAsync(repo.Query<SalaryComponent>().Where(x=>x.Id==componentId)))throw new DomainException("err.notFound");
         employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         var row = await repo.FirstOrDefaultAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == employeeId && c.ComponentId == componentId));
@@ -234,6 +246,6 @@ public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser m
         var ids = await scope.VisibleEmployeeIdsAsync();
         var cs = (await repo.ToListAsync(repo.Query<Contract>().Where(c => c.IsCurrent && c.EndDate != null))).Where(c => c.ExpiresWithin(today, days));
         var emps = await LookupAsync();
-        return cs.Where(c => ids == null || ids.Contains(c.EmployeeId)).Select(c => (c, emps[c.EmployeeId])).OrderBy(x => x.c.EndDate).ToList();
+        return cs.Where(c => ids == null || ids.Contains(c.EmployeeId)).Select(c => {var copy=Copy(c);if(!CanIdentity(c.EmployeeId))copy.Notes="";return (copy,VisibleCopy(emps[c.EmployeeId]));}).OrderBy(x => x.copy.EndDate).ToList();
     }
 }

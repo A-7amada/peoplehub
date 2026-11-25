@@ -67,7 +67,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
         }
 
         var expiring = me.Can(Perm.EmpManage) ? await employees.ExpiringContractsAsync(60) : [];
-        var hires = working.OrderByDescending(e => e.HireDate).Take(4).ToList();
+        var hires = working.OrderByDescending(e => e.HireDate).Take(4).Select(e=>new Employee{Id=e.Id,Code=e.Code,FullName=e.FullName,FullNameAr=e.FullNameAr,HireDate=e.HireDate,JobTitleId=e.JobTitleId,JobTitle=e.JobTitle==null?null:new JobTitle{Id=e.JobTitle.Id,Name=e.JobTitle.Name,NameAr=e.JobTitle.NameAr}}).ToList();
         return new DashboardData(kpis, byDept, trend, payTrend, byStatus, expiring, pending, hires, company);
     }
 
