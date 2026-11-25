@@ -47,3 +47,5 @@ Each phase should have:
 - Subscriptions, billing and pricing are added as a proposed workstream (`BRD-Phase-1-Subscriptions-Billing-Addendum.md`, `USER-STORIES-Subscriptions-Billing.md`). Draft only, nothing is built.
 - Existing PeopleHub modules and documentation will be assessed before implementation to avoid duplicating completed work.
 - The exact legal, tax, social insurance, banking, and data-retention requirements must be confirmed for each target country.
+
+- Country packs (proposed direction by Ahmed, 2026-11-25): per-tenant country configuration for labor-law rules, consumed by every phase. Egypt only at first. See `COUNTRY-PACKS-Addendum.md`. Draft, not approved.

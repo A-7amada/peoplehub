@@ -1,5 +1,7 @@
 > **PROPOSED DRAFT, NOT APPROVED.** Generated in a ChatGPT evaluation conversation (https://chatgpt.com/share/6b06e8ab-1b60-83ea-b893-80f4e267ce25, 2026-11-25). It is not part of BRD v3, has not been reviewed against the repository, and is not in scope for current work. Per Ahmed Hamada's WhatsApp voice note of 2026-11-25 15:57 EET: take no action on the evaluation itself, keep these drafts in the repo, and apply the architecture step first once the current BRD v3 work is finished.
 
+> **Country pack note (proposed, Ahmed direction 2026-11-25):** stories in this phase must specify the Egypt country pack values they depend on and read them from the active pack, not hardcode them. See `COUNTRY-PACKS-Addendum.md`. Draft, not approved.
+
 # BRD — Phase 2: HR Functional Excellence
 
 **Product:** PeopleHub  

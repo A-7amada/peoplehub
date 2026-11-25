@@ -263,3 +263,6 @@ If you want, I can:
 ---
 ## Decision record (added 2026-11-25)
 The open question above (SaaS, dedicated or hybrid) is resolved by Ahmed (WhatsApp, 2026-11-25 16:19): SaaS multi-tenant with subscriptions. Phase 0 designs tenancy in from day one: shared database + `TenantId` first, database-per-tenant as a later option for large customers. The current single-tenant build stays the demo and can be deployed dedicated for an early customer.
+
+## Country pack concept (added 2026-11-25, proposed, Ahmed direction)
+Alongside the tenant, define a country/localization profile. Each tenant has one active country pack (labor-law rules, leave entitlements, working hours/week, overtime rules, end-of-service formula, social insurance and tax parameters, official holidays, payroll calendar). Modules consume the pack and never hardcode a country. Build the layer and fill it with Egyptian law only; KSA and UAE packs are authored at expansion time. Ties to PH0-004 and US-PH3-018. Full draft: `COUNTRY-PACKS-Addendum.md`. Not approved, nothing built.

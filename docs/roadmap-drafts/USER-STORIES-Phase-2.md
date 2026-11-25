@@ -2,6 +2,8 @@
 >
 > **Assumptions to confirm:** (1) Ahmed's WhatsApp voice note of 2026-11-25 15:58 EET was partly garbled; it was read as "split the three phase BRDs into stories and keep them in the repo until current work is finished" and as meaning stories with their acceptance criteria. (2) No story actors were invented: each story keeps the draft's own "The system shall..." statement, its acceptance criteria and the phase-level priority (High); the draft carries no per-requirement priority, estimate or owner. (3) Story and requirement numbering follow the draft: story `US-PH2-NNN` maps to `PH2-BR-NNN`. (4) Before any phase starts, gap-analyse each story against `docs/TRACEABILITY.md` and the code, since many describe features that already exist in part.
 
+> **Country pack note (proposed, Ahmed direction 2026-11-25):** stories in this phase must specify the Egypt country pack values they depend on and read them from the active pack, not hardcode them. See `COUNTRY-PACKS-Addendum.md`. Draft, not approved.
+
 
 # User stories: Phase 2 (High)
 

@@ -95,3 +95,5 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 ## Verification of the ChatGPT review's own claims
 
 The evaluation said money calculations use `double` conversions per OPERATIONS.md. Checked: arithmetic is `decimal`, storage conversion is `double` in `AppDbContext.ConfigureConventions`. It also said it could not read `src`, so its code-level statements were not verified by it.
+
+Note (2026-11-25): the country-pack addendum (`COUNTRY-PACKS-Addendum.md`, CP-BR-001..005) is not yet gap-analysed. Expected: Gap, with Egyptian rules embedded in payroll code.
