@@ -18,7 +18,7 @@ public abstract class BaseController(Loc loc) : Controller
     /// <summary>Runs an action, turning domain rule violations into a flash message.</summary>
     protected async Task<IActionResult> Do(Func<Task> work, string okKey, Func<IActionResult> next)
     {
-        try { await work(); TempData["ok"] = loc[okKey]; }
+        try { if (!ModelState.IsValid) throw new DomainException("err.required"); await work(); TempData["ok"] = loc[okKey]; }
         catch (DomainException ex) { TempData["err"] = loc[ex.Message]; }
         return next();
     }

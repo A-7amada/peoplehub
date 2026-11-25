@@ -59,7 +59,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     [RequirePerm(Perm.EmpManage), HttpPost]
     public async Task<IActionResult> Edit(Employee model, string? reason)
     {
-        try { await svc.SaveAsync(model, reason); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Profile), new { id = model.Id == 0 ? (await svc.SearchAsync(new(model.Email, null, null, null))).FirstOrDefault()?.Id : model.Id }); }
+        try { if (!ModelState.IsValid) throw new DomainException("err.required"); await svc.SaveAsync(model, reason); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Profile), new { id = model.Id == 0 ? (await svc.SearchAsync(new(model.Email, null, null, null))).FirstOrDefault()?.Id : model.Id }); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; if(!me.Can(Perm.EmpPay))model.BasicSalary=0;if(!me.Can(Perm.EmpBankEdit)){model.Iban="";model.BankName="";}if(!me.Can(Perm.EmpIdentity)){model.NationalId="";model.BirthDate=null;model.Address="";model.MaritalStatus="";model.InsuranceNumber="";} await Lists(); return View(model); }
     }
 
