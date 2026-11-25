@@ -72,3 +72,5 @@ Full post-catch-up checkpoint on8945341:370 automated cases passed in five parti
 Performance-transaction checkpoint: five failure/success cases passed, then28 focused performance/privacy/framework/response/maintenance cases passed including those five. Eight performance MVC checks passed again on a fresh fictional copy. This does not replace the370-case full checkpoint on8945341.
 
 Test inventory audit:375 discoverable cases on the performance-transaction build. The five established full-suite partitions plus the new PerformanceAtomicTests cover each listed case exactly once, with no missing or duplicated test filter matches. This audits partition coverage, not execution of a new full375-case run.
+
+Full performance-transaction checkpoint:375 cases passed in five nonoverlapping partitions (88+50+52+78+107), against22a1ca3 source plus docs-only follow-up. New local review adds talent permission checks to recruitment read services and employee revision touches within both enrolment paths, not a database uniqueness or PostgreSQL stress claim.

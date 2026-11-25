@@ -265,8 +265,8 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
 {
     private void Need() { if (!me.Can(Perm.TalentManage)) throw new DomainException("err.forbidden"); }
 
-    public Task<List<JobOpening>> JobsAsync() => repo.ToListAsync(repo.Query<JobOpening>().OrderByDescending(j => j.IsOpen).ThenByDescending(j => j.CreatedAt));
-    public Task<List<Candidate>> CandidatesAsync() => repo.ToListAsync(repo.Query<Candidate>().OrderBy(c => c.Stage).ThenByDescending(c => c.CreatedAt));
+    public Task<List<JobOpening>> JobsAsync() { Need(); return repo.ToListAsync(repo.Query<JobOpening>().OrderByDescending(j => j.IsOpen).ThenByDescending(j => j.CreatedAt)); }
+    public Task<List<Candidate>> CandidatesAsync() { Need(); return repo.ToListAsync(repo.Query<Candidate>().OrderBy(c => c.Stage).ThenByDescending(c => c.CreatedAt)); }
     public async Task AddJobAsync(string title,string? titleAr,int? dept,int positions,string? justification=null)
     {
         Need();if(string.IsNullOrWhiteSpace(title)||title.Length>200||positions<1||positions>1000||string.IsNullOrWhiteSpace(justification)||justification.Length>2000)throw new DomainException("err.required");if(dept!=null&&!await repo.AnyAsync(repo.Query<Department>().Where(x=>x.Id==dept)))throw new DomainException("err.notFound");
@@ -314,13 +314,15 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
     { Need(); if (string.IsNullOrWhiteSpace(title)||title.Length>200||hours<=0||hours>1000||date.Date<clock.Today||date.Year>9998||string.IsNullOrWhiteSpace(need)||need.Length>2000||budget<0||budget>1000000000||budget!=null&&(currency==null||currency.Length!=3||!currency.All(x=>x>='A'&&x<='Z'))) throw new DomainException("err.required"); repo.Add(new TrainingCourse { Title=title.Trim(),TitleAr=titleAr?.Trim()??"",Hours=hours,Date=date.Date,Need=need.Trim(),PlannedBudget=budget,Currency=budget==null?"":currency!,ApprovalStatus="Pending",CreatedByUserId=me.UserId });audit.Log("ProposeCourse","Training",title,"Pending course approval, planning only, no spending");await repo.SaveAsync(); }
     public Task DecideCourseAsync(int id,bool approve,string reason)=>repo.AtomicAsync(async()=>
     {Need();var course=await repo.FirstOrDefaultAsync(repo.Query<TrainingCourse>().Where(x=>x.Id==id))??throw new DomainException("err.notFound");if(course.ApprovalStatus!="Pending"||course.CreatedByUserId==me.UserId)throw new DomainException("err.forbidden");if(string.IsNullOrWhiteSpace(reason)||reason.Length>2000)throw new DomainException("err.reasonRequired");course.ApprovalStatus=approve?"Approved":"Rejected";course.DecidedByUserId=me.UserId;course.DecidedAt=clock.UtcNow;course.DecisionReason=reason.Trim();audit.Log("DecideCourse","Training",id,$"{course.ApprovalStatus}: {reason.Trim()}");await repo.SaveAsync();});
-    public async Task EnrollAsync(int courseId, int employeeId)
+    public Task EnrollAsync(int courseId, int employeeId)=>repo.AtomicAsync(async()=>
     {
         if (employeeId != me.EmployeeId) Need();
         if (!await repo.AnyAsync(repo.Query<TrainingCourse>().Where(x => x.Id == courseId && (x.ApprovalStatus=="Approved"||x.ApprovalStatus=="Legacy"))) || !await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Id == employeeId))) throw new DomainException("err.notFound");
+        var employee=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x=>x.Id==employeeId))??throw new DomainException("err.notFound");
         if (await repo.AnyAsync(repo.Query<TrainingEnrollment>().Where(x => x.CourseId == courseId && x.EmployeeId == employeeId))) throw new DomainException("err.alreadyEnrolled");
-        repo.Add(new TrainingEnrollment { CourseId = courseId, EmployeeId = employeeId }); await repo.SaveAsync();
-    }
+        employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
+        repo.Add(new TrainingEnrollment { CourseId = courseId, EmployeeId = employeeId });audit.Log("Enroll","Training",courseId,$"employee #{employeeId}"); await repo.SaveAsync();
+    });
     public async Task CompleteAsync(int id) { Need(); var e = await repo.FirstOrDefaultAsync(repo.Query<TrainingEnrollment>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound"); e.Completed = true; await repo.SaveAsync(); }
 }
 
