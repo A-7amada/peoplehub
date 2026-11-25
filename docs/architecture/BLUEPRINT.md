@@ -55,7 +55,7 @@ Each class that implements a pattern carries a one-line comment naming it.
 Shared database, TenantId on customer data, EF global query filter, tenant stamped on save, ITenantContext per request and per job, platform tenant separate from customer tenants, support access by audited time-limited grant. Resolution from the session claim now, subdomain later. Existing demo data is assigned to a default tenant by the migration. Status: **Planned**.
 
 ## 6. Data
-PostgreSQL via EF Core. Money moves from double storage to decimal(18,2) (ADR-0015), after a backup and a verified restore, before the tenancy migration. Migrations are generated for both providers on every change; SQLite upgrade is exercised and Postgres SQL is inspected. Status: **Planned** (decimal), migrations process **Built**.
+PostgreSQL via EF Core. Money moves from double storage to decimal(18,2) (ADR-0015), after a backup and a verified restore, before the tenancy migration. Migrations are generated for both providers on every change; SQLite upgrade is exercised and Postgres SQL is inspected. Status: decimal(18,2) **Built** on PostgreSQL (migration DecimalMoney, 2026-11-25; quantities such as hours and multiplier are numeric(18,4); SQLite keeps REAL for local and tests through the provider Strategy). Rehearsed on a restored copy of production: 36 columns, sums identical. Migrations process **Built**.
 
 ## 7. Financial rules (target section E)
 Decimal precision (Planned), effective-dated policies (Partial), immutable payroll snapshots (Partial: finalized runs are fixed), calculation traceability (Partial), adjustment and reversal ledger (Partial), approval separation (Built), reconciliation (Partial).
@@ -76,8 +76,8 @@ Health live and ready, in-process metrics, correlation ids, Diagnostics page (Bu
 Production: Render Free, manual deploy, Neon Free. Staging (Planned): second free Render service and a Neon branch. Backups: daily encrypted pg_dump from a private repository.
 
 ## 13. Implementation order (decision 21)
-1. ADRs and this Blueprint (this change).
-2. Restore drill, then decimal(18,2).
+1. ADRs and this Blueprint (**Done**).
+2. Restore drill (**Done**, weekly workflow in the private backups repo) then decimal(18,2) (**Done**, deploy pending verification).
 3. Postgres tests in GitHub Actions.
 4. Interfaces: ITenantContext, ICache, IFileStore.
 5. TenantId, backfill, query filter, isolation tests.
