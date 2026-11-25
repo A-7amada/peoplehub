@@ -10,15 +10,15 @@ public class TransactionBoundaryTests
  static string ServicesDir()
  {
   var d=new DirectoryInfo(AppContext.BaseDirectory);
-  while(d!=null&&!Directory.Exists(Path.Combine(d.FullName,"src","PeopleHub.Application","Services")))d=d.Parent;
-  Assert.NotNull(d);return Path.Combine(d!.FullName,"src","PeopleHub.Application","Services");
+  while(d!=null&&!Directory.Exists(Path.Combine(d.FullName,"src","PeopleHub.Application","Modules")))d=d.Parent;
+  Assert.NotNull(d);return Path.Combine(d!.FullName,"src","PeopleHub.Application","Modules");
  }
  static readonly Regex Decl=new(@"^\s*(public|internal|private|protected)\s[^=;]*?\b(\w+)\s*(<[^>]*>)?\s*\(",RegexOptions.Compiled);
  /// <summary>Any service method that saves more than once must run inside AtomicAsync, directly or because it is called from one in the same file.</summary>
  [Fact]public void MultiSaveServiceMethodsAreAtomic()
  {
   var offenders=new List<string>();var checkedMethods=0;
-  foreach(var f in Directory.GetFiles(ServicesDir(),"*.cs"))
+  foreach(var f in Directory.GetFiles(ServicesDir(),"*.cs",SearchOption.AllDirectories))
   {
    var lines=File.ReadAllLines(f);var text=string.Join("\n",lines);
    var starts=new List<(int line,string name)>();
