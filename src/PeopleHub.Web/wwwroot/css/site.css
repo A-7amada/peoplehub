@@ -212,3 +212,8 @@ bdi{unicode-bidi:isolate}
 
 /* Leave request dates and controls need a full-width review surface. */
 .leave-workspace{grid-template-columns:minmax(0,1fr)}.leave-workspace>.card{min-width:0}.leave-workspace .request-table{min-width:900px}.request-table .request-detail{min-width:170px}.leave-workspace>.card:last-child{max-width:720px;width:100%}
+
+/* Keep long advance rows inside their own table scroll, in both directions. */
+.advances-grid{grid-template-columns:minmax(0,1fr)}.advances-grid>.card{min-width:0}.advances-grid .tbl{min-width:760px}@media(max-width:1100px){.advances-grid{grid-template-columns:minmax(0,1fr)}}
+
+.advances-grid>.card:last-child{width:100%;max-width:620px}

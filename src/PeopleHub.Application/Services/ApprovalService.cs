@@ -7,6 +7,13 @@ public record RequestRow(string Kind, int Id, Employee Employee, string TypeName
     RequestStatus Status, string? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel, string? AttachmentToken, string? AttachmentName,
     List<ApprovalAction> History,string? WorkflowRevisionHash=null,bool ApprovalCommentRequired=false,string? AssignedTo=null,int GroupRequired=0,int GroupVotes=0,int[]? PendingSeats=null);
 
+// Advance history needs identity labels, not the tracked employee's private profile or routing evidence.
+public record AdvanceRow(int Id,int EmployeeId,Employee Employee,decimal Amount,int Installments,int StartYear,int StartMonth,decimal Paid,string Reason,RequestStatus Status)
+{
+    public decimal Monthly => Installments>0?Math.Round(Amount/Installments,2):0;
+    public decimal Remaining => Amount-Paid;
+}
+
 public partial class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows, DelegationService delegations)
 {
     public static readonly string[] Kinds = ["Leave", "Overtime", "Correction", "Advance"];
@@ -180,7 +187,7 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         await repo.SaveAsync();
     }
 
-    public async Task SettleAdvanceAsync(int id)
+    public Task SettleAdvanceAsync(int id)=>repo.AtomicAsync(async()=>
     {
         if (!me.Can(Perm.AdvManage)) throw new DomainException("err.forbidden");
         var a = await repo.FirstOrDefaultAsync(repo.Query<AdvanceRequest>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
@@ -188,11 +195,12 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         a.Settle();
         audit.Log("Settle", "Advance", id, $"early settlement of {left:N2}");
         await repo.SaveAsync();
-    }
+    });
 
-    public async Task<List<AdvanceRequest>> AdvancesAsync()
+    public async Task<List<AdvanceRow>> AdvancesAsync()
     {
         var ids = await scope.VisibleEmployeeIdsAsync();
-        return (await repo.ToListAsync(repo.Query<AdvanceRequest>().OrderByDescending(a => a.CreatedAt))).Where(a => ids == null || ids.Contains(a.EmployeeId)).ToList();
+        var requests = await repo.ToListAsync(repo.Query<AdvanceRequest>().Where(a=>ids==null||ids.Contains(a.EmployeeId)).OrderByDescending(a=>a.CreatedAt));
+        return requests.Select(a=>new AdvanceRow(a.Id,a.EmployeeId,new Employee{Id=a.EmployeeId,Code=a.Employee!.Code,FullName=a.Employee.FullName,FullNameAr=a.Employee.FullNameAr},a.Amount,a.Installments,a.StartYear,a.StartMonth,a.Paid,a.Reason,a.Status)).ToList();
     }
 }
