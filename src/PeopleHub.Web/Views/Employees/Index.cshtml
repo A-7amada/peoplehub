@@ -1,7 +1,7 @@
 @model List<Employee>
 @{ ViewData["Title"] = T["nav.employees"]; var f = (EmployeeFilter)ViewBag.Filter; var depts = (List<Department>)ViewBag.Depts; var br = (List<Branch>)ViewBag.Branches; bool hr = Me.Can(Perm.EmpManage); bool pay = Model.Count > 0 && Me.Can(Perm.EmpSalary); }
 <div class="page-head"><div><h1>@T["nav.employees"]</h1><div class="sub">@Model.Count @T["emp.found"]</div></div>
-<div class="actions"><a class="btn" href="/Reports/Csv?key=employees">@Ui.Icon("download", 16) CSV</a>@if (hr) { <a class="btn btn-primary" href="/Employees/Edit">@Ui.Icon("plus", 16) @T["emp.add"]</a> }</div></div>
+<div class="actions"><a class="btn" href="/Reports/Csv?key=employees">@Ui.Icon("download", 16) CSV</a>@if (hr) { <a class="btn" href="/ImportValidation">@(T.IsAr?"فحص CSV دون استيراد":"CSV dry-run validation")</a> <a class="btn btn-primary" href="/Employees/Edit">@Ui.Icon("plus", 16) @T["emp.add"]</a> }</div></div>
 <div class="card"><form class="filters" method="get">
   <div class="search">@Ui.Icon("search", 16)<input type="search" name="q" value="@f.Search" placeholder="@T["emp.search"]"></div>
   <select name="dept"><option value="">@T["emp.allDepts"]</option>@foreach (var d in depts) { <option value="@d.Id" selected="@(f.DepartmentId == d.Id)">@T.Name(d.Name, d.NameAr)</option> }</select>

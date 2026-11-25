@@ -90,3 +90,7 @@ The training-management audience can inspect a read-only annual course-estimate 
 
 ### Internal grievance response appeals
 Original submitters may retain one immutable appeal for each employee-visible intake response. A different relations manager, excluding responder and subject identities, records one reasoned employee-visible disposition: response upheld or reconsideration recommended. A recommendation never executes a sanction or changes the original records. No private investigation details, case access, notification, legal deadline or served notice is created. Investigation/discipline appeals and legal process review remain open.
+
+
+### Employee import validation boundary
+Employee managers may upload a bounded UTF-8 CSV for dry-run checks only: exact eight-column nonfinancial schema, maximum256KiB/200data rows, format/duplicate/current-reference checks. Uploads use an in-memory multipart buffer and are not retained; no employee, account, salary, balance or history record is written. Results are not approval or an import guarantee. Execution, staging, mapping, historical reconciliation and rollback remain open.
