@@ -5,7 +5,7 @@ on:
   pull_request:
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -27,6 +27,22 @@ jobs:
         env:
           TEST_POSTGRES: Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ci
         run: dotnet test -c Release --no-build --logger "trx;LogFileName=results.trx" --logger "console;verbosity=minimal"
+      - name: Publish failure details to the ci-report branch
+        if: failure()
+        run: |
+          python3 - <<'PY' > /tmp/report.txt
+          import xml.etree.ElementTree as ET,glob
+          ns={'t':'http://microsoft.com/schemas/VisualStudio/TeamTest/2010'}
+          for f in glob.glob('tests/PeopleHub.Tests/TestResults/*.trx'):
+              r=ET.parse(f).getroot()
+              for u in r.iter('{%s}UnitTestResult'%ns['t']):
+                  if u.get('outcome')=='Failed':
+                      m=u.find('.//t:Message',ns); st=u.find('.//t:StackTrace',ns)
+                      print('FAILED',u.get('testName')); print((m.text or '')[:1200] if m is not None else ''); print((st.text or '')[:800] if st is not None else ''); print('---')
+          PY
+          git config user.name ci-bot; git config user.email ci-bot@users.noreply.github.com
+          git checkout --orphan ci-report; git rm -rf -q . ; mkdir -p ci-report; { echo "run ${{ github.run_id }} sha ${{ github.sha }}"; cat /tmp/report.txt; } > ci-report/latest.txt
+          git add ci-report; git commit -qm "CI failure report"; git push -qf origin ci-report
       - name: Fail if any test was skipped (proves the PostgreSQL tests really ran)
         run: |
           grep -o 'total="[0-9]*" executed="[0-9]*" passed="[0-9]*" failed="[0-9]*"[^>]*' tests/PeopleHub.Tests/TestResults/results.trx | head -1
