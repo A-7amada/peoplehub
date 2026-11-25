@@ -129,7 +129,17 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
+    // Resilience pattern (Retry): migrations are transactional on PostgreSQL, so a failed attempt (for example a lock conflict with the previous instance during a rolling deploy) leaves the schema unchanged and is safe to repeat.
+    var startupLog = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+    for (var attempt = 1; ; attempt++)
+    {
+        try { await db.Database.MigrateAsync(); break; }
+        catch (Exception ex) when (attempt < 4)
+        {
+            startupLog.LogError(ex, "Migration attempt {Attempt} failed; retrying in {Delay}s", attempt, attempt * 5);
+            await Task.Delay(TimeSpan.FromSeconds(attempt * 5));
+        }
+    }
     var hrPass = app.Environment.IsDevelopment() ? "Admin123!" : app.Configuration["HR_SEED_PASSWORD"];
     await SeedData.InitializeAsync(db, hrPass, "Demo123!", scope.ServiceProvider.GetRequiredService<AppClock>().Today);
     await scope.ServiceProvider.GetRequiredService<SettingsService>().LoadAsync();
