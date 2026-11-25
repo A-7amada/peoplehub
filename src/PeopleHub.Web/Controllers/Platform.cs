@@ -49,8 +49,10 @@ public class TalentController(Loc loc, TalentService svc, OrgService org, Employ
     public IActionResult Performance() => Redirect("/Perf");
     [HttpPost] public Task<IActionResult> AddReview(int employeeId, string period, string? goals, string? comment, int score) => Do(() => svc.AddReviewAsync(employeeId, period, goals, comment, score), "msg.saved", () => RedirectToAction(nameof(Performance)));
 
-    public async Task<IActionResult> Training()
+    public async Task<IActionResult> Training(int? budgetYear)
     {
+        var year=budgetYear??clock.Today.Year;if(year<2000||year>9998)return BadRequest();
+        if(me.Can(Perm.TalentManage))ViewBag.Budget=await svc.TrainingBudgetAsync(year);
         ViewBag.Evidence = await evidence.GetAsync();
         ViewBag.Enrollments = await svc.EnrollmentsAsync();
         return View(await svc.CoursesAsync());

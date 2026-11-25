@@ -82,3 +82,7 @@ Authorized benefits managers may view full monthly planning shares of enrolments
 
 ## Employee grievance intake boundary
 Active accounts linked to Active/OnLeave employees may submit their own immutable internal statement and view their own intake and explicit responses. Relations-management accounts may view intake and append employee-visible responses, excluding submitter and subject aliases. General HR, manager, company-scope and investigator case grants do not expose another employee's intake. Intake never creates a case or investigation grant; private case notes/files never appear in this view. No email, anonymous reporting, emergency response, deadline, legal finding, served notice, discipline or payroll/status action. Appeals/legal review remain open.
+
+
+### Annual course estimate planning boundary
+The training-management audience can inspect a read-only annual course-estimate summary by scheduled calendar year, approval state and currency. Each course counts once; missing or unusable estimates are reported separately, not treated as zero. Rejected plans and legacy approval-unknown records remain distinct. There is no currency conversion, department allocation, enforced cap, spending authorization or actual-expenditure claim. HR-002 remains Partial.

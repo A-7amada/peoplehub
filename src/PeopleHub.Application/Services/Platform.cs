@@ -306,6 +306,16 @@ public class TalentService(IRepository repo, ICurrentUser me, AccessScope scope,
     }
     public Task AddReviewAsync(int employeeId, string period, string? goals, string? comment, int score) => throw new DomainException("err.usePerf");
 
+    public async Task<TrainingBudgetSummary> TrainingBudgetAsync(int year)
+    {
+        Need();if(year<2000||year>9998)throw new DomainException("err.dates");
+        var start=new DateTime(year,1,1);var end=start.AddYears(1);
+        var courses=await repo.ToListAsync(repo.Query<TrainingCourse>().Where(x=>x.Date>=start&&x.Date<end).Select(x=>new {x.ApprovalStatus,x.Currency,x.PlannedBudget}));
+        var priced=courses.Where(x=>x.PlannedBudget is >=0 && x.Currency.Length==3 && x.Currency.All(c=>c>='A'&&c<='Z')).ToList();
+        var rows=priced.GroupBy(x=>new{Status=x.ApprovalStatus is "Pending" or "Approved" or "Rejected"?x.ApprovalStatus:"Legacy",x.Currency}).OrderBy(x=>x.Key.Status).ThenBy(x=>x.Key.Currency).Select(g=>new TrainingBudgetRow(g.Key.Status,g.Key.Currency,g.Count(),g.Sum(x=>x.PlannedBudget!.Value))).ToList();
+        return new(year,courses.Count,courses.Count-priced.Count,rows);
+    }
+
     public async Task<List<TrainingCourse>> CoursesAsync()
     {
         var courses=await repo.ToListAsync(repo.Query<TrainingCourse>().OrderBy(c=>c.Date));
