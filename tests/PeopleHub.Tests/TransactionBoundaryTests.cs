@@ -43,7 +43,7 @@ public class TransactionBoundaryTests
  }
  static readonly (Type type,string action)[] Sensitive=
  {
-  (typeof(EmployeesController),"Status"),(typeof(EmployeesController),"SetComponent"),(typeof(EmployeesController),"AdjustBalance"),(typeof(AttendanceController),"Lock"),(typeof(ImportValidationController),"Commit")
+  (typeof(EmployeesController),"Status"),(typeof(EmployeesController),"SetComponent"),(typeof(EmployeesController),"AdjustBalance"),(typeof(AttendanceController),"Lock"),(typeof(ImportValidationController),"Commit"),(typeof(ImportValidationController),"Rollback")
  };
  [Fact]public void SensitiveEmployeeAndPeriodActionsRequireStepUp()
  {

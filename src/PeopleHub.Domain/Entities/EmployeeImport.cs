@@ -11,6 +11,9 @@ public class EmployeeImportBatch
  public DateTime CreatedAt {get;set;}
  public string? CommittedBy {get;set;}
  public DateTime? CommittedAt {get;set;}
+ public string? RolledBackBy {get;set;}
+ public DateTime? RolledBackAt {get;set;}
+ public string? RollbackReason {get;set;}
 }
 public class StagedEmployeeRow
 {

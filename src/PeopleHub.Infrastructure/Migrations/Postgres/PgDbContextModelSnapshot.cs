@@ -2233,6 +2233,15 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<string>("RollbackReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("RolledBackAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("RolledBackBy")
+                        .HasColumnType("text");
+
                     b.Property<int>("RowCount")
                         .HasColumnType("integer");
 

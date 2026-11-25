@@ -25,12 +25,17 @@ public class ImportValidationController(Loc loc,EmployeeImportValidation service
  {
   Response.Headers.CacheControl="no-store, private";
   var b=await batches.GetAsync(id);if(b==null)return NotFound();
-  ViewBag.Recon=b.Status=="Committed"?await batches.ReconcileAsync(id):null;
+  ViewBag.Recon=b.Status!="Staged"?await batches.ReconcileAsync(id):null;
   return View(b);
  }
  [HttpPost,RequireStepUp]public async Task<IActionResult> Commit(int id)
  {
   try{await batches.CommitAsync(id);TempData["ok"]=L["msg.saved"];}catch(DomainException ex){TempData["err"]=L[ex.Message];}
+  return RedirectToAction(nameof(Batch),new{id});
+ }
+ [HttpPost,RequireStepUp]public async Task<IActionResult> Rollback(int id,string? reason)
+ {
+  try{await batches.RollbackAsync(id,reason);TempData["ok"]=L["msg.saved"];}catch(DomainException ex){TempData["err"]=L[ex.Message];}
   return RedirectToAction(nameof(Batch),new{id});
  }
  [HttpPost]public async Task<IActionResult> Discard(int id)

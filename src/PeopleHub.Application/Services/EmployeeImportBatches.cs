@@ -3,7 +3,7 @@ using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Application.Services;
 public record ImportReconciliation(int Staged,int Linked,int Missing);
-/// <summary>ENT-002: staged employee import with an explicit, all-or-nothing commit. Creates employees only: no accounts, salary, bank or identity data, no updates of existing people. Committed batches are not rolled back here: removing people is an owner policy question.</summary>
+/// <summary>ENT-002: staged employee import with an explicit, all-or-nothing commit. Creates employees only: no accounts, salary, bank or identity data, no updates of existing people. Rollback of a committed batch TERMINATES the imported people (owner decision, Ahmed 2026-11-25 19:17); it never deletes them and their records stay.</summary>
 public class EmployeeImportBatches(IRepository repo,ICurrentUser me,AppClock clock,AuditService audit,EmployeeImportValidation validation)
 {
  void Require(){if(!me.Can(Perm.EmpManage))throw new DomainException("err.forbidden");}
@@ -71,6 +71,33 @@ public class EmployeeImportBatches(IRepository repo,ICurrentUser me,AppClock clo
   audit.Log("ImportCommit","EmployeeImportBatch",b.Id,$"{rows.Count} employees created");
   await repo.SaveAsync();
  });
+ /// <summary>Owner decision 2026-11-25 19:17: rollback terminates imported people, never deletes them. Needs a reason. People already in a final status are left as they are and counted.</summary>
+ public async Task<int> RollbackAsync(int batchId,string? reason)
+ {
+  int terminated=0;
+  await repo.AtomicAsync(async()=>
+  {
+   Require();
+   if(string.IsNullOrWhiteSpace(reason))throw new DomainException("err.reasonRequired");
+   var b=await repo.FirstOrDefaultAsync(repo.Query<EmployeeImportBatch>().Where(x=>x.Id==batchId))??throw new DomainException("err.notFound");
+   if(b.Status!="Committed")throw new DomainException("err.importNotCommitted");
+   var ids=(await repo.ToListAsync(repo.Query<StagedEmployeeRow>().Where(x=>x.BatchId==batchId&&x.EmployeeId!=null).Select(x=>x.EmployeeId!.Value))).ToList();
+   var people=await repo.ToListAsync(repo.Query<Employee>().Where(x=>ids.Contains(x.Id)));
+   foreach(var e in people)
+   {
+    if(e.Status is EmployeeStatus.Terminated or EmployeeStatus.Resigned or EmployeeStatus.Retired)continue;
+    var from=e.Status;
+    repo.Add(e.ChangeStatus(EmployeeStatus.Terminated,me.Email,$"Import batch #{b.Id} rolled back: {reason.Trim()}",clock.UtcNow));
+    e.LeaveRequestStamp=Guid.NewGuid().ToString("N");
+    audit.Log("StatusChange","Employee",e.Code,$"{from} -> Terminated; import batch #{b.Id} rolled back");
+    terminated++;
+   }
+   b.Status="RolledBack";b.RolledBackBy=me.Email;b.RolledBackAt=clock.UtcNow;b.RollbackReason=reason.Trim();
+   audit.Log("ImportRollback","EmployeeImportBatch",b.Id,$"{terminated} employees terminated");
+   await repo.SaveAsync();
+  });
+  return terminated;
+ }
  public async Task<ImportReconciliation> ReconcileAsync(int batchId)
  {
   Require();

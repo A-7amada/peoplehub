@@ -2134,6 +2134,15 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<string>("RollbackReason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("RolledBackAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RolledBackBy")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("RowCount")
                         .HasColumnType("INTEGER");
 
