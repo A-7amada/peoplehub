@@ -52,7 +52,7 @@ Namespaces follow folders. Files move module by module in small commits; every m
 Each class that implements a pattern carries a one-line comment naming it.
 
 ## 5. Multi-tenancy (ADR-0001 to 0004)
-Shared database, TenantId on customer data, EF global query filter, tenant stamped on save, ITenantContext per request and per job, platform tenant separate from customer tenants, support access by audited time-limited grant. Resolution from the session claim now, subdomain later. Existing demo data is assigned to a default tenant by the migration. Status: **Planned**.
+Shared database, TenantId on customer data, EF global query filter, tenant stamped on save, ITenantContext per request and per job, platform tenant separate from customer tenants, support access by audited time-limited grant. Resolution from the session claim now, subdomain later. Existing demo data is assigned to a default tenant by the migration. Status: **Built** 2026-11-26 (TenantFoundation migration): shadow TenantId column on 98 customer tables, global query filter, stamping and cross-tenant write guard, Tenant table (Id 1 = default demo tenant), natural keys unique per tenant, logins still unique by email. Not yet: tenant claim issued at login (resolver defaults to tenant 1), second-tenant onboarding, PostgreSQL row-level security.
 
 ## 6. Data
 PostgreSQL via EF Core. Money moves from double storage to decimal(18,2) (ADR-0015), after a backup and a verified restore, before the tenancy migration. Migrations are generated for both providers on every change; SQLite upgrade is exercised and Postgres SQL is inspected. Status: decimal(18,2) **Built** on PostgreSQL (migration DecimalMoney, 2026-11-25; quantities such as hours and multiplier are numeric(18,4); SQLite keeps REAL for local and tests through the provider Strategy). Rehearsed on a restored copy of production: 36 columns, sums identical. Migrations process **Built**.
@@ -78,9 +78,9 @@ Production: Render Free, manual deploy, Neon Free. Staging (Planned): second fre
 ## 13. Implementation order (decision 21)
 1. ADRs and this Blueprint (**Done**).
 2. Restore drill (**Done**, weekly workflow in the private backups repo) then decimal(18,2) (**Done**, deploy pending verification).
-3. Postgres tests in GitHub Actions.
-4. Interfaces: ITenantContext, ICache, IFileStore.
-5. TenantId, backfill, query filter, isolation tests.
+3. Postgres tests in GitHub Actions (**Done**, CI workflow).
+4. Interfaces: ITenantContext, ICache, IFileStore (**Done**; DB-backed IFileStore with the file migration is **Planned**).
+5. TenantId, backfill, query filter, isolation tests (**Done**).
 6. Module boundaries and domain events, with the folder reorganization above.
 7. Egypt Pack and policy separation.
 8. API conventions and OIDC preparation.
