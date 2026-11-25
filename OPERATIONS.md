@@ -31,7 +31,7 @@ dotnet run --project tools/PeopleHub.Ops -- restore-empty /secure/path/peoplehub
 
 The tool migrates the target, refuses a nonempty target, restores in FK order, resets identity sequences, and rolls back on failure. The Neon integration test exported and restored to a separate temporary database, checked employee/user counts and refusal to overwrite. Repeat a restore drill before each real cutover; verify more than counts for real data.
 
-SQLite can use `BACKUP_PATH` for a daily rotating seven-file backup while the app is awake. That path must be durable. No scheduled off-host PostgreSQL backup is configured in this demo yet. Manual export and a successful restore drill are not an ongoing disaster recovery service. Never rely only on Neon's short free history.
+SQLite can use `BACKUP_PATH` for a daily rotating seven-file backup while the app is awake. That path must be durable. A free scheduled off-host backup now exists (approved by the owner 2026-11-25): a daily workflow in a separate PRIVATE repository runs pg_dump against the Neon direct endpoint, GPG-encrypts the archive and keeps it as a 90-day artifact. The private key is held only as a passphrase-protected escrow file; the passphrase is in the owner's vault. Restore: decrypt the escrow key, decrypt the artifact, `pg_restore --no-owner` into an EMPTY database with a PostgreSQL 18 client. Not yet exercised: a full restore drill. Artifacts expire after 90 days, and roles, data-protection keys and SMTP credentials are not included. Manual export and a successful restore drill are not an ongoing disaster recovery service. Never rely only on Neon's short free history.
 
 ## Authentication
 
