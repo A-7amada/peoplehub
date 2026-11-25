@@ -82,7 +82,7 @@
 | ARC-008 | Optimistic concurrency/database constraints | P0 | Existing, further race tests open |
 | ARC-009 | Read projections/metrics/tracing/health | P1 | Partial: public minimal live/database-ready endpoints, bounded in-process action metrics and correlation IDs/logs; durable telemetry, domain projections and external tracing remain open |
 | ENT-001 | Multiple legal entities, shared employees and intercompany payroll | P2 | Open |
-| ENT-002 | Legacy imports/validation/dedup/reconciliation/rollback | P1 | Partial: legacy performance import existing |
+| ENT-002 | Legacy imports/validation/dedup/reconciliation/rollback | P1 | Partial: legacy performance import now atomic across cycles/appraisals/audit with source-ID idempotence and rollback/retry fault tests; source rows retained. General import staging/validation/dedup/reconciliation/rollback UI remains open |
 | ENT-003 | Accounting/government/banking adapters | P2 | Open: external contracts and credentials |
 | ENT-004 | SSO/federation | P2 | Open |
 | ENT-005 | Mobile/GPS attendance | P2 | Open |

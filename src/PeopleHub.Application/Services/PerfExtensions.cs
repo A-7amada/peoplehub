@@ -151,10 +151,17 @@ public partial class PerfService
 
     public async Task<int> MigrateLegacyAsync()
     {
+        var count=0;
+        await repo.AtomicAsync(async()=>{count=await MigrateLegacyCoreAsync();});
+        return count;
+    }
+    private async Task<int> MigrateLegacyCoreAsync()
+    {
         // Called at startup and by HR. Preserve original rows and reviewer/comment/score; idempotent by source ID.
         var old = await repo.ToListAsync(repo.Query<PerformanceReview>()); var existing = await repo.ToListAsync(repo.Query<PerfAppraisal>());
         var count = 0;
-        foreach (var group in old.GroupBy(r => r.Period))
+        var pending=old.Where(r=>!existing.Any(a=>a.LegacyReviewId==r.Id)).ToList();
+        foreach (var group in pending.GroupBy(r => r.Period))
         {
             var name = "Imported: " + group.Key;
             var c = await repo.FirstOrDefaultAsync(repo.Query<PerfCycle>().Where(c => c.Name == name));
