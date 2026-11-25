@@ -89,12 +89,19 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AdvanceRequest");
                 });
@@ -117,6 +124,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("text");
@@ -125,6 +137,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("Key")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AppSetting");
                 });
@@ -174,6 +188,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<bool>("TotpEnabled")
                         .HasColumnType("boolean");
 
@@ -184,6 +203,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AppUser");
                 });
@@ -223,7 +244,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("ApprovalAction");
                 });
@@ -266,6 +294,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("StageIndex")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("ToEmail")
                         .IsRequired()
                         .HasColumnType("text");
@@ -274,6 +307,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "RequestId", "StageIndex");
 
@@ -310,10 +345,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("StageIndex")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "RequestId", "StageIndex", "UserId", "OnDate")
                         .IsUnique();
@@ -357,7 +399,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("StageIndex")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "RequestId", "StageIndex", "ActorEmployeeId")
                         .IsUnique();
@@ -407,9 +456,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssetId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AssetMovement");
                 });
@@ -446,6 +502,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("text");
@@ -455,6 +516,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Token")
                         .IsUnique();
@@ -527,12 +590,19 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AttendanceCorrection");
                 });
@@ -587,7 +657,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Date");
 
@@ -625,10 +702,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Year", "Month")
                         .IsUnique();
@@ -683,10 +767,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("WorkedMinutes")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
@@ -727,11 +818,18 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("User")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AuditLog");
                 });
@@ -767,10 +865,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EnrollmentId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("BenefitCancellation");
                 });
@@ -827,7 +932,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("StartsOn")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "PlanId");
 
@@ -886,7 +998,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("BenefitPlan");
                 });
@@ -917,7 +1036,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Branch");
                 });
@@ -961,9 +1087,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Stage")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("JobOpeningId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Candidate");
                 });
@@ -1013,7 +1146,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("CandidateId", "StartsAt");
 
@@ -1062,6 +1202,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("StartOn")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Terms")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1072,6 +1217,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("CandidateId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CandidateOffer");
                 });
@@ -1111,9 +1258,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("OfferId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CandidateOfferEvent");
                 });
@@ -1146,10 +1300,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CareerEvent");
                 });
@@ -1194,9 +1355,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Tag")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Tag")
                         .IsUnique();
 
                     b.ToTable("CompanyAsset");
@@ -1244,10 +1412,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppraisalId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CompetencyApplication");
                 });
@@ -1273,6 +1448,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("TemplateId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -1281,6 +1461,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CompetencyItem");
                 });
@@ -1310,7 +1492,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CompetencyTemplate");
                 });
@@ -1345,10 +1534,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Contract");
                 });
@@ -1379,10 +1575,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("ToEmployeeId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Delegation");
                 });
@@ -1425,7 +1628,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("TargetHeadcount")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Department");
                 });
@@ -1460,7 +1670,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("DevItem");
                 });
@@ -1495,6 +1712,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime>("Time")
                         .HasColumnType("timestamp without time zone");
 
@@ -1502,6 +1724,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("DeviceUserId", "Time");
 
@@ -1545,11 +1769,18 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("To")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmailOutbox");
                 });
@@ -1654,19 +1885,26 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("BranchId");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("JobTitleId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Code")
                         .IsUnique();
 
-                    b.HasIndex("JobTitleId");
+                    b.HasIndex("TenantId", "Email")
+                        .IsUnique();
 
                     b.ToTable("Employee");
                 });
@@ -1721,7 +1959,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int?>("ShiftId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeAssignment");
                 });
@@ -1765,11 +2010,18 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeCase");
                 });
@@ -1808,10 +2060,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("UserId")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("CaseId", "UserId");
 
@@ -1853,9 +2112,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CaseId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeCaseEvent");
                 });
@@ -1907,11 +2173,18 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Token")
                         .IsUnique();
@@ -1954,7 +2227,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeDependent");
                 });
@@ -1989,6 +2269,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -2001,6 +2286,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("AttachmentToken")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeDocument");
                 });
@@ -2025,11 +2312,18 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "FieldId")
                         .IsUnique();
@@ -2072,6 +2366,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("SubmittedByUserId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -2079,6 +2378,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievance");
                 });
@@ -2117,10 +2418,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("ResponseId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievanceAppeal");
                 });
@@ -2163,10 +2471,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppealId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievanceAppealDecision");
                 });
@@ -2202,9 +2517,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("GrievanceId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievanceResponse");
                 });
@@ -2256,9 +2578,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
-                    b.HasIndex("FileHash")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "FileHash")
                         .IsUnique();
 
                     b.ToTable("EmployeeImportBatch");
@@ -2299,10 +2628,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeProbation");
                 });
@@ -2331,9 +2667,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("ComponentId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeSalaryComponent");
                 });
@@ -2372,7 +2715,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("ShiftId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
@@ -2449,7 +2799,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int?>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "EffectiveOn", "Kind")
                         .IsUnique();
@@ -2487,9 +2844,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("ReviewerEmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("AppraisalId", "ReviewerEmployeeId")
                         .IsUnique();
@@ -2528,7 +2892,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Holiday");
                 });
@@ -2562,10 +2933,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Label")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("HrFieldDefinition");
                 });
@@ -2618,10 +2996,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Status", "NextAttemptAt");
 
@@ -2677,6 +3062,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -2688,6 +3078,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("DepartmentId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("JobOpening");
                 });
@@ -2729,7 +3121,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("JobTitle");
                 });
@@ -2760,6 +3159,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Used")
                         .HasColumnType("integer");
 
@@ -2769,6 +3173,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveBalance");
                 });
@@ -2837,6 +3243,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("text");
 
@@ -2845,6 +3256,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveRequest");
                 });
@@ -2890,10 +3303,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveTransaction");
                 });
@@ -2942,7 +3362,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveType");
                 });
@@ -2989,11 +3416,18 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LifecycleTask");
                 });
@@ -3032,6 +3466,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasColumnType("text");
@@ -3040,6 +3479,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
@@ -3074,6 +3515,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("TitleKey")
                         .IsRequired()
                         .HasColumnType("text");
@@ -3082,6 +3528,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Notification");
                 });
@@ -3147,12 +3595,19 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("text");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("OvertimeRequest");
                 });
@@ -3174,6 +3629,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("text");
@@ -3185,6 +3645,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Token")
                         .IsUnique();
@@ -3243,9 +3705,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("TargetRunId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("TargetRunId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PayrollAdjustment");
                 });
@@ -3285,7 +3754,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Sequence")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("AdjustmentId", "Sequence")
                         .IsUnique();
@@ -3336,10 +3812,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("RunId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("LineId", "Version")
                         .IsUnique();
@@ -3387,10 +3870,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Version")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("RunId", "Version")
                         .IsUnique();
@@ -3519,6 +4009,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<decimal>("TotalDeductions")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -3526,6 +4021,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("RunId", "EmployeeId")
                         .IsUnique();
@@ -3579,12 +4076,19 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Year")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Year", "Month")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Year", "Month")
                         .IsUnique();
 
                     b.ToTable("PayrollRun");
@@ -3645,6 +4149,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int?>("SelfScore")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CycleId");
@@ -3653,6 +4162,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("LegacyReviewId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfAppraisal");
                 });
@@ -3698,10 +4209,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppraisalId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfBonus");
                 });
@@ -3757,7 +4275,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Status")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfCycle");
                 });
@@ -3795,6 +4320,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -3803,6 +4333,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfGoal");
                 });
@@ -3834,7 +4366,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfReminder");
                 });
@@ -3874,7 +4413,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("AppraisalId", "Kind");
 
@@ -3920,9 +4466,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Score")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerformanceReview");
                 });
@@ -3962,6 +4515,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -3969,6 +4527,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.HasKey("Id");
 
                     b.HasIndex("AppraisalId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PipMilestone");
                 });
@@ -4008,9 +4568,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("MilestoneId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PipProgress");
                 });
@@ -4050,9 +4617,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CandidateId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("RecruitmentEvent");
                 });
@@ -4086,9 +4660,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Code")
                         .IsUnique();
 
                     b.ToTable("Role");
@@ -4116,7 +4697,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("RolePermission");
                 });
@@ -4150,10 +4738,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("SalaryComponent");
                 });
@@ -4201,7 +4796,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("SalaryStructure");
                 });
@@ -4249,9 +4851,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("StructureId")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("SalaryStructureApplication");
                 });
@@ -4348,7 +4957,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<long>("Start")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Shift");
                 });
@@ -4404,7 +5020,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("RowNumber")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("BatchId", "RowNumber")
                         .IsUnique();
@@ -4442,12 +5065,66 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("To")
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TenantId");
+
                     b.ToTable("StatusHistory");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.Tenant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Tenant");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 11, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Name = "Demo company",
+                            Slug = "demo",
+                            Status = "Active"
+                        });
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCertificate", b =>
@@ -4495,10 +5172,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AttachmentToken")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingCertificate");
                 });
@@ -4526,7 +5210,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("CertificateId", "OnDate")
                         .IsUnique();
@@ -4585,6 +5276,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("text");
@@ -4594,6 +5290,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingCourse");
                 });
@@ -4621,11 +5319,18 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingEnrollment");
                 });
@@ -4665,9 +5370,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingOutcome");
                 });
@@ -4693,7 +5405,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("WorkflowDefinition");
                 });
@@ -4727,7 +5446,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("text")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "Hash")
                         .IsUnique();
@@ -4764,6 +5490,11 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Rule")
                         .HasColumnType("integer");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
                     b.Property<decimal?>("Threshold")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -4772,6 +5503,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("WorkflowStep");
                 });

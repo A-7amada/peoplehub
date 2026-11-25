@@ -80,12 +80,19 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AdvanceRequest");
                 });
@@ -106,6 +113,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -114,6 +126,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("Key")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AppSetting");
                 });
@@ -161,6 +175,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<bool>("TotpEnabled")
                         .HasColumnType("INTEGER");
 
@@ -171,6 +190,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("Email")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AppUser");
                 });
@@ -208,7 +229,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("ApprovalAction");
                 });
@@ -249,6 +277,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("StageIndex")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("ToEmail")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -257,6 +290,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "RequestId", "StageIndex");
 
@@ -291,10 +326,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("StageIndex")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "RequestId", "StageIndex", "UserId", "OnDate")
                         .IsUnique();
@@ -336,7 +378,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("StageIndex")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "RequestId", "StageIndex", "ActorEmployeeId")
                         .IsUnique();
@@ -384,9 +433,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AssetId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AssetMovement");
                 });
@@ -421,6 +477,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -430,6 +491,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Token")
                         .IsUnique();
@@ -500,12 +563,19 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AttendanceCorrection");
                 });
@@ -558,7 +628,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Date");
 
@@ -594,10 +671,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Year")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Year", "Month")
                         .IsUnique();
@@ -650,10 +734,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("WorkedMinutes")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
@@ -692,11 +783,18 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("User")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("AuditLog");
                 });
@@ -730,10 +828,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EnrollmentId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("BenefitCancellation");
                 });
@@ -788,7 +893,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("StartsOn")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "PlanId");
 
@@ -843,7 +955,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("BenefitPlan");
                 });
@@ -872,7 +991,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Branch");
                 });
@@ -914,9 +1040,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Stage")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("JobOpeningId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Candidate");
                 });
@@ -964,7 +1097,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("CandidateId", "StartsAt");
 
@@ -1010,6 +1150,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("StartOn")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Terms")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -1020,6 +1165,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("CandidateId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CandidateOffer");
                 });
@@ -1057,9 +1204,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("OfferId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CandidateOfferEvent");
                 });
@@ -1090,10 +1244,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CareerEvent");
                 });
@@ -1136,9 +1297,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Tag")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Tag")
                         .IsUnique();
 
                     b.ToTable("CompanyAsset");
@@ -1184,10 +1352,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppraisalId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CompetencyApplication");
                 });
@@ -1211,6 +1386,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("TemplateId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -1219,6 +1399,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CompetencyItem");
                 });
@@ -1246,7 +1428,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("CompetencyTemplate");
                 });
@@ -1279,10 +1468,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Contract");
                 });
@@ -1311,10 +1507,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("ToEmployeeId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Delegation");
                 });
@@ -1355,7 +1558,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("TargetHeadcount")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Department");
                 });
@@ -1388,7 +1598,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("DevItem");
                 });
@@ -1421,6 +1638,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<DateTime>("Time")
                         .HasColumnType("TEXT");
 
@@ -1428,6 +1650,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("DeviceUserId", "Time");
 
@@ -1469,11 +1693,18 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("To")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmailOutbox");
                 });
@@ -1575,19 +1806,26 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("BranchId");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
                     b.HasIndex("DepartmentId");
 
-                    b.HasIndex("Email")
+                    b.HasIndex("JobTitleId");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Code")
                         .IsUnique();
 
-                    b.HasIndex("JobTitleId");
+                    b.HasIndex("TenantId", "Email")
+                        .IsUnique();
 
                     b.ToTable("Employee");
                 });
@@ -1639,7 +1877,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("ShiftId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeAssignment");
                 });
@@ -1681,11 +1926,18 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeCase");
                 });
@@ -1722,10 +1974,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("UserId")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("CaseId", "UserId");
 
@@ -1765,9 +2024,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CaseId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeCaseEvent");
                 });
@@ -1817,11 +2083,18 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Token")
                         .IsUnique();
@@ -1862,7 +2135,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeDependent");
                 });
@@ -1895,6 +2175,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -1907,6 +2192,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("AttachmentToken")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeDocument");
                 });
@@ -1929,11 +2216,18 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "FieldId")
                         .IsUnique();
@@ -1974,6 +2268,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("SubmittedByUserId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -1981,6 +2280,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievance");
                 });
@@ -2017,10 +2318,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("ResponseId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievanceAppeal");
                 });
@@ -2061,10 +2369,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppealId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievanceAppealDecision");
                 });
@@ -2098,9 +2413,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("GrievanceId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeGrievanceResponse");
                 });
@@ -2150,9 +2472,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
-                    b.HasIndex("FileHash")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "FileHash")
                         .IsUnique();
 
                     b.ToTable("EmployeeImportBatch");
@@ -2191,10 +2520,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeProbation");
                 });
@@ -2220,9 +2556,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("ComponentId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("EmployeeSalaryComponent");
                 });
@@ -2259,7 +2602,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("ShiftId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "Date")
                         .IsUnique();
@@ -2333,7 +2683,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("EmployeeId", "EffectiveOn", "Kind")
                         .IsUnique();
@@ -2369,9 +2726,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime?>("SubmittedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("ReviewerEmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("AppraisalId", "ReviewerEmployeeId")
                         .IsUnique();
@@ -2408,7 +2772,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Holiday");
                 });
@@ -2440,10 +2811,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("Label")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("HrFieldDefinition");
                 });
@@ -2494,10 +2872,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("IdempotencyKey")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Status", "NextAttemptAt");
 
@@ -2551,6 +2936,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -2562,6 +2952,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("DepartmentId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("JobOpening");
                 });
@@ -2599,7 +2991,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("JobTitle");
                 });
@@ -2628,6 +3027,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Used")
                         .HasColumnType("INTEGER");
 
@@ -2637,6 +3041,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveBalance");
                 });
@@ -2703,6 +3109,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("TEXT");
 
@@ -2711,6 +3122,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasIndex("EmployeeId");
 
                     b.HasIndex("LeaveTypeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveRequest");
                 });
@@ -2754,10 +3167,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Year")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveTransaction");
                 });
@@ -2804,7 +3224,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LeaveType");
                 });
@@ -2849,11 +3276,18 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("LifecycleTask");
                 });
@@ -2890,6 +3324,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("StartedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -2898,6 +3337,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("TokenHash")
                         .IsUnique();
@@ -2930,6 +3371,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("TitleKey")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -2938,6 +3384,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Notification");
                 });
@@ -2999,12 +3447,19 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("WorkflowRevisionHash")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("OvertimeRequest");
                 });
@@ -3024,6 +3479,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Token")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -3035,6 +3495,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Token")
                         .IsUnique();
@@ -3090,9 +3552,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("TargetRunId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("TargetRunId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PayrollAdjustment");
                 });
@@ -3130,7 +3599,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Sequence")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("AdjustmentId", "Sequence")
                         .IsUnique();
@@ -3178,10 +3654,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("RunId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Version")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("LineId", "Version")
                         .IsUnique();
@@ -3227,10 +3710,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Version")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("RunId", "Version")
                         .IsUnique();
@@ -3342,12 +3832,19 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<double>("Tax")
                         .HasColumnType("REAL");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<double>("TotalDeductions")
                         .HasColumnType("REAL");
 
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("RunId", "EmployeeId")
                         .IsUnique();
@@ -3399,12 +3896,19 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Year")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Year", "Month")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Year", "Month")
                         .IsUnique();
 
                     b.ToTable("PayrollRun");
@@ -3462,6 +3966,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int?>("SelfScore")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CycleId");
@@ -3470,6 +3979,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.HasIndex("LegacyReviewId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfAppraisal");
                 });
@@ -3512,10 +4023,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AppraisalId")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfBonus");
                 });
@@ -3569,7 +4087,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Status")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfCycle");
                 });
@@ -3605,6 +4130,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -3613,6 +4143,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfGoal");
                 });
@@ -3642,7 +4174,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerfReminder");
                 });
@@ -3680,7 +4219,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("AppraisalId", "Kind");
 
@@ -3724,9 +4270,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Score")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PerformanceReview");
                 });
@@ -3764,6 +4317,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -3771,6 +4329,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasKey("Id");
 
                     b.HasIndex("AppraisalId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PipMilestone");
                 });
@@ -3808,9 +4368,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("MilestoneId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("PipProgress");
                 });
@@ -3848,9 +4415,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CandidateId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("RecruitmentEvent");
                 });
@@ -3882,9 +4456,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
-                    b.HasIndex("Code")
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Code")
                         .IsUnique();
 
                     b.ToTable("Role");
@@ -3910,7 +4491,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("RolePermission");
                 });
@@ -3942,10 +4530,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("SalaryComponent");
                 });
@@ -3990,7 +4585,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("SalaryStructure");
                 });
@@ -4036,9 +4638,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("StructureId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("SalaryStructureApplication");
                 });
@@ -4131,7 +4740,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<long>("Start")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("Shift");
                 });
@@ -4185,7 +4801,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("RowNumber")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("BatchId", "RowNumber")
                         .IsUnique();
@@ -4221,12 +4844,64 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<int>("To")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TenantId");
+
                     b.ToTable("StatusHistory");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.Tenant", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Tenant");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            CreatedAt = new DateTime(2026, 11, 25, 0, 0, 0, 0, DateTimeKind.Utc),
+                            Name = "Demo company",
+                            Slug = "demo",
+                            Status = "Active"
+                        });
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCertificate", b =>
@@ -4272,10 +4947,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("AttachmentToken")
                         .IsUnique();
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingCertificate");
                 });
@@ -4301,7 +4983,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("CertificateId", "OnDate")
                         .IsUnique();
@@ -4357,6 +5046,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -4366,6 +5060,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingCourse");
                 });
@@ -4391,11 +5087,18 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("CourseId");
 
                     b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingEnrollment");
                 });
@@ -4433,9 +5136,16 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
 
                     b.HasIndex("EnrollmentId");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("TrainingOutcome");
                 });
@@ -4459,7 +5169,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("WorkflowDefinition");
                 });
@@ -4491,7 +5208,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT")
                         .HasDefaultValue("");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.HasIndex("Kind", "Hash")
                         .IsUnique();
@@ -4526,6 +5250,11 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<int>("Rule")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
                     b.Property<double?>("Threshold")
                         .HasColumnType("REAL");
 
@@ -4533,6 +5262,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
 
                     b.ToTable("WorkflowStep");
                 });

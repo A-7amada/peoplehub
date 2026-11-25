@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Design;
 namespace PeopleHub.Infrastructure.Persistence;
 /// <summary>PostgreSQL context. Strategy pattern (ADR-0015): money is exact numeric(18,2); quantities and
 /// factors (hours, multiplier, score) are numeric(18,4) so no precision is lost to rounding.</summary>
-public class PgDbContext(DbContextOptions<PgDbContext> options) : AppDbContext(options)
+public class PgDbContext(DbContextOptions<PgDbContext> options, PeopleHub.Application.Common.Tenancy.ITenantContext? tenant = null) : AppDbContext(options, tenant)
 {
     static readonly HashSet<string> Quantities = ["Multiplier", "OvertimeHours", "Hours", "FinalScore"];
     protected override void ConfigureDecimalStorage(ModelConfigurationBuilder c)
