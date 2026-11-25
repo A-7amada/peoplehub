@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PeopleHub.Infrastructure.Persistence;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Employees;
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Tests;
 public class AssetTests

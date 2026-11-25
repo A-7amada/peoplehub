@@ -1,6 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using PeopleHub.Infrastructure.Persistence;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Attendance;
+using PeopleHub.Application.Modules.Employees;
+using PeopleHub.Application.Modules.Leave;
+using PeopleHub.Application.Modules.Payroll;
+using PeopleHub.Application.Modules.Requests;
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Tests;
 public class BusinessFoundationTests

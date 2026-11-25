@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Modules.Platform;
 namespace PeopleHub.Web.Services;
 
 public class OperationsService(AppDbContext db, IConfiguration config)
@@ -44,7 +45,7 @@ public class MailWorker(IServiceScopeFactory scopes, ILogger<MailWorker> log) : 
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
         while (!ct.IsCancellationRequested) {
-            try { using var scope=scopes.CreateScope(); await scope.ServiceProvider.GetRequiredService<PeopleHub.Application.Services.EmailService>().FlushAsync(); }
+            try { using var scope=scopes.CreateScope(); await scope.ServiceProvider.GetRequiredService<PeopleHub.Application.Modules.Platform.EmailService>().FlushAsync(); }
             catch(Exception ex) { log.LogWarning(ex,"Mail delivery deferred"); }
             await Task.Delay(TimeSpan.FromMinutes(1),ct);
         }

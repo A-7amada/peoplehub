@@ -1,7 +1,14 @@
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
 using PeopleHub.Infrastructure.Persistence;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Attendance;
+using PeopleHub.Application.Modules.Employees;
+using PeopleHub.Application.Modules.Leave;
+using PeopleHub.Application.Modules.Payroll;
+using PeopleHub.Application.Modules.Platform;
+using PeopleHub.Application.Modules.Reporting;
+using PeopleHub.Application.Modules.Requests;
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Tests;
 /// <summary>SEC-001 export and service audit. The sweep proves what the current report and export code returns to a user with only the general Reports grant. The file list is a ratchet, not proof that every use is guarded.</summary>

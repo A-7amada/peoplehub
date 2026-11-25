@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Employees
 @model EmployeeImportBatch
 @{Func<string,string,string>X=(e,a)=>T.IsAr?a:e;ViewData["Title"]=X("Employee import batch #","دفعة استيراد الموظفين رقم ")+Model.Id;var recon=ViewBag.Recon as ImportReconciliation;}
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@(Model.Status=="RolledBack"?X("Rolled back. The imported people were terminated and their records are kept.","تم التراجع. أُنهيت خدمة الموظفين المستوردين وسجلاتهم محفوظة."):Model.Status=="Staged"?X("Staged and waiting. No employee has been created yet.","مجهزة وبانتظار القرار. لم يتم إنشاء أي موظف بعد."):X("Committed. These employees were created from the staged rows.","تم التنفيذ. أُنشئ هؤلاء الموظفون من الصفوف المجهزة."))</div></div></div>

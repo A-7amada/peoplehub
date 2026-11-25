@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
 using PeopleHub.Domain.Entities;
 
 namespace PeopleHub.Web.Services;

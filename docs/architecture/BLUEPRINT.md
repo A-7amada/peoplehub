@@ -36,7 +36,7 @@ src/PeopleHub.Web/
 tests/PeopleHub.Tests/
   Architecture/ Tenancy/ Modules/<Module>/ Postgres/
 ```
-Namespaces follow folders. Files move module by module in small commits; every move keeps the full gate green. Current state: **Planned**. Today the code is flat per layer (Domain/Entities, Application/Services, Web/Controllers).
+Namespaces follow folders. Files move module by module in small commits; every move keeps the full gate green. Current state (2026-11-26): Application is **Built** as `Modules/<Module>/` with one namespace per module (`PeopleHub.Application.Modules.Employees`, Leave, Attendance, Payroll, Talent, Benefits, Relations, Requests, Identity, Operations, Reporting, Organization, Platform) plus `Common/` (current user, clock, audit, notification, access scope, Tenancy, Caching, Files). Domain is **Built** as `Modules/<Module>/` folders; the C# namespace stays `PeopleHub.Domain.Entities` on purpose, because EF migration snapshots store entity type names and a namespace change would make every migration diff noisy and risky. Infrastructure (`Persistence`, `Caching`, `Files`, `Operations`) is partly organized; Web controllers and Infrastructure configurations per module are **Planned**. Module boundary tests (a module may use another module only through its public contract) are **Planned**; today every module may see every other (known coupling, recorded for step 6b).
 
 ## 4. Design patterns, named where they are used
 - Repository and Unit of Work: AppDbContext behind IRepository (exists, Built). `AtomicAsync` is the unit of work boundary.

@@ -1,4 +1,4 @@
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Operations;
 namespace PeopleHub.Web.Services;
 /// <summary>ARC-004: wraps a maintenance job with a persisted lease and run record. Claim and completion use their own scopes so a failed job cannot leak tracked changes into the record.</summary>
 public static class JobTracker

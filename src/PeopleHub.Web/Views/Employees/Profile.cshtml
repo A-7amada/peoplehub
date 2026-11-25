@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Employees
 @model EmployeeProfile
 @{
   var e = Model.Employee; ViewData["Title"] = T.Name(e.FullName, e.FullNameAr); string tab = ViewBag.Tab;

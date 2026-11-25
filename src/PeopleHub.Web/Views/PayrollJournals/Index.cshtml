@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Payroll
 @model CostCentreJournal
 @{ViewData["Title"]=T.IsAr?"ملخص مراكز التكلفة":"Cost-centre summary";}
 <div class="page-head"><h1>@ViewData["Title"] @Model.Year-@Model.Month.ToString("00")</h1><div class="actions"><a class="btn" href="/Payroll/Run/@Model.RunId">@T["nav.payroll"]</a>@if(Me.Can(Perm.PayExport)){<a class="btn" href="/PayrollJournals/Csv?id=@Model.RunId">CSV</a>}</div></div>

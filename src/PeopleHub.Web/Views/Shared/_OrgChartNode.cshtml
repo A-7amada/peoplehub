@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Organization
 @model DeptNode
 <li><div class="oc-box @(Model.Dept.IsActive ? "" : "off")"><span class="avatar oc-av">@Ui.Icon("org", 14)</span><div class="oc-t">@T.Name(Model.Dept.Name, Model.Dept.NameAr)</div>
  <div class="oc-m">@(Model.ManagerName == null ? "-" : T.Name(Model.ManagerName, Model.ManagerNameAr ?? ""))</div><div class="oc-n">@Model.Headcount @T["org.people"]</div></div>

@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Attendance
 @model List<DailyRow>
 @{ ViewData["Title"] = T["att.daily"]; DateTime date = ViewBag.Date; int? dept = ViewBag.Dept; var depts = (List<Department>)ViewBag.Depts;
    bool officer = Me.Can(Perm.AttManage); }

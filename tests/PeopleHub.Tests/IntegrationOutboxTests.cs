@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Operations;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Infrastructure.Persistence;
 namespace PeopleHub.Tests;

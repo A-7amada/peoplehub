@@ -1,4 +1,5 @@
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Payroll;
+using PeopleHub.Application.Modules.Reporting;
 namespace PeopleHub.Tests;
 public class SpreadsheetExportTests
 {

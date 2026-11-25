@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Relations;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Web.Services;
 namespace PeopleHub.Web.Controllers;

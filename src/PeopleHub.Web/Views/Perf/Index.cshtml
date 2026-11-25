@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Talent
 @model List<AppraisalView>
 @{ ViewData["Title"] = T.IsAr ? "إدارة الأداء" : "Performance management"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var cycles = (List<PerfCycle>)ViewBag.Cycles; var c = ViewBag.Cycle as PerfCycle; bool hr = Context.User.Claims.Any(x => x.Type == System.Security.Claims.ClaimTypes.Role && PermissionCache.Has(new[] { x.Value }, Perm.TalentManage));
   var st = new Dictionary<CycleStatus, (string en, string ar, string col)> { [CycleStatus.Open] = ("Open: goals and ratings", "مفتوحة: الأهداف والتقييم", "green"), [CycleStatus.Calibration] = ("Calibration", "المعايرة", "amber"), [CycleStatus.Closed] = ("Closed", "مغلقة", "violet") };

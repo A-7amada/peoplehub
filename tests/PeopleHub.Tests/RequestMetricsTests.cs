@@ -1,4 +1,4 @@
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Operations;
 namespace PeopleHub.Tests;
 public class RequestMetricsTests
 {

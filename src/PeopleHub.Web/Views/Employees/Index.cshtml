@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Employees
 @model List<Employee>
 @{ ViewData["Title"] = T["nav.employees"]; var f = (EmployeeFilter)ViewBag.Filter; var depts = (List<Department>)ViewBag.Depts; var br = (List<Branch>)ViewBag.Branches; bool hr = Me.Can(Perm.EmpManage); bool pay = Model.Count > 0 && Me.Can(Perm.EmpSalary); }
 <div class="page-head"><div><h1>@T["nav.employees"]</h1><div class="sub">@Model.Count @T["emp.found"]</div></div>

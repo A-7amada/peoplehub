@@ -1,3 +1,5 @@
+@using PeopleHub.Application.Common
+@using PeopleHub.Application.Modules.Talent
 @model List<Candidate>
 @{ ViewData["Title"] = T.IsAr ? "التوظيف" : "Recruitment"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var jobs = (List<JobOpening>)ViewBag.Jobs; var depts = (List<Department>)ViewBag.Depts;
    var stages = new[] { CandidateStage.Applied, CandidateStage.Screening, CandidateStage.Interview, CandidateStage.Offer, CandidateStage.Hired, CandidateStage.Rejected };

@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Talent
 @model AppraisalView
 @{var a=Model.A;var tools=(PerfTools)ViewBag.Tools;Func<string,string,string>X=(e,b)=>T.IsAr?b:e;bool hr=Context.User.Claims.Any(x=>x.Type==System.Security.Claims.ClaimTypes.Role && PermissionCache.Has(new[]{x.Value},Perm.TalentManage));}
 <div class="grid g2" style="margin-top:18px">

@@ -1,0 +1,30 @@
+using PeopleHub.Domain.Entities;
+using PeopleHub.Domain.Interfaces;
+using PeopleHub.Application.Common;
+namespace PeopleHub.Application.Modules.Operations;
+public record PendingKind(string Kind,int Pending,int OldestAgeDays);
+public record StoredFiles(int Count,long Bytes);
+public record OperationsSnapshot(DateTime AsOf,List<PendingKind> Approvals,OutboxReconciliation Outbox,int UnreadNotifications);
+/// <summary>ARC-009: read-only aggregate projection for operators. Counts only: no employee IDs, names, request contents or payloads. Computed on demand from the database, not stored.</summary>
+public class OperationsProjection(IRepository repo,AppClock clock,IntegrationOutbox outbox)
+{
+ async Task<PendingKind> Kind<T>(string kind) where T:Approvable
+ {
+  var created=await repo.ToListAsync(repo.Query<T>().Where(x=>x.Status==RequestStatus.Pending).Select(x=>x.CreatedAt));
+  var oldest=created.Count==0?0:Math.Max(0,(int)(clock.UtcNow-created.Min()).TotalDays);
+  return new(kind,created.Count,oldest);
+ }
+ /// <summary>ARC-006: files live in the database (private, authorised downloads only). This shows how much of the free database they use. Counts and sizes only.</summary>
+ public async Task<StoredFiles> StoredFilesAsync()
+ {
+  var a=await repo.ToListAsync(repo.Query<Attachment>().Select(x=>x.Data.Length));
+  var c=await repo.ToListAsync(repo.Query<EmployeeCaseFile>().Select(x=>x.Data.Length));
+  return new(a.Count+c.Count,a.Sum(x=>(long)x)+c.Sum(x=>(long)x));
+ }
+ public async Task<OperationsSnapshot> SnapshotAsync()
+ {
+  var kinds=new List<PendingKind>{await Kind<LeaveRequest>("Leave"),await Kind<OvertimeRequest>("Overtime"),await Kind<AttendanceCorrection>("Correction"),await Kind<AdvanceRequest>("Advance")};
+  var unread=await repo.CountAsync(repo.Query<Notification>().Where(x=>!x.IsRead));
+  return new(clock.UtcNow,kinds,await outbox.ReconcileAsync(),unread);
+ }
+}

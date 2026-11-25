@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Benefits
 @model BenefitView
 @{ViewData["Title"]=T.IsAr?"مزايا الموظفين":"Employee benefits";Func<string,string,string>X=(e,a)=>T.IsAr?a:e;bool hr=Me.Can(Perm.BenefitsManage);var employees=(List<Employee>)ViewBag.Employees;}
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><p class="sub">@X("Plans and recorded coverage, separate from payroll","الخطط والتغطية المسجلة، منفصلة عن المرتبات")</p></div></div>

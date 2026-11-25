@@ -1,3 +1,5 @@
+@using PeopleHub.Application.Common
+@using PeopleHub.Application.Modules.Talent
 @model List<TrainingCourse>
 @{ ViewData["Title"] = T.IsAr ? "التدريب" : "Training"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; var en = (List<TrainingParticipant>)ViewBag.Enrollments; var evidence=(TrainingEvidenceView)ViewBag.Evidence; bool mgr = Context.User.Claims.Any() && PermissionCache.Has(Context.User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value), Perm.TalentManage); }
 <p class="muted small">@X("Certificate expiry reminders are private in-app alerts for the employee and training managers, within 30 days and after expiry, at most daily while this service is awake. No email is sent and delivery time is not guaranteed.","تنبيهات انتهاء الشهادات داخل التطبيق فقط للموظف ومسؤولي التدريب، خلال ٣٠ يوماً قبل الانتهاء وبعده، مرة يومياً كحد أقصى أثناء تشغيل الخدمة. لا تُرسل رسالة بريد ولا يوجد ضمان لموعد التسليم.")</p>

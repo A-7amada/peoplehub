@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Operations
 @model List<RouteMetric>
 @{Func<string,string,string>X=(e,a)=>T.IsAr?a:e;ViewData["Title"]=X("Service diagnostics","تشخيص الخدمة");}
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><p class="sub">@X("In-memory observations since this process started. Resets on deploy or restart, not an uptime guarantee. Static files are excluded. Counts contain no employee IDs, paths, query strings or message contents.","قياسات في الذاكرة منذ بدء العملية وتصفّر مع إعادة التشغيل أو النشر، وليست ضمانا للاستمرارية. لا تشمل الملفات الثابتة أو أرقام الموظفين أو المسارات أو معاملات البحث أو محتوى الرسائل.")</p></div></div>

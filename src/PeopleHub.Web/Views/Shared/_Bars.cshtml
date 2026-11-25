@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Reporting
 @model List<ChartItem>
 @{ var max = Math.Max(1, Model.Select(m => m.Value).DefaultIfEmpty(0).Max()); }
 <div class="bars">

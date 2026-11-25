@@ -1,3 +1,5 @@
+@using PeopleHub.Application.Modules.Attendance
+@using PeopleHub.Application.Modules.Platform
 @model List<DayRow>
 @{
   var e = (Employee)ViewBag.Emp; int y = ViewBag.Year, m = ViewBag.Month; var today = (AttendanceRecord?)ViewBag.Today; var s = (AttendanceSummary)ViewBag.Summary; bool own = ViewBag.Own;

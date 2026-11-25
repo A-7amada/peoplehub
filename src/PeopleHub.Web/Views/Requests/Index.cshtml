@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Requests
 @model List<RequestRow>
 @{ ViewData["Title"] = T["nav.requests"]; string scope = ViewBag.Scope; string? kind = ViewBag.Kind; int inbox = ViewBag.Inbox; }
 <div class="page-head"><div><h1>@T["nav.requests"]</h1><div class="sub">@T["req.sub"]</div></div><div class="actions"><a class="btn" href="/Requests/Advances">@Ui.Icon("wallet", 16) @T["req.advances"]</a></div></div>

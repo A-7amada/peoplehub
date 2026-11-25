@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using PeopleHub.Infrastructure.Persistence;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Operations;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Web.Services;
 namespace PeopleHub.Web.Controllers;

@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Employees;
+using PeopleHub.Application.Modules.Platform;
+using PeopleHub.Application.Modules.Requests;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Web.Services;
 

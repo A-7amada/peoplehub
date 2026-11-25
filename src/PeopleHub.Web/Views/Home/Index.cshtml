@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Reporting
 @model DashboardData
 @{ ViewData["Title"] = T["nav.dashboard"]; var icons = new Dictionary<string,string>{["dash.headcount"]="users",["dash.presentToday"]="check",["dash.onLeave"]="calendar",["dash.pending"]="inbox",["dash.payroll"]="wallet"}; }
 <div class="page-head"><div><h1>@T["dash.welcome"], @User.Identity!.Name!.Split('@')[0]</h1><div class="sub">@(DateTime.Now.ToString("dddd, d MMMM yyyy", System.Globalization.CultureInfo.CurrentUICulture)) · @(Model.CompanyWide ? T["dash.scopeCompany"] : T["dash.scopeTeam"])</div></div>

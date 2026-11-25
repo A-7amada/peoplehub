@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Talent
 @model (PipView View,int AppraisalId)
 @{Func<string,string,string>X=(e,a)=>T.IsAr?a:e;}
 <div class="card" style="margin-top:20px"><div class="card-h"><h2>@X("Performance improvement milestones","مراحل خطة تحسين الأداء")</h2></div><div class="card-b"><p class="muted">@X("Explicit support goals and progress evidence, not an automatic disciplinary decision. The employee may record updates; their manager or HR reviews completion or cancellation. No score, salary or employment status changes. Dates and success measures are chosen by the reviewer.","أهداف دعم وأدلة تقدم محددة وليست قرارا تأديبيا تلقائيا. يسجل الموظف التحديثات ويراجع المدير أو الموارد البشرية الإتمام أو الإلغاء. لا تتغير الدرجة أو الراتب أو الحالة الوظيفية. يحدد المراجع المواعيد ومعايير النجاح.")</p>

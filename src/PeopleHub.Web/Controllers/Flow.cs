@@ -1,6 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Employees;
+using PeopleHub.Application.Modules.Organization;
+using PeopleHub.Application.Modules.Payroll;
+using PeopleHub.Application.Modules.Platform;
+using PeopleHub.Application.Modules.Reporting;
+using PeopleHub.Application.Modules.Requests;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Web.Services;
 

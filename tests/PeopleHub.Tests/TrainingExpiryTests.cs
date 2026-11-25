@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using PeopleHub.Infrastructure.Persistence;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Talent;
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Tests;
 public class TrainingExpiryTests

@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Talent
 @model AppraisalView
 @{ var a = Model.A; ViewData["Title"] = T.Name(a.Employee!.FullName, a.Employee.FullNameAr); Func<string, string, string> X = (en, ar) => T.IsAr ? ar : en;
   bool closed = a.Cycle!.Status == CycleStatus.Closed; bool self = Model.CanSelf || (!Model.CanManage && !Model.CanCalibrate && a.EmployeeId == (int.TryParse(Context.User.FindFirst("emp")?.Value, out var meId) ? meId : -1));

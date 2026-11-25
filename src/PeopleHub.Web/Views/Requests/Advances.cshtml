@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Requests
 @model List<AdvanceRow>
 @{ ViewData["Title"] = T["req.advances"]; var today = DateTime.Today; bool pay = Me.Can(Perm.AdvManage); string Money(decimal value)=>T.IsAr?$"{value:N2} ج.م":$"EGP {value:N2}"; }
 <div class="page-head"><div><h1>@T["req.advances"]</h1><div class="sub">@T["adv.sub"]</div></div></div>

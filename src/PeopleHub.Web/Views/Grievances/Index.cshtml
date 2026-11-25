@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Relations
 @model GrievanceView
 @{Func<string,string,string>X=(e,a)=>T.IsAr?a:e;ViewData["Title"]=X("Internal grievance intake","طلبات التظلم الداخلية");bool manage=Me.Can(Perm.RelationsManage);}
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Employee statements and explicit responses, separate from investigation cases.","بيانات الموظفين والردود الموجهة لهم، منفصلة عن قضايا التحقيق.")</div></div></div>

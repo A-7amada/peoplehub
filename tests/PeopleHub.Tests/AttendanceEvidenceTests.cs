@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using PeopleHub.Infrastructure.Persistence;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Attendance;
+using PeopleHub.Application.Modules.Platform;
+using PeopleHub.Application.Modules.Requests;
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Tests;
 public class AttendanceEvidenceTests

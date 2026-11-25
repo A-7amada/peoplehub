@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Employees
 @model (LifecycleView V,int EmployeeId)
 @{var v=Model.V;var id=Model.EmployeeId;bool hr=Me.Can(Perm.EmpManage);Func<string,string,string>X=(e,a)=>T.IsAr?a:e;}
 @if(!hr&&Me.EmployeeId!=id){<div class="flash">@X("Only tasks assigned to you are shown here. Other lifecycle tasks and probation details are private to the employee and HR.","تظهر هنا المهام المسندة إليك فقط. بقية مهام دورة الموظف وتفاصيل الاختبار خاصة بالموظف والموارد البشرية.")</div>}

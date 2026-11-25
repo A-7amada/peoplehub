@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Payroll
 @model List<PayrollBankResult>
 @{var run=(PayrollRun)ViewBag.Run;var lines=(List<PayrollLine>)ViewBag.Lines;ViewData["Title"]=T.IsAr?"مطابقة البنك":"Bank reconciliation";string Identity(PayrollLine l)=>string.IsNullOrWhiteSpace(l.EmployeeCodeSnapshot)?(T.IsAr?"بند قديم، معرف الموظف #":"Legacy line, employee #")+l.EmployeeId:l.EmployeeCodeSnapshot+" "+T.Name(l.EmployeeNameSnapshot,l.EmployeeNameArSnapshot);string Outcome(string s)=>T.IsAr?(s=="Paid"?"سداد مسجل":s=="Returned"?"مرتجع":"مرفوض"):s;}
 <div class="page-head"><h1>@ViewData["Title"] @run.Year-@run.Month.ToString("00")</h1><a class="btn" href="/Payroll/Run/@run.Id">@T["nav.payroll"]</a></div>

@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Organization
 @model DeptNode
 <li><div class="node"><span class="avatar" style="width:34px;height:34px;background:#eef0ff;color:#5b5bd6">@Ui.Icon("org", 16)</span>
  <div><div class="t">@T.Name(Model.Dept.Name, Model.Dept.NameAr) @if (!Model.Dept.IsActive) { @Ui.Chip(T["common.inactive"], "gray") }</div>

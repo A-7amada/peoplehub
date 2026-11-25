@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Attendance
 @model PunchExceptionView
 @{ViewData["Title"]=T.IsAr?"استثناءات البصمات":"Punch exceptions";Func<string,string,string>X=(e,a)=>T.IsAr?a:e;DateTime from=ViewBag.From,to=ViewBag.To;}
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><p class="muted">@X("Missing punches on recorded days after the scheduled shift ends. No times are invented. Days with no record use the normal absence calendar. Unknown device users need a separate verified mapping.","البصمات الناقصة في الأيام المسجلة بعد نهاية الوردية. لا تختلق أوقات. الأيام بلا سجل تظهر في تقويم الغياب. معرف الجهاز غير المعروف يحتاج مطابقة منفصلة موثقة.")</p></div></div>

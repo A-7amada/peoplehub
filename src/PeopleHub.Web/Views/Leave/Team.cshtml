@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Requests
 @model List<(Employee Employee, LeaveRequest Leave)>
 @{ ViewData["Title"] = T["leave.team"]; var up = (List<RequestRow>)ViewBag.Upcoming; }
 <div class="page-head"><div><h1>@T["leave.team"]</h1><div class="sub">@T["leave.onLeaveToday"]</div></div><a class="btn" href="/Leave/Calendar">@T["leave.calendar"]</a></div>

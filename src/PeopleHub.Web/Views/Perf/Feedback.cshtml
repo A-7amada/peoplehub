@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Talent
 @model List<ReviewerInboxItem>
 @{ ViewData["Title"] = T.IsAr ? "تقييم 360" : "360 feedback"; Func<string,string,string> X=(e,a)=>T.IsAr?a:e; }
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Invited reviewers submit once. Identity, comments and aggregates each require separate grants. Aggregate publication also requires an explicitly configured minimum and, for the subject, a closed cycle. This is not an anonymity guarantee.", "المقيم المدعو يرسل مرة واحدة. الهوية والتعليقات والمتوسطات تتطلب صلاحيات منفصلة. نشر المتوسط يتطلب حداً أدنى محدداً، ولصاحب التقييم دورة مغلقة أيضاً. هذا ليس ضماناً لإخفاء الهوية.")</div></div></div>

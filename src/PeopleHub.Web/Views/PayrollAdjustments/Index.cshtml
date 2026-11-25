@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Payroll
 @model List<PayrollAdjustmentView>
 @{ViewData["Title"]=T.IsAr?"تصحيحات مرتبات مرجعية":"Referenced payroll corrections";int target=ViewBag.Target;var sources=(List<PayrollLine>)ViewBag.Sources;}
 <div class="page-head"><h1>@ViewData["Title"] #@target</h1><a class="btn" href="/Payroll/Run/@target">@T["nav.payroll"]</a></div>

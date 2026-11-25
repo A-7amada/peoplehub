@@ -1,4 +1,6 @@
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Employees;
+using PeopleHub.Application.Modules.Requests;
+using PeopleHub.Application.Modules.Talent;
 namespace PeopleHub.Web.Services;
 public class PerfWorker(IServiceScopeFactory scopes, ILogger<PerfWorker> log) : BackgroundService
 {

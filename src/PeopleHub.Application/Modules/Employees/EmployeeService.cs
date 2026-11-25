@@ -1,0 +1,252 @@
+using PeopleHub.Domain.Entities;
+using PeopleHub.Domain.Interfaces;
+
+using PeopleHub.Application.Common;
+namespace PeopleHub.Application.Modules.Employees;
+
+public record EmployeeFilter(string? Search, int? DepartmentId, int? BranchId, EmployeeStatus? Status);
+public record EmployeeProfile(Employee Employee, string? ManagerName, string? ManagerNameAr, List<Contract> Contracts,
+    List<StatusHistory> StatusHistory, List<CareerEvent> Events, List<EmployeeSalaryComponent> Components, bool CanSeeSalary, Shift? Shift,bool CanSeeIdentity=false,bool CanSeeBank=false);
+
+public class EmployeeService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, AppClock clock)
+{
+    public async Task<List<Employee>> SearchAsync(EmployeeFilter f)
+    {
+        var ids = await scope.VisibleEmployeeIdsAsync();
+        var q = repo.Query<Employee>().Where(e => true);
+        if (ids != null) q = q.Where(e => ids.Contains(e.Id));
+        if (!string.IsNullOrWhiteSpace(f.Search))
+        {
+            var s = f.Search.Trim().ToLower();
+            q = q.Where(e => e.FullName.ToLower().Contains(s) || e.FullNameAr.Contains(s) || e.Email.Contains(s) || e.Code.ToLower().Contains(s));
+        }
+        if (f.DepartmentId is { } d) q = q.Where(e => e.DepartmentId == d);
+        if (f.BranchId is { } b) q = q.Where(e => e.BranchId == b);
+        if (f.Status is { } st) q = q.Where(e => e.Status == st);
+        return (await repo.ToListAsync(q.OrderBy(e => e.Code))).Select(VisibleCopy).ToList();
+    }
+
+    private async Task<Dictionary<int, Employee>> LookupAsync() =>
+        (await repo.ToListAsync(repo.Query<Employee>())).ToDictionary(e => e.Id);
+
+    public async Task<List<Employee>> ManagerCandidatesAsync() =>
+        (await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active).OrderBy(e => e.FullName))).Select(VisibleCopy).ToList();
+
+    private Task<Employee?> LoadAsync(int id) => repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e => e.Id == id));
+
+    public async Task<Employee?> GetAsync(int id)
+    {
+        if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
+        var e=await LoadAsync(id);
+        return e==null?null:VisibleCopy(e);
+    }
+    public async Task<Employee?> SettlementEmployeeAsync(int id)
+    {
+        if(!me.Can(Perm.EmpPay)) throw new DomainException("err.forbidden");
+        var e=await LoadAsync(id);
+        return e==null?null:new Employee{Id=e.Id,Code=e.Code,FullName=e.FullName,FullNameAr=e.FullNameAr,HireDate=e.HireDate,BasicSalary=e.BasicSalary};
+    }
+    public async Task<EmployeeProfile> ProfileAsync(int id)
+    {
+        if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
+        var e = await LoadAsync(id) ?? throw new DomainException("err.notFound");
+        var mgr = e.ManagerId is { } m ? await LoadAsync(m) : null;
+        var visible=VisibleCopy(e);
+        return new EmployeeProfile(visible, mgr?.FullName, mgr?.FullNameAr,
+            (await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.StartDate))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Notes="";return copy;}).ToList(),
+            (await repo.ToListAsync(repo.Query<StatusHistory>().Where(c => c.EmployeeId == id).OrderByDescending(c => c.At))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Reason=null;return copy;}).ToList(),
+            (await repo.ToListAsync(repo.Query<CareerEvent>().Where(c => c.EmployeeId == id && (c.Type != CareerEventType.SalaryChange || scope.CanSeeSalary(id))).OrderByDescending(c => c.Date))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Details="";return copy;}).ToList(),
+            scope.CanSeeSalary(id) ? await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == id)) : [],
+            scope.CanSeeSalary(id),
+            e.ShiftId is { } s ? await repo.FirstOrDefaultAsync(repo.Query<Shift>().Where(x => x.Id == s)) : null,CanIdentity(id),CanBank(id));
+    }
+
+    private static T Copy<T>(T source)=>System.Text.Json.JsonSerializer.Deserialize<T>(System.Text.Json.JsonSerializer.Serialize(source))!;
+    private bool CanIdentity(int id)=>me.EmployeeId==id||me.Can(Perm.EmpIdentity);
+    private bool CanBank(int id)=>me.EmployeeId==id||me.Can(Perm.EmpBank);
+    private Employee VisibleCopy(Employee source)
+    {
+        var e=System.Text.Json.JsonSerializer.Deserialize<Employee>(System.Text.Json.JsonSerializer.Serialize(source))!;
+        if(!CanIdentity(e.Id)){e.NationalId="";e.BirthDate=null;e.Address="";e.InsuranceNumber="";e.MaritalStatus="";}
+        if(!CanBank(e.Id)){e.BankName="";e.Iban="";}
+        if(!scope.CanSeeSalary(e.Id))e.BasicSalary=0;
+        return e;
+    }
+    public async Task<Employee?> EditModelAsync(int id)
+    {
+        RequireHr();var e=await LoadAsync(id);if(e==null)return null;
+        e=System.Text.Json.JsonSerializer.Deserialize<Employee>(System.Text.Json.JsonSerializer.Serialize(e))!;
+        if(!me.Can(Perm.EmpIdentity)){e.NationalId="";e.BirthDate=null;e.Address="";e.InsuranceNumber="";e.MaritalStatus="";}
+        if(!me.Can(Perm.EmpBankEdit)||!me.Can(Perm.EmpPay)){e.BankName="";e.Iban="";}
+        if(!me.Can(Perm.EmpPay))e.BasicSalary=0;
+        return e;
+    }
+
+    public async Task<List<EmployeeAssignment>> AssignmentsAsync(int id)
+    {
+        if (!await scope.CanSeeAsync(id)) throw new DomainException("err.forbidden");
+        return (await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==id).OrderByDescending(x=>x.EffectiveFrom).ThenByDescending(x=>x.Id))).Select(x=>{var copy=Copy(x);if(!CanIdentity(id))copy.Reason="";if(!scope.CanSeeSalary(id))copy.BasicSalary=0;return copy;}).ToList();
+    }
+
+    private void RequireHr()
+    {
+        if (!me.Can(Perm.EmpManage)) throw new DomainException("err.forbidden");
+    }
+
+    public Task SaveAsync(Employee model, string? reason) => repo.AtomicAsync(()=>SaveCoreAsync(model,reason));
+    private async Task SaveCoreAsync(Employee model, string? reason)
+    {
+        RequireHr();
+        model.FullNameAr ??= ""; model.NationalId ??= ""; model.MaritalStatus ??= ""; model.Nationality ??= "Egyptian";
+        model.Address ??= ""; model.Phone ??= ""; model.BankName ??= ""; model.Iban ??= ""; model.InsuranceNumber ??= "";
+        if (!me.Can(Perm.EmpPay))
+        {
+            var original=model.Id==0?null:await LoadAsync(model.Id);
+            if (original==null && model.BasicSalary!=0) throw new DomainException("err.forbidden");
+            if (original!=null) {model.BasicSalary=original.BasicSalary;}
+        }
+        var protectedOriginal=model.Id==0?null:await LoadAsync(model.Id);
+        if(!me.Can(Perm.EmpBankEdit)||!me.Can(Perm.EmpPay))
+        {
+            if(protectedOriginal==null&&(!string.IsNullOrEmpty(model.Iban)||!string.IsNullOrEmpty(model.BankName)))throw new DomainException("err.forbidden");
+            model.Iban=protectedOriginal?.Iban??"";model.BankName=protectedOriginal?.BankName??"";
+        }
+        if(!me.Can(Perm.EmpIdentity))
+        {
+            if(protectedOriginal==null&&(!string.IsNullOrEmpty(model.NationalId)||model.BirthDate!=null||!string.IsNullOrEmpty(model.Address)||!string.IsNullOrEmpty(model.InsuranceNumber)))throw new DomainException("err.forbidden");
+            model.NationalId=protectedOriginal?.NationalId??"";model.BirthDate=protectedOriginal?.BirthDate;model.Address=protectedOriginal?.Address??"";model.InsuranceNumber=protectedOriginal?.InsuranceNumber??"";model.MaritalStatus=protectedOriginal?.MaritalStatus??"";
+        }
+        model.Validate(protectedOriginal==null||model.NationalId!=protectedOriginal.NationalId);
+        if (!await repo.AnyAsync(repo.Query<Department>().Where(x => x.Id == model.DepartmentId)) ||
+            !await repo.AnyAsync(repo.Query<Branch>().Where(x => x.Id == model.BranchId)) ||
+            !await repo.AnyAsync(repo.Query<JobTitle>().Where(x => x.Id == model.JobTitleId)) ||
+            (model.ShiftId.HasValue && !await repo.AnyAsync(repo.Query<Shift>().Where(x => x.Id == model.ShiftId))) ||
+            (model.ManagerId.HasValue && !await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Id == model.ManagerId))))
+            throw new DomainException("err.notFound");
+        if (await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Email == model.Email && x.Id != model.Id))) throw new DomainException("err.emailTaken");
+        var today = clock.Today;
+
+        if (model.Id == 0)
+        {
+            var n = await repo.CountAsync(repo.Query<Employee>()) + 1;
+            model.Code = $"EMP-{n:0000}";
+            while (await repo.AnyAsync(repo.Query<Employee>().Where(x => x.Code == model.Code))) model.Code = $"EMP-{++n:0000}";
+            model.Status = EmployeeStatus.Active;
+            repo.Add(model);
+            audit.Log("Create", "Employee", model.Code, $"{model.FullName}, salary {model.BasicSalary}");
+            await repo.SaveAsync();
+            repo.Add(EmployeeAssignment.Capture(model,model.HireDate.Date,me.Email,"Hired"));
+            repo.Add(new StatusHistory { EmployeeId = model.Id, From = EmployeeStatus.Active, To = EmployeeStatus.Active, At = clock.UtcNow, ChangedBy = me.Email, Reason = "Hired" });
+            await repo.SaveAsync();
+            return;
+        }
+
+        var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == model.Id)) ?? throw new DomainException("err.notFound");
+        if(await repo.AnyAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==e.Id && x.Kind=="Assignment" && !x.Cancelled && x.AppliedAt==null))) throw new DomainException("err.pendingSchedule");
+        var assignmentChanged=e.BasicSalary!=model.BasicSalary || e.DepartmentId!=model.DepartmentId || e.BranchId!=model.BranchId || e.JobTitleId!=model.JobTitleId || e.ManagerId!=model.ManagerId || e.ShiftId!=model.ShiftId;
+        var prior=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==e.Id).OrderBy(x=>x.EffectiveFrom));
+        if (assignmentChanged && string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
+        if (assignmentChanged && prior.Count==0) {var baseline=EmployeeAssignment.Capture(e,today,me.Email,"Observed pre-change baseline; earlier effective dates unknown");baseline.EffectiveTo=today;repo.Add(baseline);}
+        if (assignmentChanged && prior.LastOrDefault() is {} last) last.EffectiveTo=today;
+        void Event(CareerEventType t, string details) =>
+            repo.Add(new CareerEvent { EmployeeId = e.Id, Type = t, Date = today, Details = details, RecordedBy = me.Email });
+        var changes = new List<string>();
+        if (e.BasicSalary != model.BasicSalary) { Event(CareerEventType.SalaryChange, $"{e.BasicSalary:N0} -> {model.BasicSalary:N0}"); changes.Add($"salary {e.BasicSalary} -> {model.BasicSalary}"); }
+        if (e.JobTitleId != model.JobTitleId) { Event(CareerEventType.TitleChange, $"title #{e.JobTitleId} -> #{model.JobTitleId}"); changes.Add($"jobTitle {e.JobTitleId} -> {model.JobTitleId}"); }
+        if (e.DepartmentId != model.DepartmentId) { Event(CareerEventType.Transfer, $"department #{e.DepartmentId} -> #{model.DepartmentId}"); changes.Add($"department {e.DepartmentId} -> {model.DepartmentId}"); }
+        if (e.ManagerId != model.ManagerId) { Event(CareerEventType.ManagerChange, $"manager #{e.ManagerId} -> #{model.ManagerId}"); changes.Add($"manager {e.ManagerId} -> {model.ManagerId}"); }
+        if (model.ManagerId == e.Id) throw new DomainException("err.selfManager");
+        if (e.BranchId != model.BranchId) changes.Add($"branch {e.BranchId} -> {model.BranchId}");
+
+        e.FullName = model.FullName; e.FullNameAr = model.FullNameAr ?? ""; e.NationalId = model.NationalId ?? ""; e.BirthDate = model.BirthDate;
+        e.Gender = model.Gender; e.MaritalStatus = model.MaritalStatus ?? ""; e.Nationality = model.Nationality ?? ""; e.Address = model.Address ?? "";
+        e.Phone = model.Phone ?? ""; e.Email = model.Email; e.HireDate = model.HireDate; e.JobTitleId = model.JobTitleId; e.DepartmentId = model.DepartmentId;
+        e.BranchId = model.BranchId; e.ManagerId = model.ManagerId; e.EmploymentType = model.EmploymentType; e.ShiftId = model.ShiftId;
+        e.BankName = model.BankName ?? ""; e.Iban = model.Iban ?? ""; e.InsuranceNumber = model.InsuranceNumber ?? ""; e.BasicSalary = model.BasicSalary;
+        if (assignmentChanged) repo.Add(EmployeeAssignment.Capture(e,today,me.Email,reason!.Trim()));
+        audit.Log("Update", "Employee", e.Code, changes.Count == 0 ? "profile fields" : string.Join("; ", changes) + (string.IsNullOrWhiteSpace(reason) ? "" : $" (reason: {reason})"));
+        await repo.SaveAsync();
+    }
+
+    /// <summary>Employees may update only their own contact details.</summary>
+    public async Task UpdateMyContactAsync(string? phone, string? address)
+    {
+        var e = await LoadAsync(me.EmployeeId ?? throw new DomainException("err.forbidden")) ?? throw new DomainException("err.notFound");
+        audit.Log("Update", "Employee", e.Code, $"contact: phone '{e.Phone}' -> '{phone}'");
+        e.Phone = phone?.Trim() ?? ""; e.Address = address?.Trim() ?? "";
+        await repo.SaveAsync();
+    }
+
+    public async Task ChangeStatusAsync(int id, EmployeeStatus to, string? reason)
+    {
+        RequireHr();
+        if (to is EmployeeStatus.Terminated or EmployeeStatus.Resigned or EmployeeStatus.Suspended && string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
+        var e = await LoadAsync(id) ?? throw new DomainException("err.notFound");
+        if(await repo.AnyAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==e.Id && !x.Cancelled && x.AppliedAt==null))) throw new DomainException("err.pendingSchedule");
+        var from = e.Status;
+        repo.Add(e.ChangeStatus(to, me.Email, reason, clock.UtcNow));
+        audit.Log("StatusChange", "Employee", e.Code, $"{from} -> {to}; {reason}");
+        await repo.SaveAsync();
+    }
+
+    public Task AddContractAsync(int employeeId, ContractType type, DateTime start, DateTime? end, string? notes) => repo.AtomicAsync(async()=>
+    {
+        RequireHr();
+        var employee=await LoadAsync(employeeId)??throw new DomainException("err.notFound");
+        employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
+        var old = await repo.ToListAsync(repo.Query<Contract>().Where(c => c.EmployeeId == employeeId && c.IsCurrent));
+        var c = Contract.Create(employeeId, type, start, end, notes);
+        foreach (var o in old) o.IsCurrent = false;
+        repo.Add(c);
+        audit.Log("Create", "Contract", employeeId, $"{type} {start:yyyy-MM-dd} -> {end:yyyy-MM-dd}");
+        await repo.SaveAsync();
+    });
+
+    public Task RenewContractAsync(int contractId, DateTime newEnd) => repo.AtomicAsync(async()=>
+    {
+        RequireHr();
+        var c = await repo.FirstOrDefaultAsync(repo.Query<Contract>().Where(x => x.Id == contractId)) ?? throw new DomainException("err.notFound");
+        var employee=await LoadAsync(c.EmployeeId)??throw new DomainException("err.notFound");
+        employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
+        var nc = c.Renew(newEnd);
+        repo.Add(nc);
+        repo.Add(new CareerEvent { EmployeeId = c.EmployeeId, Type = CareerEventType.ContractRenewal, Date = clock.Today, Details = $"until {newEnd:yyyy-MM-dd}", RecordedBy = me.Email });
+        audit.Log("Renew", "Contract", contractId, $"until {newEnd:yyyy-MM-dd}");
+        await repo.SaveAsync();
+    });
+
+    public async Task AddCareerEventAsync(int employeeId, CareerEventType type, string? details)
+    {
+        RequireHr();
+        if (string.IsNullOrWhiteSpace(details)) throw new DomainException("err.reasonRequired");
+        repo.Add(new CareerEvent { EmployeeId = employeeId, Type = type, Date = clock.Today, Details = details.Trim(), RecordedBy = me.Email });
+        audit.Log("Create", "CareerEvent", employeeId, $"{type}: {details}");
+        await repo.SaveAsync();
+    }
+
+    public Task SetComponentAsync(int employeeId, int componentId, decimal amount) => repo.AtomicAsync(async()=>
+    {
+        if (!me.Can(Perm.EmpPay)) throw new DomainException("err.forbidden");
+        if (amount < 0 || amount>100000000 || decimal.Round(amount,2)!=amount) throw new DomainException("err.salary");
+        var employee=await LoadAsync(employeeId)??throw new DomainException("err.notFound");
+        if(!await repo.AnyAsync(repo.Query<SalaryComponent>().Where(x=>x.Id==componentId)))throw new DomainException("err.notFound");
+        employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");
+        var row = await repo.FirstOrDefaultAsync(repo.Query<EmployeeSalaryComponent>().Where(c => c.EmployeeId == employeeId && c.ComponentId == componentId));
+        var before = row?.Amount ?? 0;
+        if (row == null) repo.Add(new EmployeeSalaryComponent { EmployeeId = employeeId, ComponentId = componentId, Amount = amount });
+        else row.Amount = amount;
+        audit.Log("Update", "SalaryComponent", employeeId, $"component #{componentId}: {before} -> {amount}");
+        await repo.SaveAsync();
+    });
+
+    public Task<List<SalaryComponent>> ComponentsAsync() => repo.ToListAsync(repo.Query<SalaryComponent>().OrderBy(c => c.Type).ThenBy(c => c.Name));
+
+    public async Task<List<(Contract Contract, Employee Employee)>> ExpiringContractsAsync(int days)
+    {
+        var today = clock.Today;
+        var ids = await scope.VisibleEmployeeIdsAsync();
+        var cs = (await repo.ToListAsync(repo.Query<Contract>().Where(c => c.IsCurrent && c.EndDate != null))).Where(c => c.ExpiresWithin(today, days));
+        var emps = await LookupAsync();
+        return cs.Where(c => ids == null || ids.Contains(c.EmployeeId)).Select(c => {var copy=Copy(c);if(!CanIdentity(c.EmployeeId))copy.Notes="";return (copy,VisibleCopy(emps[c.EmployeeId]));}).OrderBy(x => x.copy.EndDate).ToList();
+    }
+}

@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Reporting
 @model ReportTable
 @{ ViewData["Title"] = T["nav.reports"]; string key = ViewBag.Key; int y = ViewBag.Year, m = ViewBag.Month; bool needsPeriod = key is "attendance" or "payroll" or "leave"; }
 <div class="page-head"><div><h1>@T["nav.reports"]</h1><div class="sub">@T["rep.sub"]</div></div><div class="actions"><a class="btn" href="/Reports/Csv?key=@key&year=@y&month=@m">@Ui.Icon("download", 16) CSV</a> <a class="btn" href="/Reports/Xlsx?key=@key&year=@y&month=@m">@Ui.Icon("download", 16) Excel</a> <button class="btn" onclick="window.print()">@Ui.Icon("download", 16) PDF</button></div></div>

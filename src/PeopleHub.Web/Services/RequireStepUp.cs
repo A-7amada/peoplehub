@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Modules.Identity;
+using PeopleHub.Application.Modules.Payroll;
 namespace PeopleHub.Web.Services;
 /// <summary>Rejects sensitive operations rather than replaying an unconfirmed POST.</summary>
 [AttributeUsage(AttributeTargets.Method)]

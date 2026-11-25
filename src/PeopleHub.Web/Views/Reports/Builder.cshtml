@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Reporting
 @model ReportTable
 @{ ViewData["Title"] = T.IsAr ? "منشئ التقارير" : "Report builder"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en; string ds = ViewBag.Dataset; var cols = (string[])ViewBag.Cols; var depts = (List<Department>)ViewBag.Depts; int? dept = ViewBag.Dept;
   var dsName = new Dictionary<string, string> { ["employees"] = X("Employees", "الموظفون"), ["leave"] = X("Leave requests", "طلبات الإجازة"), ["reviews"] = X("Performance reviews", "تقييمات الأداء"), ["training"] = X("Training", "التدريب") };

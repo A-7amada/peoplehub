@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Payroll
 @model PayrollRun
 @{
   var lines = (List<PayrollLine>)ViewBag.Lines; var hist = (List<ApprovalAction>)ViewBag.History; ViewData["Title"] = $"{T["nav.payroll"]} {Model.Year}-{Model.Month:00}";

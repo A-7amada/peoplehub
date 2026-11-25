@@ -1,3 +1,4 @@
+@using PeopleHub.Application.Modules.Payroll
 @model List<PayrollRun>
 @{ ViewData["Title"] = T["nav.payroll"]; DateTime now = ViewBag.Now; bool prep = Me.Can(Perm.PayPrepare); }
 <div class="page-head">@if(Me.Can(Perm.EmpPay)&&Me.Can(Perm.EmpSalary)){<a class="btn" href="/SalaryStructures">@(T.IsAr?"هياكل الرواتب":"Salary structures")</a>}<div><h1>@T["nav.payroll"]</h1><div class="sub">@T["pay.sub"]</div></div><div class="actions"><a class="btn" href="/Payroll/MySlips">@Ui.Icon("file", 16) @T["pay.mySlips"]</a></div></div>

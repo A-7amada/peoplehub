@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using PeopleHub.Infrastructure.Persistence;
-using PeopleHub.Application.Services;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Operations;
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Tests;
 /// <summary>ARC-004 durable run state and lease. SQLite only.</summary>
