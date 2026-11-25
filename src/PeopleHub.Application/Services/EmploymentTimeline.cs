@@ -32,11 +32,18 @@ public class EmploymentTimeline(IRepository repo,ICurrentUser me,AppClock clock,
   foreach(var child in await repo.ToListAsync(repo.Query<EmploymentChange>().Where(c=>c.ParentChangeId==x.Id && c.AppliedAt==null)))child.Cancelled=true;
   audit.Log("CancelSchedule","Employee",x.EmployeeId,$"schedule #{id}: {reason.Trim()}");await repo.SaveAsync();
  });
- public Task ApplyDueAsync()=>repo.AtomicAsync(async()=>
+ public async Task ApplyDueAsync()
  {
-  var due=await repo.ToListAsync(repo.Query<EmploymentChange>().Where(x=>!x.Cancelled && x.AppliedAt==null && x.EffectiveOn<=clock.Today).OrderBy(x=>x.EffectiveOn).ThenBy(x=>x.Id));
-  foreach(var x in due)
+  var due=await repo.ToListAsync(repo.Query<EmploymentChange>().Where(x=>!x.Cancelled && x.AppliedAt==null && x.EffectiveOn<=clock.Today).OrderBy(x=>x.EffectiveOn).ThenBy(x=>x.Id).Select(x=>x.EmployeeId));
+  var failed=new List<Exception>();
+  // Keep a temporary assignment and its return in the same employee transaction.
+  foreach(var employeeId in due.Distinct())
   {
+   try { await repo.AtomicAsync(async()=>
+   {
+    var pending=await repo.ToListAsync(repo.Query<EmploymentChange>().Where(x=>x.EmployeeId==employeeId && !x.Cancelled && x.AppliedAt==null && x.EffectiveOn<=clock.Today).OrderBy(x=>x.EffectiveOn).ThenBy(x=>x.Id));
+    foreach(var x in pending)
+    {
    var e=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==x.EmployeeId))??throw new DomainException("err.notFound");
    if(x.Kind=="Status")repo.Add(e.ChangeStatus(x.Status!.Value,x.Actor,x.Reason,x.EffectiveOn));
    else
@@ -49,6 +56,10 @@ public class EmploymentTimeline(IRepository repo,ICurrentUser me,AppClock clock,
     repo.Add(EmployeeAssignment.Capture(e,x.EffectiveOn,x.Actor,x.Reason));
    }
    x.AppliedAt=clock.UtcNow;audit.Log("ApplySchedule","Employee",e.Id,$"schedule #{x.Id}, effective {x.EffectiveOn:yyyy-MM-dd}");await repo.SaveAsync();
+    }
+   }); }
+   catch(Exception ex) when(ex is not OperationCanceledException){failed.Add(new InvalidOperationException($"Employee schedule deferred: {employeeId}",ex));}
   }
- });
+  if(failed.Count>0)throw new AggregateException("Some employee schedules were deferred; unrelated employee batches were processed.",failed);
+ }
 }

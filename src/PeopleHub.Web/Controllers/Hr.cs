@@ -27,7 +27,6 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         try
         {
             var eid = id ?? me.EmployeeId ?? throw new DomainException("err.notFound");
-            await timeline.ApplyDueAsync();
             var p = await svc.ProfileAsync(eid);
             ViewBag.Scheduled=await timeline.ListAsync(eid,access);
             if(tab=="assets"){ViewBag.Assets=await assets.GetAsync(eid);if(me.Can(Perm.EmpManage))ViewBag.Inventory=await assets.InventoryAsync();}
