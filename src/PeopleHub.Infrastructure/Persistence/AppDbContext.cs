@@ -38,10 +38,16 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
 
     protected override void ConfigureConventions(ModelConfigurationBuilder c)
     {
-        // SQLite has no native decimal; store as REAL so comparisons and sums work.
+        ConfigureDecimalStorage(c); // Strategy: each provider decides how decimals are stored (ADR-0015).
+        c.Properties<TimeSpan>().HaveConversion<long>();
+    }
+
+    /// <summary>Strategy hook. SQLite has no native decimal, so the local/test provider stores REAL.
+    /// PgDbContext overrides this with exact numeric(18,2).</summary>
+    protected virtual void ConfigureDecimalStorage(ModelConfigurationBuilder c)
+    {
         c.Properties<decimal>().HaveConversion<double>();
         c.Properties<decimal?>().HaveConversion<double>();
-        c.Properties<TimeSpan>().HaveConversion<long>();
     }
 
     protected override void OnModelCreating(ModelBuilder b)

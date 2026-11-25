@@ -30,8 +30,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("AssignmentStamp")
                         .IsRequired()
@@ -58,8 +59,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Installments")
                         .HasColumnType("integer");
 
-                    b.Property<double>("Paid")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Paid")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -862,11 +864,13 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("EmployeeMonthly")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("EmployeeMonthly")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("EmployerMonthly")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("EmployerMonthly")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1041,8 +1045,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("MonthlyBase")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("MonthlyBase")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
@@ -1565,8 +1570,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("BasicSalary")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("BasicSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("timestamp without time zone");
@@ -1677,8 +1683,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("BasicSalary")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("BasicSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
@@ -2308,8 +2315,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("ComponentId")
                         .HasColumnType("integer");
@@ -2387,8 +2395,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime?>("AppliedAt")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<double>("BasicSalary")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("BasicSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
@@ -2698,11 +2707,13 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Grade")
                         .HasColumnType("integer");
 
-                    b.Property<double>("MaxSalary")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("MaxSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("MinSalary")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("MinSalary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -3108,11 +3119,13 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
-                    b.Property<double>("Hours")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Hours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
-                    b.Property<double>("Multiplier")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Multiplier")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<string>("Reason")
                         .IsRequired()
@@ -3191,8 +3204,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("At")
                         .HasColumnType("timestamp without time zone");
@@ -3291,8 +3305,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime>("At")
                         .HasColumnType("timestamp without time zone");
@@ -3391,8 +3406,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("AbsenceDeduction")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("AbsenceDeduction")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("AbsentDays")
                         .HasColumnType("integer");
@@ -3400,21 +3416,25 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<string>("AdjustmentNote")
                         .HasColumnType("text");
 
-                    b.Property<double>("AdvanceInstallment")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("AdvanceInstallment")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("Allowances")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Allowances")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("BankSnapshot")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("Basic")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Basic")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("Bonus")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Bonus")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("CostCenterSnapshot")
                         .IsRequired()
@@ -3443,39 +3463,48 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("FixedDeduction")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("FixedDeduction")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("Gross")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Gross")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("IbanSnapshot")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double>("Insurance")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Insurance")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("LateDeduction")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("LateDeduction")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("LateMinutes")
                         .HasColumnType("integer");
 
-                    b.Property<double>("Martyrs")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Martyrs")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("Net")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Net")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("OtherDeduction")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("OtherDeduction")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("Overtime")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Overtime")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("OvertimeHours")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("OvertimeHours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
@@ -3486,11 +3515,13 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("RunId")
                         .HasColumnType("integer");
 
-                    b.Property<double>("Tax")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Tax")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
-                    b.Property<double>("TotalDeductions")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("TotalDeductions")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.HasKey("Id");
 
@@ -3577,8 +3608,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
-                    b.Property<double?>("FinalScore")
-                        .HasColumnType("double precision");
+                    b.Property<decimal?>("FinalScore")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<int?>("LegacyReviewId")
                         .HasColumnType("integer");
@@ -3633,8 +3665,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<double>("Amount")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("AppliedAt")
                         .HasColumnType("timestamp without time zone");
@@ -4140,8 +4173,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("At")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<double>("Basic")
-                        .HasColumnType("double precision");
+                    b.Property<decimal>("Basic")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("ComponentsJson")
                         .IsRequired()
@@ -4541,8 +4575,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<double?>("PlannedBudget")
-                        .HasColumnType("double precision");
+                    b.Property<decimal?>("PlannedBudget")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
@@ -4729,8 +4764,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Rule")
                         .HasColumnType("integer");
 
-                    b.Property<double?>("Threshold")
-                        .HasColumnType("double precision");
+                    b.Property<decimal?>("Threshold")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("WorkflowId")
                         .HasColumnType("integer");
