@@ -17,3 +17,19 @@ public class DepartmentApproverTests
  [Fact]public async Task DepartmentReminderTargetsRecordedEmployeeNotNewManager(){await using var d=await Db();var c=new AppClock(TimeProvider.System);var target=new AppUser{Email="reminder-dept7@example.local",EmployeeId=7,RoleList=Roles.Employee,PasswordHash="unused",IsActive=true};d.Add(target);var r=new OvertimeRequest{EmployeeId=6,Route="Employee#7",Hours=1,Date=c.Today,CreatedAt=c.UtcNow.AddHours(-3)};d.Add(r);d.Add(new AppSetting{Key="Workflow.ReminderHours.Overtime",Value="1"});await d.SaveAsync();await new ApprovalReminders(d,c).RunAsync();Assert.Contains(await d.Set<ApprovalReminder>().Where(x=>x.RequestId==r.Id&&x.Kind=="Overtime").ToListAsync(),x=>x.UserId==target.Id);}
  [Fact]public async Task NotificationResolvesCapturedDepartmentEmployee(){await using var d=await Db();var target=new AppUser{Email="notify-dept7@example.local",EmployeeId=7,RoleList=Roles.Employee,PasswordHash="unused",IsActive=true};d.Add(target);await d.SaveAsync();var clock=new AppClock(TimeProvider.System);await new NotificationService(d,new User(),clock).NotifyStageAsync(new OvertimeRequest{EmployeeId=6,Route="Employee#7"},"Fictional department approval");await d.SaveAsync();Assert.Contains(await d.Set<Notification>().ToListAsync(),x=>x.UserId==target.Id&&x.Details=="Fictional department approval");}
 }
+public class SkipLevelApproverTests
+{
+ static readonly WorkflowStep Step=new(){Approver=ApproverType.SkipLevelManager};
+ static Dictionary<int,int?> Chain(int? m6,int? m7)=>new(){[6]=m6,[7]=m7,[8]=null};
+ [Fact]public void CapturesManagersManager(){var e=new Employee{Id=5,ManagerId=7};Assert.Equal("Employee#8",RoutePlanner.Build([Step],e,1,false,Chain(7,8)));}
+ [Fact]public void MissingSelfOrLoopingChainBlocks()
+ {
+  Assert.Throws<DomainException>(()=>RoutePlanner.Build([Step],new Employee{Id=5},1,false,Chain(null,8)));
+  Assert.Throws<DomainException>(()=>RoutePlanner.Build([Step],new Employee{Id=5,ManagerId=7},1,false,Chain(7,null)));
+  Assert.Throws<DomainException>(()=>RoutePlanner.Build([Step],new Employee{Id=5,ManagerId=7},1,false,null));
+  Assert.Throws<DomainException>(()=>RoutePlanner.Build([Step],new Employee{Id=5,ManagerId=7},1,false,new Dictionary<int,int?>{[7]=5}));
+  Assert.Throws<DomainException>(()=>RoutePlanner.Build([Step],new Employee{Id=5,ManagerId=7},1,false,new Dictionary<int,int?>{[7]=7}));
+ }
+ [Fact]public void ThresholdStillSkipsStepWithoutBlocking(){var e=new Employee{Id=5};Assert.Equal("HRManager",RoutePlanner.Build([new WorkflowStep{Approver=ApproverType.SkipLevelManager,Threshold=5}],e,1,false,null));}
+ [Fact]public void TokenAndDuplicateGuard(){Assert.Equal("SkipLevelManager",Step.Token);}
+}

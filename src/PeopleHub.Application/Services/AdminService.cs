@@ -24,7 +24,8 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
     public async Task<string> RouteForAsync(string kind, Employee e, decimal size, bool alwaysEscalate = false)
     {
         var w = (await ListAsync()).FirstOrDefault(x => x.Kind == kind);
-        return RoutePlanner.Build(w?.Steps ?? [], e, size, alwaysEscalate);
+        var managers=(await repo.ToListAsync(repo.Query<Employee>().Select(x=>new{x.Id,x.ManagerId}))).ToDictionary(x=>x.Id,x=>x.ManagerId);
+        return RoutePlanner.Build(w?.Steps ?? [], e, size, alwaysEscalate, managers);
     }
 
     public async Task RouteRequestAsync(string kind,Approvable request,Employee employee,decimal size,bool alwaysEscalate=false)
@@ -33,7 +34,8 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
         var steps=definition?.Steps??[];
         var json=JsonSerializer.Serialize(new{Kind=kind,RoutingSemantics="captured-participant-rules-v3",Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold,x.Rule,x.RequiredCount})});
         var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
-        var route=RoutePlanner.Build(steps,employee,size,alwaysEscalate);
+        var managers=(await repo.ToListAsync(repo.Query<Employee>().Select(x=>new{x.Id,x.ManagerId}))).ToDictionary(x=>x.Id,x=>x.ManagerId);
+        var route=RoutePlanner.Build(steps,employee,size,alwaysEscalate,managers);
         var routed=new List<string>();
         var users=await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive));
         var employees=await repo.ToListAsync(repo.Query<Employee>());
@@ -86,7 +88,7 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
         if (type == ApproverType.Role && codes.Length == 0) throw new DomainException("err.roleRequired");
         var knownRoles=(await repo.ToListAsync(repo.Query<Role>())).Select(r=>r.Code).ToHashSet();
         if(type==ApproverType.Role&&codes.Any(r=>!knownRoles.Contains(r)))throw new DomainException("err.roleRequired");
-        if(type==ApproverType.DepartmentManager&&w.Steps.Any(s=>s.Approver==type))throw new DomainException("err.dupDepartmentManager");
+        if(type is ApproverType.DepartmentManager or ApproverType.SkipLevelManager&&w.Steps.Any(s=>s.Approver==type))throw new DomainException(type==ApproverType.SkipLevelManager?"err.dupSkipLevel":"err.dupDepartmentManager");
         if (w.Steps.Count >= 6) throw new DomainException("err.maxSteps");
         if (type == ApproverType.DirectManager && w.Steps.Any(s => s.Approver == ApproverType.DirectManager)) throw new DomainException("err.dupManager");
         if(w.Steps.Any(s=>s.Approver==type&&type==ApproverType.Role&&(rule!=ApprovalRule.AnyRole||s.Rule!=ApprovalRule.AnyRole)&&s.RoleCode==string.Join('|',codes)))throw new DomainException("err.approvalGroup");

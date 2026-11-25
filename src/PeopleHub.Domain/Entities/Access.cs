@@ -122,7 +122,7 @@ public static class PermissionCache
     public static (string En, string Ar)? NameOf(string code) => _names.TryGetValue(code, out var n) ? n : null;
 }
 
-public enum ApproverType { DirectManager = 0, Role = 1, DepartmentManager = 2 }
+public enum ApproverType { DirectManager = 0, Role = 1, DepartmentManager = 2, SkipLevelManager = 3 }
 
 /// <summary>One approval cycle per request kind (Leave, Overtime, Correction, Advance).</summary>
 public class WorkflowDefinition
@@ -151,13 +151,13 @@ public class WorkflowStep
     /// </summary>
     public decimal? Threshold { get; set; }
     /// <summary>The route token stored on requests: "Manager" or the role code.</summary>
-    public string Token => Approver switch {ApproverType.DirectManager=>ApprovalStage.Manager,ApproverType.DepartmentManager=>"DepartmentManager",_=>RoleCode??""};
+    public string Token => Approver switch {ApproverType.DirectManager=>ApprovalStage.Manager,ApproverType.DepartmentManager=>"DepartmentManager",ApproverType.SkipLevelManager=>"SkipLevelManager",_=>RoleCode??""};
 }
 
 /// <summary>Builds the route of a new request from the configured steps. Pure, so it is unit-tested.</summary>
 public static class RoutePlanner
 {
-    public static string Build(IEnumerable<WorkflowStep> steps, Employee e, decimal size, bool alwaysEscalate = false)
+    public static string Build(IEnumerable<WorkflowStep> steps, Employee e, decimal size, bool alwaysEscalate = false, IReadOnlyDictionary<int,int?>? managers = null)
     {
         var ordered = steps.OrderBy(s => s.Order).ToList();
         var route = new List<string>();
@@ -171,6 +171,13 @@ public static class RoutePlanner
                 var manager=e.Department?.ManagerId;
                 if(manager is not >0||manager==e.Id)throw new DomainException("err.departmentApprover");
                 token=ApprovalStage.EmployeeToken(manager.Value);
+            }
+            if(s.Approver==ApproverType.SkipLevelManager)
+            {
+                // The manager's manager, captured now. A missing, self or looping chain blocks the request instead of skipping the step.
+                int? skip=e.ManagerId is {} m&&managers!=null&&managers.TryGetValue(m,out var up)?up:null;
+                if(skip is not >0||skip==e.Id||skip==e.ManagerId)throw new DomainException("err.skipLevelApprover");
+                token=ApprovalStage.EmployeeToken(skip.Value);
             }
             if (!route.Contains(token)) route.Add(token);
         }

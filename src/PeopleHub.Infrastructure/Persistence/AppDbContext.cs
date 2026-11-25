@@ -53,6 +53,7 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
         b.Entity<ApprovalReminder>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.UserId,x.OnDate}).IsUnique();
         b.Entity<PayrollBankResult>().HasIndex(x=>new{x.LineId,x.Version}).IsUnique();
         b.Entity<EmployeeCaseFile>().HasIndex(x=>x.Token).IsUnique();
+        b.Entity<IntegrationEvent>().HasIndex(x=>x.IdempotencyKey).IsUnique();b.Entity<IntegrationEvent>().HasIndex(x=>new{x.Status,x.NextAttemptAt});
         b.Entity<EmployeeGrievanceAppeal>().HasIndex(x=>x.ResponseId).IsUnique();
         b.Entity<EmployeeGrievanceAppealDecision>().HasIndex(x=>x.AppealId).IsUnique();
         b.Entity<EmployeeGrievance>().HasIndex(x=>x.EmployeeId);

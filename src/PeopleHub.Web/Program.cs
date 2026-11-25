@@ -30,6 +30,8 @@ builder.Services.AddScoped<ICurrentUser, WebCurrentUser>();
 builder.Services.AddScoped<AccessScope>();
 builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<IntegrationOutbox>();
+builder.Services.AddScoped<OperationsProjection>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<OrgService>();
 builder.Services.AddScoped<GrievanceIntake>();
