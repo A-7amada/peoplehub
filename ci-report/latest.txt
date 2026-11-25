@@ -1,0 +1,9 @@
+run 45716544923 sha 115d39607e167711f16d446fcfe1f8d5477068e3
+FAILED PeopleHub.Tests.HardeningTests.PostgresMigrationSmoke
+System.InvalidOperationException : Restore refused: target is not empty
+   at PeopleHub.Infrastructure.Operations.PostgresArchive.RestoreEmptyAsync(AppDbContext db, Byte[] bytes) in /home/runner/work/peoplehub/peoplehub/src/PeopleHub.Infrastructure/Operations/PostgresArchive.cs:line 35
+   at PeopleHub.Infrastructure.Operations.PostgresArchive.RestoreEmptyAsync(AppDbContext db, Byte[] bytes) in /home/runner/work/peoplehub/peoplehub/src/PeopleHub.Infrastructure/Operations/PostgresArchive.cs:line 51
+   at PeopleHub.Tests.HardeningTests.PostgresMigrationSmoke() in /home/runner/work/peoplehub/peoplehub/tests/PeopleHub.Tests/HardeningTests.cs:line 55
+   at PeopleHub.Tests.HardeningTests.PostgresMigrationSmoke() in /home/runner/work/peoplehub/peoplehub/tests/PeopleHub.Tests/HardeningTests.cs:line 58
+   at PeopleHub.Tests.HardeningTests.PostgresMigrationSmoke() in /ho
+---
