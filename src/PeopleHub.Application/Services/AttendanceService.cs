@@ -213,20 +213,23 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         return result;
     }
 
-    public async Task RequestOvertimeAsync(DateTime date, decimal hours, string? reason)
+    public Task RequestOvertimeAsync(DateTime date,decimal hours,string? reason)=>repo.AtomicAsync(()=>RequestOvertimeCoreAsync(date,hours,reason));
+    private async Task RequestOvertimeCoreAsync(DateTime date, decimal hours, string? reason)
     {
         var e = await MeAsync();
         var o = OvertimeRequest.Create(e, date, hours, reason, clock.Today);
         await flows.RouteRequestAsync("Overtime",o,e,hours);
         if (await repo.AnyAsync(repo.Query<OvertimeRequest>().Where(x => x.EmployeeId == e.Id && x.Date == date.Date && (x.Status == RequestStatus.Pending || x.Status == RequestStatus.Approved))))
             throw new DomainException("err.overtimeExists");
+        e.LeaveRequestStamp=Guid.NewGuid().ToString("N");
         o.Employee = e;
         repo.Add(o);
         await notify.NotifyStageAsync(o, $"{e.FullName}: {hours}h");
         await repo.SaveAsync();
     }
 
-    public async Task RequestCorrectionAsync(DateTime date, DateTime? newIn, DateTime? newOut, string? reason, string? attToken = null, string? attName = null)
+    public Task RequestCorrectionAsync(DateTime date,DateTime? newIn,DateTime? newOut,string? reason,string? attToken=null,string? attName=null)=>repo.AtomicAsync(()=>RequestCorrectionCoreAsync(date,newIn,newOut,reason,attToken,attName));
+    private async Task RequestCorrectionCoreAsync(DateTime date, DateTime? newIn, DateTime? newOut, string? reason, string? attToken, string? attName)
     {
         var e = await MeAsync();
         var rec = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == date.Date));

@@ -111,3 +111,7 @@ Department workflow full checkpoint: 404 executed passes plus one explicit Postg
 Fictional localhost MVC acceptance configures captured-all only after step-up, submits overtime, completes the direct-manager stage, retains the first vote without advancing, removes the first voter inbox action and finalizes on the second distinct participant. Both decisions retained. EN/AR workflow configuration and pending-vote viewport screenshots inspected after correcting role/single-approver labels and RTL vote count direction. No production definitions, participant assignments, business policy or grants changed. Both provider migrations generated; SQLite upgrade exercised. PostgreSQL race stress not executed.
 
 Current-build fresh-fixture navigation rerun: all 228 EN/AR role-route renders passed. A preceding same-server run after four functional logins hit the configured login rate limit on the eighth navigation login; it is not counted as a complete navigation run.
+
+## Attendance submission transaction follow-up
+
+Six new tests pass for post-save rollback, no partial notification/revision/request, retry, duplicate overtime guard, failed validation tracker cleanup and nested outer rollback. Two disjoint affected test runs pass 21+45 cases. Current build passes the six fictional attendance MVC checks and three captured-group MVC checks. No UI changes in this follow-up. Latest complete suite remains the prior 419 executed plus one explicit PostgreSQL skip, not relabeled as a new full run; six new tests bring discovery to 426. No PostgreSQL parallel stress.
