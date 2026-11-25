@@ -1767,6 +1767,50 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("EmployeeCase");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeCaseAccess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("CaseId")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("Granted")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseId", "UserId");
+
+                    b.ToTable("EmployeeCaseAccess");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeCaseEvent", b =>
                 {
                     b.Property<int>("Id")

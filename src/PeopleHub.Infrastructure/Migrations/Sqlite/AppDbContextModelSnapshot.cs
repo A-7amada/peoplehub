@@ -1690,6 +1690,48 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("EmployeeCase");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeCaseAccess", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CaseId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Granted")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CaseId", "UserId");
+
+                    b.ToTable("EmployeeCaseAccess");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeCaseEvent", b =>
                 {
                     b.Property<int>("Id")
