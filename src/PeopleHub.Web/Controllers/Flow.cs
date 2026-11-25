@@ -65,7 +65,7 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
     [HttpPost]
     public async Task<IActionResult> Create(int year, int month)
     {
-        try { var id = await svc.CreateAsync(year, month); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Run), new { id }); }
+        try { if (!ModelState.IsValid) throw new DomainException("err.required"); var id = await svc.CreateAsync(year, month); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Run), new { id }); }
         catch (DomainException ex) { TempData["err"] = L[ex.Message]; return RedirectToAction(nameof(Index)); }
     }
 

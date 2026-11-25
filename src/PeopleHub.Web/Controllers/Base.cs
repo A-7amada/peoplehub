@@ -23,6 +23,13 @@ public abstract class BaseController(Loc loc) : Controller
         return next();
     }
 
+    protected static DateTime? ParseClock(DateTime date,string? value)
+    {
+        if(string.IsNullOrWhiteSpace(value))return null;
+        if(!TimeSpan.TryParseExact(value,[@"h\:mm",@"hh\:mm",@"hh\:mm\:ss"],System.Globalization.CultureInfo.InvariantCulture,out var time)||time<TimeSpan.Zero||time>=TimeSpan.FromDays(1))throw new DomainException("err.required");
+        return date.Date+time;
+    }
+
     protected static async Task<byte[]?> FileBytes(IFormFile? f)
     {
         if (f == null || f.Length == 0) return null;

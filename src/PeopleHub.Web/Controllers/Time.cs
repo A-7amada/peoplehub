@@ -42,8 +42,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
     [HttpPost]
     public Task<IActionResult> Manual(int employeeId, DateTime date, string? checkIn, string? checkOut, AttendanceSource source,string? reason)
     {
-        DateTime? T(string? s) => TimeSpan.TryParse(s, out var t) ? date.Date + t : null;
-        return Do(() => svc.AddManualAsync(employeeId, date, T(checkIn), T(checkOut), source,reason), "msg.saved", () => RedirectToAction(nameof(Daily), new { date }));
+        return Do(() => svc.AddManualAsync(employeeId, date, ParseClock(date,checkIn), ParseClock(date,checkOut), source,reason), "msg.saved", () => RedirectToAction(nameof(Daily), new { date }));
     }
 
     [HttpPost]
@@ -57,9 +56,8 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
     [HttpPost]
     public async Task<IActionResult> Correction(DateTime date, string? checkIn, string? checkOut, string? reason, IFormFile? file)
     {
-        DateTime? T(string? s) => TimeSpan.TryParse(s, out var t) ? date.Date + t : null;
         var bytes = await FileBytes(file);
-        return await Do(() => { var (tok, nm) = files.Save(file?.FileName, bytes); return svc.RequestCorrectionAsync(date, T(checkIn), T(checkOut), reason, tok, nm); }, "msg.requestSent", () => Redirect("/Requests"));
+        return await Do(() => { var (tok, nm) = files.Save(file?.FileName, bytes); return svc.RequestCorrectionAsync(date, ParseClock(date,checkIn), ParseClock(date,checkOut), reason, tok, nm); }, "msg.requestSent", () => Redirect("/Requests"));
     }
 }
 
