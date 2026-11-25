@@ -12,15 +12,24 @@ public class AttachmentService(IRepository repo, AccessScope scope, ICurrentUser
     public (string? Token, string? Name) Save(string? fileName, byte[]? data)
     {
         if (data == null || data.Length == 0 || string.IsNullOrWhiteSpace(fileName)) return (null, null);
+        var (name,ct)=Validate(fileName,data);
+        var a = new Attachment { FileName = name, ContentType = ct, Data = data, OwnerEmployeeId = me.EmployeeId ?? 0, UploadedBy = me.Email, At = clock.UtcNow };
+        repo.Add(a);
+        return (a.Token, name);
+    }
+
+    /// <summary>Checks supported format and signature only, not malware or authenticity.</summary>
+    public static (string Name,string ContentType) Validate(string fileName,byte[] data)
+    {
+        if(string.IsNullOrWhiteSpace(fileName)||data.Length==0)throw new DomainException("err.required");
         var name = Path.GetFileName(fileName);
         var ext = Path.GetExtension(name).ToLowerInvariant();
         if (!Types.TryGetValue(ext, out var ct)) throw new DomainException("err.fileType");
         if (data.Length > MaxBytes) throw new DomainException("err.fileSize");
         bool signature=ext switch {".pdf"=>data.AsSpan().StartsWith("%PDF-"u8),".png"=>data.AsSpan().StartsWith(new byte[]{137,80,78,71,13,10,26,10}),".jpg" or ".jpeg"=>data.Length>=3 && data[0]==255 && data[1]==216 && data[2]==255,_=>false};
         if(!signature)throw new DomainException("err.fileType");
-        var a = new Attachment { FileName = name, ContentType = ct, Data = data, OwnerEmployeeId = me.EmployeeId ?? 0, UploadedBy = me.Email, At = clock.UtcNow };
-        repo.Add(a);
-        return (a.Token, name);
+        if(name.Length>255)throw new DomainException("err.required");
+        return (name,ct);
     }
 
     public async Task<Attachment> GetAsync(string token)

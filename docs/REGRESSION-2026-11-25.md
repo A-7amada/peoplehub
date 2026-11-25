@@ -133,3 +133,11 @@ Daily/month attendance and delegation read follow-up: detached minimal name/depa
 - New case-access localhost harness: 5 passed. Existing private-HR harness: 4 passed. First private-HR attempt used the wrong local fixture permission key and could not exercise independent review; corrected disposable fixture reran successfully. Temporary fixture-only grant removed.
 - 228 eight-role EN/AR navigation renders passed. Actual full-page manager access/history and limited investigator EN/AR screenshots inspected, no horizontal overflow.
 - Broader roadmap remains partial. No PostgreSQL concurrency stress, legal process certification, attachments or employee appeal workflow claimed.
+
+### Private case files
+- Separate append-only case byte storage and private route, not employee-owned attachment fallback. Existing file validator extracted and reused; filename max255, PDF/JPEG/PNG signature and2MB checks. No malware/authenticity claim.
+- Relations18, existing shared-file/privacy26, new atomic2 pass, 46 focused total. New cases prove subject/general-HR/general-file-route denial, current investigator access and revocation/deactivation, immutable data/source, closed-case read-only, validation, outer/post-save rollback and stale case revision.
+- Initial combined build/test execution timed out before summary; excluded. Split completed runs r150-case18,r151-files26,r153-atomic2.
+- Current discovery449. Most recent complete full suite remains1b03745:441executed+1explicitPGskip/442.
+- Local case-access harness6 passed including upload, direct private download/no-store, subject/general-file-route denial and revocation; navigation228 passed. EN/AR manager and investigator final fullpage pixels inspected. Evidence r152-case and r154-nav.
+- Both provider migrations generated; PostgreSQL concurrency stress still unverified.

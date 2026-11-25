@@ -2,7 +2,8 @@ using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Application.Services;
 public record CaseInvestigator(int UserId,string Email);
-public record EmployeeCaseView(List<EmployeeCase> Cases,List<EmployeeCaseEvent> Events,List<EmployeeCaseAccess>? Access=null);
+public record CaseFileView(int CaseId,string Token,string FileName,string Sha256,string SourceReference,string Actor,DateTime At);
+public record EmployeeCaseView(List<EmployeeCase> Cases,List<EmployeeCaseEvent> Events,List<EmployeeCaseAccess>? Access=null,List<CaseFileView>? Files=null);
 public class EmployeeRelations(IRepository repo,ICurrentUser me,AppClock clock,AuditService audit)
 {
  private void Need(){if(!me.Can(Perm.RelationsManage))throw new DomainException("err.forbidden");}
@@ -19,7 +20,7 @@ public class EmployeeRelations(IRepository repo,ICurrentUser me,AppClock clock,A
  {
   bool all=me.Can(Perm.RelationsManage);var ids=all?new List<int>():await GrantedCaseIdsAsync();
   if(!all&&ids.Count==0)throw new DomainException("err.forbidden");
-  return new(await repo.ToListAsync(repo.Query<EmployeeCase>().Where(x=>all||ids.Contains(x.Id)).OrderByDescending(x=>x.Id)),await repo.ToListAsync(repo.Query<EmployeeCaseEvent>().Where(x=>all||ids.Contains(x.CaseId)).OrderBy(x=>x.Id)),all?await repo.ToListAsync(repo.Query<EmployeeCaseAccess>().OrderBy(x=>x.Id)):[]);
+  return new(await repo.ToListAsync(repo.Query<EmployeeCase>().Where(x=>all||ids.Contains(x.Id)).OrderByDescending(x=>x.Id)),await repo.ToListAsync(repo.Query<EmployeeCaseEvent>().Where(x=>all||ids.Contains(x.CaseId)).OrderBy(x=>x.Id)),all?await repo.ToListAsync(repo.Query<EmployeeCaseAccess>().OrderBy(x=>x.Id)):[],await repo.ToListAsync(repo.Query<EmployeeCaseFile>().Where(x=>all||ids.Contains(x.CaseId)).OrderBy(x=>x.Id).Select(x=>new CaseFileView(x.CaseId,x.Token,x.FileName,x.Sha256,x.SourceReference,x.Actor,x.At))));
  }
  public async Task<List<CaseInvestigator>> CandidatesAsync()
  {
@@ -38,6 +39,23 @@ public class EmployeeRelations(IRepository repo,ICurrentUser me,AppClock clock,A
   repo.Add(new EmployeeCaseAccess{CaseId=caseId,UserId=userId,Granted=granted,Reason=reason.Trim(),ActorUserId=me.UserId,Actor=me.Email,At=clock.UtcNow});
   audit.Log("CaseAccess","EmployeeCase",caseId,"Explicit per-case investigator access changed; identities and reason withheld from general audit");await repo.SaveAsync();
  });
+ public Task AddFileAsync(int caseId,string sourceReference,string fileName,byte[] data)=>repo.AtomicAsync(async()=>
+ {
+  var c=await repo.FirstOrDefaultAsync(repo.Query<EmployeeCase>().Where(x=>x.Id==caseId))??throw new DomainException("err.notFound");
+  if(!await CanInvestigateAsync(caseId))throw new DomainException("err.forbidden");
+  if(await repo.AnyAsync(repo.Query<EmployeeCaseEvent>().Where(x=>x.CaseId==caseId&&x.Kind=="Closed")))throw new DomainException("err.forbidden");
+  if(string.IsNullOrWhiteSpace(sourceReference)||sourceReference.Length>2000)throw new DomainException("err.reasonRequired");
+  var (name,contentType)=AttachmentService.Validate(fileName,data);
+  c.ChangeStamp=Guid.NewGuid().ToString("N");
+  repo.Add(new EmployeeCaseFile{CaseId=caseId,FileName=name,ContentType=contentType,Data=data,Sha256=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data)),SourceReference=sourceReference.Trim(),ActorUserId=me.UserId,Actor=me.Email,At=clock.UtcNow});
+  audit.Log("CaseFile","EmployeeCase",caseId,"Private evidence retained; file name, source and contents withheld. No authenticity or malware certification");await repo.SaveAsync();
+ });
+ public async Task<EmployeeCaseFile> DownloadAsync(string token)
+ {
+  var meta=await repo.FirstOrDefaultAsync(repo.Query<EmployeeCaseFile>().Where(x=>x.Token==token).Select(x=>new {x.CaseId}))??throw new DomainException("err.notFound");
+  if(!await CanInvestigateAsync(meta.CaseId))throw new DomainException("err.forbidden");
+  return (await repo.FirstOrDefaultAsync(repo.Query<EmployeeCaseFile>().Where(x=>x.Token==token)))!;
+ }
  public Task CreateAsync(int employeeId,string kind,string title,string statement)=>repo.AtomicAsync(async()=>
  {
   Need();if(kind is not("Grievance" or "Warning" or "Investigation")||string.IsNullOrWhiteSpace(title)||title.Length>200||string.IsNullOrWhiteSpace(statement)||statement.Length>8000)throw new DomainException("err.required");if(!await repo.AnyAsync(repo.Query<Employee>().Where(x=>x.Id==employeeId)))throw new DomainException("err.notFound");

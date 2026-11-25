@@ -67,4 +67,42 @@ public class EmployeeRelationsTests
  {
   await using var d=await Db();int id=await Case(d);await S(d).SetAccessAsync(id,3,true,"Archive review");await S(d).RecordAsync(id,"Closed","Concluded");var inv=S(d,new(3,15,false));Assert.Single((await inv.GetAsync()).Cases);await Assert.ThrowsAsync<DomainException>(()=>inv.RecordAsync(id,"Investigation","Too late"));
  }
+
+ static byte[] Pdf=>"%PDF-1.4 Fictional case evidence only"u8.ToArray();
+ [Fact]public async Task CaseFilesAreRestrictedToManagerOrAssignedInvestigatorNeverEmployeeOwnership()
+ {
+  await using var d=await Db();int id=await Case(d);await S(d).AddFileAsync(id,"Private source CASEFILE-72","case.pdf",Pdf);
+  var f=await d.Set<EmployeeCaseFile>().SingleAsync();Assert.Equal(Pdf,(await S(d).DownloadAsync(f.Token)).Data);Assert.Empty(await d.Set<Attachment>().ToListAsync());
+  Assert.Single((await S(d).GetAsync()).Files!);Assert.Equal(Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Pdf)),f.Sha256);
+  foreach(var u in new[]{new User(7,6,false),new User(6,4,false),new User(3,15,false)})await Assert.ThrowsAsync<DomainException>(()=>S(d,u).DownloadAsync(f.Token));
+  var c=new AppClock(TimeProvider.System);var owner=new User(7,6,false);await Assert.ThrowsAsync<DomainException>(()=>new AttachmentService(d,new(d,owner),owner,c).GetAsync(f.Token));
+  await S(d).SetAccessAsync(id,3,true,"Appointed");var inv=S(d,new(3,15,false));Assert.Equal(Pdf,(await inv.DownloadAsync(f.Token)).Data);Assert.Single((await inv.GetAsync()).Files!);
+  await inv.AddFileAsync(id,"Investigator source","second.pdf",Pdf);await S(d).SetAccessAsync(id,3,false,"Finished");await Assert.ThrowsAsync<DomainException>(()=>inv.DownloadAsync(f.Token));
+  Assert.DoesNotContain(await d.Set<AuditLog>().ToListAsync(),x=>x.Details.Contains("CASEFILE-72")||x.Details.Contains("case.pdf"));
+ }
+ [Fact]public async Task CaseFilesHaveImmutableBytesMetadataAndSource()
+ {
+  await using var d=await Db();int id=await Case(d);await S(d).AddFileAsync(id,"Original source","case.pdf",Pdf);var f=await d.Set<EmployeeCaseFile>().SingleAsync();f.Data="%PDF-changed"u8.ToArray();await Assert.ThrowsAsync<InvalidOperationException>(()=>d.SaveAsync());
+  d.ChangeTracker.Clear();f=await d.Set<EmployeeCaseFile>().SingleAsync();f.SourceReference="Rewrite";await Assert.ThrowsAsync<InvalidOperationException>(()=>d.SaveAsync());
+  d.ChangeTracker.Clear();d.Remove(await d.Set<EmployeeCaseFile>().SingleAsync());await Assert.ThrowsAsync<InvalidOperationException>(()=>d.SaveAsync());
+ }
+ [Fact]public async Task InvalidOrClosedCaseFilesLeaveNoRowsOrRevisionChanges()
+ {
+  await using var d=await Db();int id=await Case(d);var before=(await d.Set<EmployeeCase>().FindAsync(id))!.ChangeStamp;
+  foreach(var input in new[]{("case.exe",Pdf),("case.pdf",new byte[]{1,2,3}),("case.pdf",new byte[AttachmentService.MaxBytes+1]),("case.pdf",Array.Empty<byte>())})await Assert.ThrowsAsync<DomainException>(()=>S(d).AddFileAsync(id,"Source",input.Item1,input.Item2));
+  await Assert.ThrowsAsync<DomainException>(()=>S(d).AddFileAsync(id,"","case.pdf",Pdf));await Assert.ThrowsAsync<DomainException>(()=>S(d,new(3,15,false)).AddFileAsync(id,"Not assigned","case.pdf",Pdf));
+  Assert.Empty(await d.Set<EmployeeCaseFile>().ToListAsync());Assert.Equal(before,(await d.Set<EmployeeCase>().FindAsync(id))!.ChangeStamp);
+  await S(d).RecordAsync(id,"Closed","Concluded");await Assert.ThrowsAsync<DomainException>(()=>S(d).AddFileAsync(id,"Too late","case.pdf",Pdf));
+ }
+ [Fact]public async Task ClosedCaseFilesRemainReadableButInactiveAssignedAccountLosesDownload()
+ {
+  await using var d=await Db();int id=await Case(d);await S(d).SetAccessAsync(id,3,true,"Appointment");await S(d).AddFileAsync(id,"Source","case.pdf",Pdf);var token=(await d.Set<EmployeeCaseFile>().SingleAsync()).Token;await S(d).RecordAsync(id,"Closed","Concluded");var inv=S(d,new(3,15,false));Assert.Equal(Pdf,(await inv.DownloadAsync(token)).Data);
+  (await d.Set<AppUser>().FindAsync(3))!.IsActive=false;await d.SaveAsync();await Assert.ThrowsAsync<DomainException>(()=>inv.DownloadAsync(token));
+ }
+ [Fact]public async Task OuterFailureRollsBackCaseFileAndRevisionAndAudit()
+ {
+  await using var d=await Db();int id=await Case(d);var before=(await d.Set<EmployeeCase>().FindAsync(id))!.ChangeStamp;var audit=await d.Set<AuditLog>().CountAsync();
+  await Assert.ThrowsAsync<DomainException>(()=>d.AtomicAsync(async()=>{await S(d).AddFileAsync(id,"Source","case.pdf",Pdf);throw new DomainException("Fictional outer failure");}));
+  Assert.Empty(await d.Set<EmployeeCaseFile>().ToListAsync());Assert.Equal(before,(await d.Set<EmployeeCase>().FindAsync(id))!.ChangeStamp);Assert.Equal(audit,await d.Set<AuditLog>().CountAsync());await S(d).AddFileAsync(id,"Retry","case.pdf",Pdf);Assert.Single(await d.Set<EmployeeCaseFile>().ToListAsync());
+ }
 }
