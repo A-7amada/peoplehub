@@ -1,6 +1,7 @@
 using PeopleHub.Domain.Entities;
 namespace PeopleHub.Application.Services;
 
+public record ReviewerInboxItem(int Id,int AppraisalId,string EmployeeName,string EmployeeNameAr,string CycleName,bool CanSubmit,int? Score,string Comment,DateTime? SubmittedAt);
 public record FeedbackView(string? ReviewerName,string? ReviewerNameAr,int? Score,string? Comment,bool Submitted);
 public record ReviewerOption(int Id,string FullName,string FullNameAr);
 public record PerfTools(List<FeedbackView> Feedback, List<ReviewerOption> Employees, List<CompetencyTemplate> Templates, List<CompetencyItem> Items, List<TrainingCourse> Courses, List<PerfBonus> Bonuses, decimal? FeedbackAverage);
@@ -58,11 +59,13 @@ public partial class PerfService
         await notify.NotifyEmployeeAsync(reviewerEmployeeId, "notif.feedback", v.A.Employee!.FullName, "/Perf/Feedback");
         audit.Log("Nominate", "Appraisal", id, $"reviewer {reviewerEmployeeId}"); await repo.SaveAsync();
     }
-    public async Task<List<(Feedback360 F, PerfAppraisal A)>> FeedbackInboxAsync()
+    public async Task<List<ReviewerInboxItem>> FeedbackInboxAsync()
     {
-        var fs = await repo.ToListAsync(repo.Query<Feedback360>().Where(f => f.ReviewerEmployeeId == me.EmployeeId));
-        var apps = await repo.ToListAsync(repo.Query<PerfAppraisal>());
-        return fs.Select(f => (f, apps.First(a => a.Id == f.AppraisalId))).ToList();
+        if(me.EmployeeId==null)return [];
+        var fs=await repo.ToListAsync(repo.Query<Feedback360>().Where(f=>f.ReviewerEmployeeId==me.EmployeeId));
+        var ids=fs.Select(f=>f.AppraisalId).ToList();
+        var apps=await repo.ToListAsync(repo.Query<PerfAppraisal>().Where(a=>ids.Contains(a.Id)));
+        return fs.Where(f=>apps.Any(a=>a.Id==f.AppraisalId&&a.EmployeeId!=me.EmployeeId)).Select(f=>{var a=apps.First(a=>a.Id==f.AppraisalId);return new ReviewerInboxItem(f.Id,a.Id,a.Employee!.FullName,a.Employee.FullNameAr,a.Cycle!.Name,f.SubmittedAt==null&&a.Cycle.Status==CycleStatus.Open&&(!a.Cycle.AutoPhases||clock.Today>=a.Cycle.Start.Date),f.Score,f.Comment,f.SubmittedAt);}).ToList();
     }
     public async Task FeedbackAsync(int id, int score, string? comment)
     {
