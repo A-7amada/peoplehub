@@ -95,6 +95,12 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
     {
         var ids = await scope.VisibleEmployeeIdsAsync();
         var ls = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.Status == RequestStatus.Approved && l.StartDate <= date && l.EndDate >= date && (ids == null || ids.Contains(l.EmployeeId))));
-        return ls.Where(l => l.Employee != null).Select(l => (l.Employee!, l)).ToList();
+        return ls.Where(l => l.Employee != null).Select(l =>
+        {
+            var employee=l.Employee!;
+            var canEvidence=me.EmployeeId==l.EmployeeId||me.Can(Perm.LeaveEvidence);
+            var visible=new LeaveRequest{Id=l.Id,EmployeeId=l.EmployeeId,StartDate=l.StartDate,EndDate=l.EndDate,Days=l.Days,Status=l.Status,LeaveType=new LeaveType{Name=canEvidence?l.LeaveType?.Name??"":"Private leave",NameAr=canEvidence?l.LeaveType?.NameAr??"":"إجازة خاصة"}};
+            return (new Employee{Id=employee.Id,Code=employee.Code,FullName=employee.FullName,FullNameAr=employee.FullNameAr},visible);
+        }).ToList();
     }
 }
