@@ -2,7 +2,8 @@ using PeopleHub.Domain.Entities;
 namespace PeopleHub.Application.Services;
 
 public record FeedbackView(string? ReviewerName,string? ReviewerNameAr,int? Score,string? Comment,bool Submitted);
-public record PerfTools(List<FeedbackView> Feedback, List<Employee> Employees, List<CompetencyTemplate> Templates, List<CompetencyItem> Items, List<TrainingCourse> Courses, List<PerfBonus> Bonuses, decimal? FeedbackAverage);
+public record ReviewerOption(int Id,string FullName,string FullNameAr);
+public record PerfTools(List<FeedbackView> Feedback, List<ReviewerOption> Employees, List<CompetencyTemplate> Templates, List<CompetencyItem> Items, List<TrainingCourse> Courses, List<PerfBonus> Bonuses, decimal? FeedbackAverage);
 public partial class PerfService
 {
     private async Task<decimal?> ScoreAsync(PerfAppraisal a, List<PerfGoal> goals)
@@ -33,7 +34,7 @@ public partial class PerfService
         decimal? avg=canAggregate && threshold is > 0 && complete.Count>=threshold ? complete.Average(x=>(decimal)x.Score!.Value) : null;
         bool identity=!self && me.Can(Perm.FeedbackIdentity), comments=!self && me.Can(Perm.FeedbackComments);
         var views=identity || comments ? f.Select(x=>new FeedbackView(identity?x.Reviewer?.FullName:null,identity?x.Reviewer?.FullNameAr:null,comments?x.Score:null,comments?x.Comment:null,x.SubmittedAt!=null)).ToList() : new List<FeedbackView>();
-        var employees = await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active));
+        var employees = v.CanManage ? await repo.ToListAsync(repo.Query<Employee>().Where(e => e.Status == EmployeeStatus.Active && e.Id != v.A.EmployeeId).Select(e => new ReviewerOption(e.Id,e.FullName,e.FullNameAr))) : new List<ReviewerOption>();
         return new(views, employees, await repo.ToListAsync(repo.Query<CompetencyTemplate>()), await repo.ToListAsync(repo.Query<CompetencyItem>()), await repo.ToListAsync(repo.Query<TrainingCourse>().Where(c=>c.ApprovalStatus=="Approved"||c.ApprovalStatus=="Legacy")), await repo.ToListAsync(repo.Query<PerfBonus>().Where(b => b.AppraisalId == id)), avg);
     }
 
