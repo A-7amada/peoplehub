@@ -15,10 +15,18 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
     public Task<List<LeaveType>> TypesAsync() => repo.ToListAsync(repo.Query<LeaveType>().OrderBy(t => t.Id));
 
     /// <summary>Returns balances for the year, creating missing rows from type defaults (with carry-over from the previous year).</summary>
-    public async Task<List<LeaveBalance>> BalancesAsync(int employeeId, int year)
+    public async Task<List<LeaveBalance>> BalancesAsync(int employeeId,int year)
+    {
+        List<LeaveBalance> result=[];
+        await repo.AtomicAsync(async()=>result=await BalancesCoreAsync(employeeId,year));
+        return result;
+    }
+    private async Task<List<LeaveBalance>> BalancesCoreAsync(int employeeId, int year)
     {
         if (!await scope.CanSeeAsync(employeeId)) throw new DomainException("err.forbidden");
         if(me.EmployeeId!=employeeId&&!me.Can(Perm.LeaveEvidence))throw new DomainException("err.forbidden");
+        if(year<1900||year>9998)throw new DomainException("err.required");
+        var employee=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==employeeId))??throw new DomainException("err.notFound");
         var types = await TypesAsync();
         var existing = await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == employeeId && b.Year == year));
         var prev = await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == employeeId && b.Year == year - 1));
@@ -35,7 +43,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         foreach (var b in existing)
             if (!await repo.AnyAsync(repo.Query<LeaveTransaction>().Where(x=>x.EmployeeId==employeeId && x.LeaveTypeId==b.LeaveTypeId && x.Year==year)) && !addedTypes.Contains(b.LeaveTypeId))
             {Entry(employeeId,b.LeaveTypeId,year,b.Remaining,"Baseline","Pre-upgrade balance; earlier transactions unknown");created=true;}
-        if (created) await repo.SaveAsync();
+        if (created) {employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");await repo.SaveAsync();}
         return existing.OrderBy(b => b.LeaveTypeId).ToList();
     }
 
