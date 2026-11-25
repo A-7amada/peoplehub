@@ -369,7 +369,7 @@ public partial class PerfService(IRepository repo, ICurrentUser me, AccessScope 
 
     public async Task<PerfCycle> CycleAsync(int id) => await repo.FirstOrDefaultAsync(repo.Query<PerfCycle>().Where(c => c.Id == id)) ?? throw new DomainException("err.notFound");
 
-    public async Task CreateCycleAsync(string name, DateTime start, DateTime end)
+    public Task CreateCycleAsync(string name, DateTime start, DateTime end)=>repo.AtomicAsync(async()=>
     {
         if (!Hr) throw new DomainException("err.forbidden");
         if (string.IsNullOrWhiteSpace(name) || start.Year < 2000 || end.Year < 2000 || end < start) throw new DomainException("err.required");
@@ -378,9 +378,9 @@ public partial class PerfService(IRepository repo, ICurrentUser me, AccessScope 
             repo.Add(new PerfAppraisal { CycleId = c.Id, EmployeeId = e.Id });
         audit.Log("Create", "PerfCycle", name, ""); await repo.SaveAsync();
         await notify.NotifyPermAsync(Perm.ScopeTeam, "notif.perfCycle", name, "/Perf"); await repo.SaveAsync();
-    }
+    });
 
-    public async Task AdvanceCycleAsync(int id)
+    public Task AdvanceCycleAsync(int id)=>repo.AtomicAsync(async()=>
     {
         if (!Hr) throw new DomainException("err.forbidden"); var c = await CycleAsync(id);
         if (c.Status == CycleStatus.Open) c.Status = CycleStatus.Calibration;
@@ -391,7 +391,7 @@ public partial class PerfService(IRepository repo, ICurrentUser me, AccessScope 
             { await SealAsync(a); await notify.NotifyEmployeeAsync(a.EmployeeId, "notif.review", c.Name, "/Perf"); }
         }
         audit.Log("Update", "PerfCycle", c.Name, c.Status.ToString()); await repo.SaveAsync();
-    }
+    });
 
     private async Task SealAsync(PerfAppraisal a)
     {

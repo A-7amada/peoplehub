@@ -160,7 +160,7 @@ public partial class PerfService
         return count;
     }
 
-    public async Task MaintainAsync()
+    public Task MaintainAsync()=>repo.AtomicAsync(async()=>
     {
         var cycles = await repo.ToListAsync(repo.Query<PerfCycle>()); var today = clock.Today;
         foreach (var c in cycles.Where(c => c.Status != CycleStatus.Closed))
@@ -190,7 +190,7 @@ public partial class PerfService
         var dev = await repo.ToListAsync(repo.Query<DevItem>().Where(d => d.CourseId != null)); var allApps = await repo.ToListAsync(repo.Query<PerfAppraisal>()); var enroll = await repo.ToListAsync(repo.Query<TrainingEnrollment>());
         foreach (var d in dev) { var a = allApps.FirstOrDefault(a => a.Id == d.AppraisalId); if (a != null) d.Done = enroll.Any(e => e.EmployeeId == a.EmployeeId && e.CourseId == d.CourseId && e.Completed); }
         await repo.SaveAsync();
-    }
+    });
     private async Task ReminderAsync(PerfCycle c, int employeeId, string kind, int appraisalId)
     {
         var k = kind + ":" + appraisalId; var day = clock.Today;
