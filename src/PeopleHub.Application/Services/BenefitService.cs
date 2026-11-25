@@ -6,11 +6,11 @@ public class BenefitService(IRepository repo,ICurrentUser me,AppClock clock,Audi
 {
  private void Need(){if(!me.Can(Perm.BenefitsManage))throw new DomainException("err.forbidden");}
  public async Task<BenefitView> GetAsync(){bool hr=me.Can(Perm.BenefitsManage);var enroll=await repo.ToListAsync(repo.Query<BenefitEnrollment>().Where(x=>hr||x.EmployeeId==me.EmployeeId).OrderByDescending(x=>x.Id));var ids=enroll.Select(x=>x.Id).ToList();return new(await repo.ToListAsync(repo.Query<BenefitPlan>().OrderBy(x=>x.Name)),enroll,await repo.ToListAsync(repo.Query<BenefitCancellation>().Where(x=>ids.Contains(x.EnrollmentId))),hr?await repo.ToListAsync(repo.Query<EmployeeDependent>()):[]);}
- public async Task AddPlanAsync(string name,string provider,string eligibility,string coverage,bool dependentsAllowed,decimal employerMonthly,decimal employeeMonthly,string currency)
+ public Task AddPlanAsync(string name,string provider,string eligibility,string coverage,bool dependentsAllowed,decimal employerMonthly,decimal employeeMonthly,string currency)=>repo.AtomicAsync(async()=>
  {
   Need();if(string.IsNullOrWhiteSpace(name)||name.Length>150||string.IsNullOrWhiteSpace(provider)||provider.Length>200||string.IsNullOrWhiteSpace(eligibility)||eligibility.Length>2000||string.IsNullOrWhiteSpace(coverage)||coverage.Length>4000||employerMonthly<0||employeeMonthly<0||employerMonthly>1000000000||employeeMonthly>1000000000||currency==null||currency.Length!=3||!currency.All(c=>c>='A'&&c<='Z'))throw new DomainException("err.required");
   repo.Add(new BenefitPlan{Name=name.Trim(),Provider=provider.Trim(),Eligibility=eligibility.Trim(),Coverage=coverage.Trim(),DependentsAllowed=dependentsAllowed,EmployerMonthly=employerMonthly,EmployeeMonthly=employeeMonthly,Currency=currency,Actor=me.Email,At=clock.UtcNow});audit.Log("Create","BenefitPlan",name.Trim(),"Recorded plan only; no purchase, insurer notification or payroll effect");await repo.SaveAsync();
- }
+ });
  public Task EnrollAsync(int planId,int employeeId,int? dependentId,DateTime startsOn,DateTime endsOn,string eligibilityEvidence,string costCenter)=>repo.AtomicAsync(async()=>
  {
   Need();if(startsOn.Date<clock.Today||endsOn.Date<startsOn.Date||endsOn.Year>9998||string.IsNullOrWhiteSpace(eligibilityEvidence)||eligibilityEvidence.Length>2000||string.IsNullOrWhiteSpace(costCenter)||costCenter.Length>100)throw new DomainException("err.required");

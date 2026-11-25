@@ -141,3 +141,8 @@ Daily/month attendance and delegation read follow-up: detached minimal name/depa
 - Current discovery449. Most recent complete full suite remains1b03745:441executed+1explicitPGskip/442.
 - Local case-access harness6 passed including upload, direct private download/no-store, subject/general-file-route denial and revocation; navigation228 passed. EN/AR manager and investigator final fullpage pixels inspected. Evidence r152-case and r154-nav.
 - Both provider migrations generated; PostgreSQL concurrency stress still unverified.
+
+Full private-case-file build4ce7220 rerun completed:448 executed passes plus1 explicit PostgreSQL smoke skip,449 discovered. Disjoint partitions88+57+55+59+30+34+63+62, logs r157-p0,p1a,p1b and r158-raa,rab,rba,rbb,extra.
+
+### Benefit plan transaction boundary
+Plan creation now encloses plan and audit writes in one explicit transaction, matching enrollment/cancellation. No coverage, payroll, currency, approval or grant rules changed. Three fault tests prove post-save rollback/retry, outer rollback and validation with no staged changes. Ten focused benefit tests passed; four private-HR MVC checks passed. Initial build-plus-test timeout has no completed summary and is excluded; no-build rerun completed. Latest complete suite remains448+1/449 on4ce7220; three new tests bring expected discovery452, not a new full-suite claim.
