@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Interfaces;
 using PeopleHub.Application.Common.Tenancy;
+using PeopleHub.Application.Common.Events;
 
 namespace PeopleHub.Infrastructure.Persistence;
 
@@ -9,7 +10,8 @@ namespace PeopleHub.Infrastructure.Persistence;
 public class AppDbContext : DbContext, IRepository
 {
     readonly ITenantContext? tenant;
-    public AppDbContext(DbContextOptions options, ITenantContext? tenant = null) : base(options) => this.tenant = tenant;
+    readonly IDomainEventDispatcher? events;
+    public AppDbContext(DbContextOptions options, ITenantContext? tenant = null, IDomainEventDispatcher? events = null) : base(options) { this.tenant = tenant; this.events = events; }
     /// <summary>Read by the global query filter on every query (Ambient Context, ADR-0003). No context means the default tenant.</summary>
     protected int CurrentTenantId => tenant?.TenantId ?? TenantIds.Default;
     static readonly string[] NotTenantOwned = [nameof(Tenant), nameof(ScheduledJobState)];
@@ -34,7 +36,27 @@ public class AppDbContext : DbContext, IRepository
         catch { await tx.RollbackAsync(); ChangeTracker.Clear(); throw; }
     }
 
-    public override Task<int> SaveChangesAsync(CancellationToken ct = default)
+    public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    {
+        var raised = CollectDomainEvents();
+        var n = await SaveGuardedAsync(ct);
+        if (events != null && raised.Count > 0) await events.DispatchAsync(raised, ct);
+        return n;
+    }
+
+    /// <summary>Events are derived from tracked state changes before the save and published only after it succeeded.</summary>
+    List<IDomainEvent> CollectDomainEvents()
+    {
+        var list = new List<IDomainEvent>();
+        foreach (var e in ChangeTracker.Entries<Employee>().Where(x => x.State == EntityState.Modified))
+        {
+            var p = e.Property(x => x.Status);
+            if (p.IsModified && !Equals(p.OriginalValue, p.CurrentValue)) list.Add(new EmployeeStatusChanged(CurrentTenantId, e.Entity.Id, p.OriginalValue, p.CurrentValue));
+        }
+        return list;
+    }
+
+    Task<int> SaveGuardedAsync(CancellationToken ct)
     {
         if (ChangeTracker.Entries().Any(e => (e.Entity is EmployeeGrievanceAppeal or EmployeeGrievanceAppealDecision or EmployeeGrievanceResponse or EmployeeCaseFile or EmployeeCaseAccess or ApprovalVote or PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse or WorkflowRevision or PipProgress or ApprovalAssignment or ApprovalAction or TrainingCertificate or TrainingOutcome or RecruitmentEvent or CandidateOffer or CandidateOfferEvent or TrainingCertificateAlert or CompetencyApplication or BenefitPlan or BenefitEnrollment or BenefitCancellation or EmployeeCaseEvent or PayrollBankResult or ApprovalReminder or SalaryStructure or SalaryStructureApplication or PayrollAdjustment or PayrollAdjustmentEvent) && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Append-only business evidence cannot be edited or deleted.");

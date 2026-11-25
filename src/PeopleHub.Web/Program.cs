@@ -41,6 +41,8 @@ builder.Services.AddSingleton<RequestMetrics>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, WebCurrentUser>();
 builder.Services.AddScoped<PeopleHub.Application.Common.Tenancy.ITenantContext, HttpTenantContext>();
+builder.Services.AddScoped<PeopleHub.Application.Common.Events.IDomainEventDispatcher, PeopleHub.Infrastructure.Events.DomainEventDispatcher>();
+builder.Services.AddScoped<PeopleHub.Application.Common.Events.IDomainEventHandler<PeopleHub.Application.Common.Events.EmployeeStatusChanged>, PeopleHub.Infrastructure.Events.EmployeeStatusChangedLogger>();
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<PeopleHub.Infrastructure.Caching.InProcessCache>();
 builder.Services.AddScoped<PeopleHub.Application.Common.Caching.ICache>(sp => new PeopleHub.Infrastructure.Caching.TenantKeyedCache(sp.GetRequiredService<PeopleHub.Infrastructure.Caching.InProcessCache>(), sp.GetRequiredService<PeopleHub.Application.Common.Tenancy.ITenantContext>()));
