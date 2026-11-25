@@ -45,7 +45,8 @@ public class DelegationService(IRepository repo, ICurrentUser me, AuditService a
         var id = me.EmployeeId ?? -1;
         var list = await repo.ToListAsync(repo.Query<Delegation>().Where(d => !d.Revoked && (d.FromEmployeeId == id || d.ToEmployeeId == id)).OrderByDescending(d => d.StartDate));
         var emps = await repo.ToListAsync(repo.Query<Employee>());
-        return list.Select(d => (d, emps.First(e => e.Id == d.FromEmployeeId), emps.First(e => e.Id == d.ToEmployeeId))).ToList();
+        Employee NameOnly(int employeeId){var e=emps.First(x=>x.Id==employeeId);return new Employee{Id=e.Id,Code=e.Code,FullName=e.FullName,FullNameAr=e.FullNameAr};}
+        return list.Select(d => (new Delegation{Id=d.Id,FromEmployeeId=d.FromEmployeeId,ToEmployeeId=d.ToEmployeeId,StartDate=d.StartDate,EndDate=d.EndDate,Revoked=d.Revoked},NameOnly(d.FromEmployeeId),NameOnly(d.ToEmployeeId))).ToList();
     }
 
     public async Task AddAsync(int toEmployeeId, DateTime start, DateTime end)

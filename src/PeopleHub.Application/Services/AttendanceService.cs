@@ -135,6 +135,8 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         await repo.SaveAsync();
     }
 
+    private static AttendanceRecord? VisibleRecord(AttendanceRecord? r)=>r==null?null:new AttendanceRecord{Id=r.Id,EmployeeId=r.EmployeeId,Date=r.Date,CheckIn=r.CheckIn,CheckOut=r.CheckOut,Source=r.Source,LateMinutes=r.LateMinutes,EarlyLeaveMinutes=r.EarlyLeaveMinutes,WorkedMinutes=r.WorkedMinutes,OvertimeMinutes=r.OvertimeMinutes,Status=r.Status,IsExcused=r.IsExcused};
+
     public async Task<List<DailyRow>> DailyAsync(DateTime date, int? departmentId)
     {
         var ids = await scope.VisibleEmployeeIdsAsync();
@@ -142,7 +144,13 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
             && (ids == null || ids.Contains(e.Id)) && (departmentId == null || e.DepartmentId == departmentId)).OrderBy(e => e.Code));
         var recs = (await repo.ToListAsync(repo.Query<AttendanceRecord>().Where(r => r.Date == date.Date))).ToDictionary(r => r.EmployeeId);
         var leaves = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.Status == RequestStatus.Approved && l.StartDate <= date && l.EndDate >= date));
-        return emps.Select(e => new DailyRow(e, recs.GetValueOrDefault(e.Id), leaves.Any(l => l.EmployeeId == e.Id))).ToList();
+        return emps.Select(e =>
+        {
+            var visible=new Employee{Id=e.Id,Code=e.Code,FullName=e.FullName,FullNameAr=e.FullNameAr,DepartmentId=e.DepartmentId,Department=e.Department==null?null:new Department{Id=e.Department.Id,Name=e.Department.Name,NameAr=e.Department.NameAr}};
+            var r=recs.GetValueOrDefault(e.Id);
+            var record=VisibleRecord(r);
+            return new DailyRow(visible,record,leaves.Any(l=>l.EmployeeId==e.Id));
+        }).ToList();
     }
 
     public async Task<List<DayRow>> MonthAsync(int employeeId, int year, int month)
@@ -171,7 +179,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
                 Id=leave.Id,EmployeeId=leave.EmployeeId,StartDate=leave.StartDate,EndDate=leave.EndDate,Days=leave.Days,Status=leave.Status,
                 LeaveType=new LeaveType { Name=me.EmployeeId==employeeId||me.Can(Perm.LeaveEvidence)?leave.LeaveType?.Name??"":"Private leave", NameAr=me.EmployeeId==employeeId||me.Can(Perm.LeaveEvidence)?leave.LeaveType?.NameAr??"":"إجازة خاصة" }
             };
-            rows.Add(new DayRow(d, working, h?.Name, h?.NameAr, rec, visibleLeave, absent));
+            rows.Add(new DayRow(d, working, h?.Name, h?.NameAr, VisibleRecord(rec), visibleLeave, absent));
         }
         return rows;
     }
