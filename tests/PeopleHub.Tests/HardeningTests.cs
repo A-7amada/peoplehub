@@ -42,7 +42,7 @@ public class HardeningTests
         var second=await account.RequestResetAsync("test@example.local","https://demo.example");Assert.False(await account.TokenValidAsync(first!));Assert.True(await account.TokenValidAsync(second!));
         var stamp=(await db.Set<AppUser>().SingleAsync()).SecurityStamp;Assert.True(await account.ResetAsync(second!,"After123!"));Assert.NotEqual(stamp,(await db.Set<AppUser>().SingleAsync()).SecurityStamp);Assert.False(await account.ResetAsync(second!,"Again123!"));
     }
-    [Fact] public async Task PostgresMigrationSmoke()
+    [PostgresFact] public async Task PostgresMigrationSmoke()
     {
         var connection=Environment.GetEnvironmentVariable("TEST_POSTGRES");if(connection==null)return;
         await using var db=new PgDbContext(new DbContextOptionsBuilder<PgDbContext>().UseNpgsql(connection).Options);
@@ -61,4 +61,9 @@ public class HardeningTests
         }
     }
     class TestMe:ICurrentUser {public bool IsAuthenticated=>true;public string Email=>"test@example.local";public int? EmployeeId=>null;public int UserId=>1;public bool IsInRole(string r)=>true;public bool Can(string p)=>true;}
+}
+
+public sealed class PostgresFactAttribute:FactAttribute
+{
+ public PostgresFactAttribute(){if(string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("TEST_POSTGRES")))Skip="A separate disposable PostgreSQL database is not configured; no migration/restore execution is claimed.";}
 }
