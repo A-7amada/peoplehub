@@ -46,6 +46,13 @@ public class AdvanceRequest : Approvable
     public bool DueIn(int year, int month) => Status == RequestStatus.Approved && Remaining > 0 && (year * 12 + month) >= (StartYear * 12 + StartMonth);
     public decimal InstallmentFor() => Math.Min(Monthly, Remaining);
 
+    /// <summary>Withdraws an approved advance before any installment was deducted. Partly repaid advances need an owner policy, so they are refused.</summary>
+    public void CancelUnpaid()
+    {
+        if (Status != RequestStatus.Approved || Paid != 0) throw new DomainException("err.notPending");
+        Status = RequestStatus.Cancelled;
+    }
+
     public void Settle()
     {
         if (Status != RequestStatus.Approved || Remaining <= 0) throw new DomainException("err.notPending");

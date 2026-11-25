@@ -152,7 +152,7 @@ public partial class Loc
         A("req.approve", "Approve", "موافقة"); A("req.reject", "Reject", "رفض"); A("req.cancel", "Cancel", "إلغاء"); A("req.advances", "Advances", "السلف");
         A("req.kind.Leave", "Leave", "إجازة"); A("req.kind.Overtime", "Overtime", "وقت إضافي"); A("req.kind.Correction", "Attendance correction", "تصحيح حضور"); A("req.kind.Advance", "Salary advance", "سلفة");
         A("adv.sub", "Salary advances are repaid in monthly installments through payroll.", "تُسدد السلف بأقساط شهرية عبر الرواتب.");
-        A("adv.installments", "Installments", "الأقساط"); A("adv.repaid", "Repaid", "المسدد"); A("adv.settle", "Settle early", "سداد مبكر"); A("adv.new", "Request an advance", "طلب سلفة");
+        A("adv.installments", "Installments", "الأقساط"); A("adv.repaid", "Repaid", "المسدد"); A("adv.settle", "Settle early", "سداد مبكر"); A("adv.cancelUnpaid", "Withdraw (nothing deducted)", "سحب (لم يُخصم شيء)"); A("adv.new", "Request an advance", "طلب سلفة");
         A("adv.startYear", "Start year", "سنة البدء"); A("adv.startMonth", "Start month", "شهر البدء");
         A("adv.rule", "Up to 3 times the basic salary, one open advance at a time. Approved by HR then Finance.", "حتى 3 أضعاف الراتب الأساسي، سلفة واحدة مفتوحة فقط. توافق عليها الموارد البشرية ثم المالية.");
 

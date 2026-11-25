@@ -197,6 +197,18 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         await repo.SaveAsync();
     });
 
+    public Task CancelUnpaidAdvanceAsync(int id)=>repo.AtomicAsync(async()=>
+    {
+        if (!me.Can(Perm.AdvManage)) throw new DomainException("err.forbidden");
+        var a = await repo.FirstOrDefaultAsync(repo.Query<AdvanceRequest>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
+        var amount = a.Amount;
+        var openRunLine = await repo.AnyAsync(repo.Query<PayrollLine>().Where(l => l.EmployeeId == a.EmployeeId && l.AdvanceInstallment > 0 && repo.Query<PayrollRun>().Any(r => r.Id == l.RunId && r.Status != PayrollStatus.Finalized && r.Status != PayrollStatus.Paid && r.Year * 12 + r.Month >= a.StartYear * 12 + a.StartMonth)));
+        if (openRunLine) throw new DomainException("err.payrollState");
+        a.CancelUnpaid();
+        audit.Log("CancelUnpaid", "Advance", id, $"approved advance of {amount:N2} withdrawn before any deduction");
+        await repo.SaveAsync();
+    });
+
     public async Task<List<AdvanceRow>> AdvancesAsync()
     {
         var ids = await scope.VisibleEmployeeIdsAsync();

@@ -45,6 +45,7 @@ public class RequestsController(Loc loc, ApprovalService svc, AppClock clock, De
     public Task<IActionResult> Advance(decimal amount, int installments, int startYear, int startMonth, string? reason) =>
         Do(() => svc.RequestAdvanceAsync(amount, installments, startYear, startMonth, reason), "msg.requestSent", () => RedirectToAction(nameof(Advances)));
 
+    [RequireStepUp,HttpPost] public Task<IActionResult> CancelUnpaid(int id) => Do(() => svc.CancelUnpaidAdvanceAsync(id), "msg.saved", () => RedirectToAction(nameof(Advances)));
     [RequireStepUp,HttpPost] public Task<IActionResult> Settle(int id) => Do(() => svc.SettleAdvanceAsync(id), "msg.saved", () => RedirectToAction(nameof(Advances)));
 }
 
