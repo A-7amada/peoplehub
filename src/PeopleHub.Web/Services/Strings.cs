@@ -208,7 +208,7 @@ public partial class Loc
         A("roles.newHint", "After creating a role, tick its permissions in the matrix above and assign it to users.", "بعد إنشاء الدور، حدد صلاحياته في المصفوفة أعلاه ثم أسنده للمستخدمين.");
         A("users.new", "New user", "مستخدم جديد"); A("users.password", "Password (8+ characters)", "كلمة المرور (8 أحرف أو أكثر)"); A("users.employee", "Linked employee", "الموظف المرتبط");
         A("wf.sub", "Define the steps of each approval cycle and which role acts on every step. New requests follow these steps immediately; requests already in flight keep theirs.", "حدد خطوات كل مسار موافقة والدور المسؤول عن كل خطوة. الطلبات الجديدة تتبع التعديل فوراً، أما الطلبات الجارية فتكمل مسارها الحالي.");
-        A("wf.managerHint", "The employee's direct manager", "المدير المباشر للموظف (يُتخطى إن لم يوجد)"); A("wf.roleHint", "Anyone holding one of these roles", "أي مستخدم يحمل أحد هذه الأدوار");
+        A("wf.managerHint", "The employee's direct manager (system auto-approves the step if there is none)", "المدير المباشر للموظف (إن لم يوجد يعتمد النظام الخطوة تلقائيا)"); A("wf.roleHint", "Anyone holding one of these roles", "أي مستخدم يحمل أحد هذه الأدوار");
         A("wf.when", "only when above", "فقط عندما يزيد عن"); A("wf.approver", "Approver", "المعتمِد"); A("wf.byRole", "A role", "دور وظيفي"); A("wf.byManager", "Direct manager", "المدير المباشر");
         A("wf.threshold", "Applies above", "يُطبّق عند تجاوز"); A("wf.always", "always", "دائماً"); A("wf.roles", "Roles (when approver is a role)", "الأدوار (عند اختيار دور)"); A("wf.addStep", "Add step", "إضافة خطوة");
         A("wf.unit.Leave", "days", "أيام"); A("wf.unit.Overtime", "hours", "ساعات"); A("wf.unit.Correction", "n/a", "غير مستخدم"); A("wf.unit.Advance", "EGP", "ج.م");

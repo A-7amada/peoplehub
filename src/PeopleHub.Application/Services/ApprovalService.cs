@@ -185,6 +185,8 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         repo.Add(adv);
         await notify.NotifyStageAsync(adv, $"{e.FullName}: {amount:N0}");
         await repo.SaveAsync();
+        flows.RecordAutoApprovals("Advance",adv);
+        await repo.SaveAsync();
     }
 
     public Task SettleAdvanceAsync(int id)=>repo.AtomicAsync(async()=>

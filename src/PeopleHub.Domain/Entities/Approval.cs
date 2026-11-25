@@ -28,6 +28,8 @@ public abstract class Approvable
     public string Route { get; set; } = "";
     public string? WorkflowRevisionHash {get;set;}
     public string AssignmentStamp {get;set;}="";
+    /// <summary>Hierarchy step tokens the system auto-approved at submission because no approver matched. Not stored here: the caller writes them to the approval trail.</summary>
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped] public List<string> AutoApproved {get;}=[];
     public int StageIndex { get; set; }
     public RequestStatus Status { get; set; } = RequestStatus.Pending;
     public string? Comment { get; set; }

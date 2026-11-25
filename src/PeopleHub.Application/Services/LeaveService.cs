@@ -64,6 +64,8 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         repo.Add(req);
         await notify.NotifyStageAsync(req, $"{e.FullName}: {type.Name} {start:yyyy-MM-dd} → {end:yyyy-MM-dd} ({req.Days})");
         await repo.SaveAsync();
+        flows.RecordAutoApprovals("Leave",req);
+        await repo.SaveAsync();
     }
 
     public Task CancelApprovedAsync(int requestId,string? reason=null) => repo.AtomicAsync(()=>CancelApprovedCoreAsync(requestId,reason));

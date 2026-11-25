@@ -234,6 +234,8 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         repo.Add(o);
         await notify.NotifyStageAsync(o, $"{e.FullName}: {hours}h");
         await repo.SaveAsync();
+        flows.RecordAutoApprovals("Overtime",o);
+        await repo.SaveAsync();
     }
 
     public Task RequestCorrectionAsync(DateTime date,DateTime? newIn,DateTime? newOut,string? reason,string? attToken=null,string? attName=null)=>repo.AtomicAsync(()=>RequestCorrectionCoreAsync(date,newIn,newOut,reason,attToken,attName));
@@ -248,6 +250,8 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         c.Employee = e; c.AttachmentToken = attToken; c.AttachmentName = attName;
         repo.Add(c);
         await notify.NotifyStageAsync(c, $"{e.FullName}: {date:yyyy-MM-dd}");
+        await repo.SaveAsync();
+        flows.RecordAutoApprovals("Correction",c);
         await repo.SaveAsync();
     }
 }

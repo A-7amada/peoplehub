@@ -157,26 +157,28 @@ public class WorkflowStep
 /// <summary>Builds the route of a new request from the configured steps. Pure, so it is unit-tested.</summary>
 public static class RoutePlanner
 {
-    public static string Build(IEnumerable<WorkflowStep> steps, Employee e, decimal size, bool alwaysEscalate = false, IReadOnlyDictionary<int,int?>? managers = null)
+    public static string Build(IEnumerable<WorkflowStep> steps, Employee e, decimal size, bool alwaysEscalate = false, IReadOnlyDictionary<int,int?>? managers = null, Func<int,bool>? isEligible = null, List<string>? autoApproved = null)
     {
         var ordered = steps.OrderBy(s => s.Order).ToList();
         var route = new List<string>();
+        // A hierarchy step with no matching approver is auto-approved by the system and recorded (owner direction 2026-11-25).
+        void Skip(WorkflowStep s){if(autoApproved!=null&&!autoApproved.Contains(s.Token))autoApproved.Add(s.Token);}
         foreach (var s in ordered)
         {
-            if (s.Approver == ApproverType.DirectManager && e.ManagerId == null) continue;      // no manager: skip
-            if (s.Threshold is { } t && !(size > t || alwaysEscalate)) continue;               // below the threshold
+            if (s.Threshold is { } t && !(size > t || alwaysEscalate)) continue;               // below the threshold: the step does not apply
+            if (s.Approver == ApproverType.DirectManager && e.ManagerId == null) { Skip(s); continue; }
             var token=s.Token;
             if(s.Approver==ApproverType.DepartmentManager)
             {
                 var manager=e.Department?.ManagerId;
-                if(manager is not >0||manager==e.Id)throw new DomainException("err.departmentApprover");
+                if(manager is not >0||manager==e.Id||isEligible?.Invoke(manager.Value)==false){Skip(s);continue;}
                 token=ApprovalStage.EmployeeToken(manager.Value);
             }
             if(s.Approver==ApproverType.SkipLevelManager)
             {
-                // The manager's manager, captured now. A missing, self or looping chain blocks the request instead of skipping the step.
+                // The manager's manager, captured now. A missing, self or looping chain skips this step.
                 int? skip=e.ManagerId is {} m&&managers!=null&&managers.TryGetValue(m,out var up)?up:null;
-                if(skip is not >0||skip==e.Id||skip==e.ManagerId)throw new DomainException("err.skipLevelApprover");
+                if(skip is not >0||skip==e.Id||skip==e.ManagerId||isEligible?.Invoke(skip.Value)==false){Skip(s);continue;}
                 token=ApprovalStage.EmployeeToken(skip.Value);
             }
             if (!route.Contains(token)) route.Add(token);

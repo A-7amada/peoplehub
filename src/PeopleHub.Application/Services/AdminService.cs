@@ -35,7 +35,11 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
         var json=JsonSerializer.Serialize(new{Kind=kind,RoutingSemantics="captured-participant-rules-v3",Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold,x.Rule,x.RequiredCount})});
         var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
         var managers=(await repo.ToListAsync(repo.Query<Employee>().Select(x=>new{x.Id,x.ManagerId}))).ToDictionary(x=>x.Id,x=>x.ManagerId);
-        var route=RoutePlanner.Build(steps,employee,size,alwaysEscalate,managers);
+        var all=await repo.ToListAsync(repo.Query<Employee>());
+        var active=(await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive&&u.EmployeeId!=null).Select(u=>u.EmployeeId!.Value))).ToHashSet();
+        var working=all.Where(x=>x.IsWorking).Select(x=>x.Id).ToHashSet();
+        request.AutoApproved.Clear();
+        var route=RoutePlanner.Build(steps,employee,size,alwaysEscalate,all.ToDictionary(x=>x.Id,x=>x.ManagerId),id=>working.Contains(id)&&active.Contains(id),request.AutoApproved);
         var routed=new List<string>();
         var users=await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive));
         var employees=await repo.ToListAsync(repo.Query<Employee>());
@@ -53,13 +57,14 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
             else routed.Add(token);
         }
         route=string.Join(',',routed);
-        foreach(var token in route.Split(','))if(ApprovalStage.EmployeeId(token) is {} resolved)
-        {
-            var target=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==resolved));
-            if(target?.IsWorking!=true||!await repo.AnyAsync(repo.Query<AppUser>().Where(u=>u.EmployeeId==resolved&&u.IsActive)))throw new DomainException("err.departmentApprover");
-        }
         if(!await repo.AnyAsync(repo.Query<WorkflowRevision>().Where(x=>x.Kind==kind&&x.Hash==hash)))repo.Add(new WorkflowRevision{Kind=kind,Hash=hash,DefinitionJson=json,ObservedAt=DateTime.UtcNow});
         request.Route=route;request.WorkflowRevisionHash=hash;
+    }
+    /// <summary>Writes the system auto-approvals of hierarchy steps to the approval trail. Call after the request has an ID.</summary>
+    public void RecordAutoApprovals(string kind,Approvable request)
+    {
+        foreach(var token in request.AutoApproved)repo.Add(new ApprovalAction{Kind=kind,RequestId=request.Id,Actor="system",Action="AutoApproved:"+token,At=DateTime.UtcNow});
+        request.AutoApproved.Clear();
     }
     public Task<List<WorkflowRevision>> RevisionsAsync(){Require();return repo.ToListAsync(repo.Query<WorkflowRevision>().OrderByDescending(x=>x.ObservedAt).Take(100));}
 
