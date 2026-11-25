@@ -1,0 +1,12 @@
+@model EmployeeImportBatch
+@{Func<string,string,string>X=(e,a)=>T.IsAr?a:e;ViewData["Title"]=X("Employee import batch #","دفعة استيراد الموظفين رقم ")+Model.Id;var recon=ViewBag.Recon as ImportReconciliation;}
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@(Model.Status=="Staged"?X("Staged and waiting. No employee has been created yet.","مجهزة وبانتظار القرار. لم يتم إنشاء أي موظف بعد."):X("Committed. These employees were created from the staged rows.","تم التنفيذ. أُنشئ هؤلاء الموظفون من الصفوف المجهزة."))</div></div></div>
+<div class="card"><div class="card-b">
+<p>@X("Rows","الصفوف"): @Model.RowCount · @X("Staged by","جهزها"): <span dir="ltr">@Model.CreatedBy</span> · <time dir="ltr">@Model.CreatedAt.ToString("yyyy-MM-dd HH:mm") UTC</time></p>
+@if(Model.Status=="Staged"){<p class="muted small">@X("Commit creates all employees or none. Every row is checked again first. Employees are created without accounts, salary, bank or identity data, and existing people are never updated. Committed batches cannot be rolled back here.","التنفيذ ينشئ كل الموظفين أو لا ينشئ أحدا، ويُفحص كل صف مرة أخرى قبله. يُنشأ الموظفون دون حسابات أو راتب أو بيانات بنكية أو هوية، ولا يتم تحديث أي شخص موجود. لا يمكن التراجع عن دفعة منفذة من هنا.")</p>
+<form method="post" action="/ImportValidation/Commit" asp-antiforgery="true" style="display:inline"><input type="hidden" name="id" value="@Model.Id"><button class="btn btn-primary">@X("Commit import","تنفيذ الاستيراد")</button></form>
+<form method="post" action="/ImportValidation/Discard" asp-antiforgery="true" style="display:inline"><input type="hidden" name="id" value="@Model.Id"><button class="btn">@X("Discard batch","حذف الدفعة")</button></form>}
+else{<p>@X("Committed by","نفذها"): <span dir="ltr">@Model.CommittedBy</span> · <time dir="ltr">@Model.CommittedAt?.ToString("yyyy-MM-dd HH:mm") UTC</time></p>
+@if(recon!=null){<p>@X("Reconciliation","المطابقة"): @X("staged","مجهز") @recon.Staged · @X("employees found","موظفون موجودون") @recon.Linked · @X("missing","مفقودون") @recon.Missing</p>}}
+<p><a href="/ImportValidation">@X("Back to validation","العودة إلى الفحص")</a></p>
+</div></div>

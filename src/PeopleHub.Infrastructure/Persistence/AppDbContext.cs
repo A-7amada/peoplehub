@@ -116,6 +116,9 @@ public class AppDbContext(DbContextOptions options) : DbContext(options), IRepos
         b.Entity<Feedback360>().HasIndex(x => new { x.AppraisalId, x.ReviewerEmployeeId }).IsUnique();
         b.Entity<PayrollLine>().HasIndex(x => new { x.RunId, x.EmployeeId }).IsUnique();
         b.Entity<PasswordReset>().HasIndex(x => x.Token).IsUnique();
+        b.Entity<EmployeeImportBatch>().HasIndex(x => x.FileHash).IsUnique();
+        b.Entity<StagedEmployeeRow>().HasIndex(x => new { x.BatchId, x.RowNumber }).IsUnique();
+        b.Entity<StagedEmployeeRow>().HasOne<EmployeeImportBatch>().WithMany().HasForeignKey(x => x.BatchId).OnDelete(DeleteBehavior.Cascade);
         foreach (var entity in b.Model.GetEntityTypes())
             b.Entity(entity.ClrType).Property<string>("Revision").HasDefaultValue("").IsConcurrencyToken();
         if (Database.IsNpgsql())

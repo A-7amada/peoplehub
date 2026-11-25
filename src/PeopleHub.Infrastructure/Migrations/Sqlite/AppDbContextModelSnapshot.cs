@@ -2105,6 +2105,50 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("EmployeeGrievanceResponse");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeImportBatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("CommittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CommittedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FileHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RowCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileHash")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeImportBatch");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeProbation", b =>
                 {
                     b.Property<int>("Id")
@@ -4036,6 +4080,63 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("Shift");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.StagedEmployeeRow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("FullNameAr")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("HireDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("JobTitleId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId", "RowNumber")
+                        .IsUnique();
+
+                    b.ToTable("StagedEmployeeRow");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.StatusHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -4562,6 +4663,15 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.StagedEmployeeRow", b =>
+                {
+                    b.HasOne("PeopleHub.Domain.Entities.EmployeeImportBatch", null)
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingEnrollment", b =>

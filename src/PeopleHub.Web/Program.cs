@@ -37,6 +37,7 @@ builder.Services.AddScoped<OrgService>();
 builder.Services.AddScoped<GrievanceIntake>();
 builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<EmployeeImportValidation>();
+builder.Services.AddScoped<EmployeeImportBatches>();
 builder.Services.AddScoped<EmployeeLifecycle>();
 builder.Services.AddScoped<AssetService>();
 builder.Services.AddScoped<TrainingEvidence>();

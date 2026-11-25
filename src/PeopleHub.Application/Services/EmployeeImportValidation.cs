@@ -3,9 +3,9 @@ using System.Text;
 using PeopleHub.Domain.Entities;
 using PeopleHub.Domain.Interfaces;
 namespace PeopleHub.Application.Services;
-public record EmployeeImportRow(int Row,string Code,string Name,string Email,List<string> Errors);
+public record EmployeeImportRow(int Row,string Code,string Name,string Email,List<string> Errors){public string[]? Cells{get;init;}}
 public record EmployeeImportPreview(List<EmployeeImportRow> Rows,int ValidRows);
-/// <summary>Bounded dry-run only. No persistence, employee mutation or import authorization.</summary>
+/// <summary>Bounded dry-run only. No persistence, employee mutation or import authorization. Staging and commit live in EmployeeImportBatches.</summary>
 public class EmployeeImportValidation(IRepository repo,ICurrentUser me)
 {
  public const int MaxBytes=262144;
@@ -32,7 +32,7 @@ public class EmployeeImportValidation(IRepository repo,ICurrentUser me)
    if(!int.TryParse(r[6],NumberStyles.None,CultureInfo.InvariantCulture,out var branch)||!branches.Contains(branch))errors.Add("branch");
    if(!int.TryParse(r[7],NumberStyles.None,CultureInfo.InvariantCulture,out var title)||!titles.Contains(title))errors.Add("jobTitle");
    if(codes.Contains(r[0]))errors.Add("existingCode");if(emails.Contains(r[3]))errors.Add("existingEmail");if(duplicateCodes.Contains(r[0]))errors.Add("duplicateCode");if(duplicateEmails.Contains(r[3]))errors.Add("duplicateEmail");
-   result.Add(new(i+2,r[0],r[1],r[3],errors));
+   result.Add(new(i+2,r[0],r[1],r[3],errors){Cells=r});
   }
   return new(result,result.Count(x=>x.Errors.Count==0));
  }

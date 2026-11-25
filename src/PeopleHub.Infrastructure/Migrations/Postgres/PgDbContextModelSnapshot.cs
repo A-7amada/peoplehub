@@ -2202,6 +2202,52 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("EmployeeGrievanceResponse");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeImportBatch", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CommittedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CommittedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FileHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RowCount")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FileHash")
+                        .IsUnique();
+
+                    b.ToTable("EmployeeImportBatch");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.EmployeeProbation", b =>
                 {
                     b.Property<int>("Id")
@@ -4215,6 +4261,65 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("Shift");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.StagedEmployeeRow", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int?>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("FullNameAr")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("HireDate")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<int>("JobTitleId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("RowNumber")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BatchId", "RowNumber")
+                        .IsUnique();
+
+                    b.ToTable("StagedEmployeeRow");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.StatusHistory", b =>
                 {
                     b.Property<int>("Id")
@@ -4759,6 +4864,15 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired();
 
                     b.Navigation("Employee");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.StagedEmployeeRow", b =>
+                {
+                    b.HasOne("PeopleHub.Domain.Entities.EmployeeImportBatch", null)
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingEnrollment", b =>

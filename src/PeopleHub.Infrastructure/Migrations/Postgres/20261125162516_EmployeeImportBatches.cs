@@ -1,0 +1,88 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+
+#nullable disable
+
+namespace PeopleHub.Infrastructure.Migrations.Postgres
+{
+    /// <inheritdoc />
+    public partial class EmployeeImportBatches : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "EmployeeImportBatch",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    FileHash = table.Column<string>(type: "text", nullable: false),
+                    Status = table.Column<string>(type: "text", nullable: false),
+                    RowCount = table.Column<int>(type: "integer", nullable: false),
+                    CreatedBy = table.Column<string>(type: "text", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    CommittedBy = table.Column<string>(type: "text", nullable: true),
+                    CommittedAt = table.Column<DateTime>(type: "timestamp without time zone", nullable: true),
+                    Revision = table.Column<string>(type: "text", nullable: true, defaultValue: "")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EmployeeImportBatch", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StagedEmployeeRow",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    BatchId = table.Column<int>(type: "integer", nullable: false),
+                    RowNumber = table.Column<int>(type: "integer", nullable: false),
+                    Code = table.Column<string>(type: "text", nullable: false),
+                    FullName = table.Column<string>(type: "text", nullable: false),
+                    FullNameAr = table.Column<string>(type: "text", nullable: false),
+                    Email = table.Column<string>(type: "text", nullable: false),
+                    HireDate = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    DepartmentId = table.Column<int>(type: "integer", nullable: false),
+                    BranchId = table.Column<int>(type: "integer", nullable: false),
+                    JobTitleId = table.Column<int>(type: "integer", nullable: false),
+                    EmployeeId = table.Column<int>(type: "integer", nullable: true),
+                    Revision = table.Column<string>(type: "text", nullable: true, defaultValue: "")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StagedEmployeeRow", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StagedEmployeeRow_EmployeeImportBatch_BatchId",
+                        column: x => x.BatchId,
+                        principalTable: "EmployeeImportBatch",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EmployeeImportBatch_FileHash",
+                table: "EmployeeImportBatch",
+                column: "FileHash",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StagedEmployeeRow_BatchId_RowNumber",
+                table: "StagedEmployeeRow",
+                columns: new[] { "BatchId", "RowNumber" },
+                unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "StagedEmployeeRow");
+
+            migrationBuilder.DropTable(
+                name: "EmployeeImportBatch");
+        }
+    }
+}
