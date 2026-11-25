@@ -23,7 +23,7 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 
 | Story | Class | Evidence | Blocker type |
 |---|---|---|---|
-| US-PH1-001 Tenant lifecycle | Gap | No `Tenant` or `TenantId` anywhere in `src` (grep). Single company. | Owner decision: operating model (SaaS, dedicated, hybrid) |
+| US-PH1-001 Tenant lifecycle | Gap | No `Tenant` or `TenantId` anywhere in `src` (grep). Single company. | Operating model decided 2026-11-25 (SaaS multi-tenant); design is Phase 0 work |
 | US-PH1-002 Tenant data isolation | Gap | Same. One `AppDbContext`, no query filters by tenant; `[ENT-001]` Open. Existing per-user scope (`AccessScope`) is employee-scope within one company, not tenant isolation. | Same decision, then large cross-cutting build |
 | US-PH1-003 Tenant-aware identity and authorization | Gap | Roles, permission grants and step-up exist (`Access.cs`, `[SEC-001]`, `[SEC-010]`) but are single-company. No tenant membership, no platform-admin vs customer-admin split beyond SystemAdmin. | Same |
 | US-PH1-004 Tenant-specific configuration | Gap | Settings, workflows, holidays and shifts are global to the one company. | Same |
@@ -89,7 +89,7 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 
 1. **Already built, do not redo:** step-up and session security, field-level privacy grants, append-only audit, workflow engine features (versions, quorum, delegation, reassignment, reminders), payroll locking and traceability, correction and bank-evidence workflows, benefits and recruitment cores, grievance intake and appeals, attendance ledger and corrections, document and asset management.
 2. **Real engineering gaps that need no owner decision:** CI workflow `[US-PH1-013]`, exact decimal storage `[US-PH1-007]`, report breadth and scheduling `[US-PH2-019]`, responsive verification `[US-PH2-017]`, HR letter generation `[US-PH2-016]`, workflow draft/publish and simulation `[US-PH3-008/009]`, generic outbox and idempotency `[US-PH3-002]`.
-3. **Blocked on the owner:** multi-tenancy model and everything tenant-shaped (PH1-001 to 004, PH3-018), encryption and key custody, retention, hosting and scheduler tier, Egyptian payroll sign-off, leave policy values, Brevo credential, integration contracts, AI governance.
+3. **Blocked on the owner:** (tenancy model now decided: SaaS multi-tenant, 2026-11-25; tenant-shaped stories PH1-001 to 004, PH3-018 wait for Phase 0 design) pricing and plan decisions, encryption and key custody, retention, hosting and scheduler tier, Egyptian payroll sign-off, leave policy values, Brevo credential, integration contracts, AI governance.
 4. **Not verified:** real ZKTeco hardware, PostgreSQL race behavior and load, email delivery, mobile viewports, malware scanning.
 
 ## Verification of the ChatGPT review's own claims

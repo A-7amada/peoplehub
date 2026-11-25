@@ -239,7 +239,7 @@ The system shall support controlled and repeatable production releases.
 
 ## 8. Dependencies
 
-- Confirmed SaaS tenant model and hosting strategy.
+- SaaS tenant model and hosting strategy: confirmed by Ahmed on 2026-11-25 (SaaS multi-tenant with subscriptions; shared database + `TenantId` first, database-per-tenant later for large customers). Dedicated deployment remains possible for an early customer.
 - Identity and authorization model.
 - Data classification and retention policy.
 - Payroll specialist review of financial and statutory rules.
@@ -282,7 +282,7 @@ Phase 1 is complete only when:
 
 ## 12. Open Decisions
 
-- Shared database with `TenantId` versus database-per-tenant, or a hybrid tiered model.
+- RESOLVED 2026-11-25 by Ahmed: SaaS multi-tenant. Shared database with `TenantId` first, database-per-tenant later as an option for large customers. Details of the tier boundary remain for Phase 0.
 - Whether a user may belong to multiple tenants.
 - Tenant-level data residency and retention requirements.
 - Initial production RPO/RTO and availability targets.

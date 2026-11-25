@@ -42,6 +42,8 @@ Each phase should have:
 ## Important assumptions to confirm
 - Initial target market: Egypt, with later localization for other countries.
 - Initial customer segment: small and mid-sized organizations, with a possible growth path to larger enterprises.
-- Multi-tenancy is a product requirement for the target SaaS direction.
+- **Confirmed decision (Ahmed, 2026-11-25, WhatsApp 16:19):** PeopleHub's target operating model is SaaS multi-tenant with subscriptions. The current single-tenant build stays as the demo and can be deployed dedicated for an early customer who insists on their own environment. Multi-tenancy is therefore a product requirement, not an assumption.
+- Hosting strategy (follows the review chat recommendation): shared database with `TenantId` first, with the option of database-per-tenant later for large customers.
+- Subscriptions, billing and pricing are added as a proposed workstream (`BRD-Phase-1-Subscriptions-Billing-Addendum.md`, `USER-STORIES-Subscriptions-Billing.md`). Draft only, nothing is built.
 - Existing PeopleHub modules and documentation will be assessed before implementation to avoid duplicating completed work.
 - The exact legal, tax, social insurance, banking, and data-retention requirements must be confirmed for each target country.

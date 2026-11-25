@@ -10,7 +10,7 @@ Files in `docs/roadmap-drafts/`:
 
 | File | Content |
 |---|---|
-| `PHASE-0-architecture-proposal.md` | Architecture-first proposal: modular monolith, shared database with tenant id, outbox, jobs, localization packages. Ends with an unanswered operating-model question (SaaS, dedicated or hybrid). |
+| `PHASE-0-architecture-proposal.md` | Architecture-first proposal: modular monolith, shared database with tenant id, outbox, jobs, localization packages. Its operating-model question is resolved: Ahmed confirmed SaaS multi-tenant with subscriptions on 2026-11-25 (shared database + TenantId first, database-per-tenant later for large customers). Subscriptions/billing is a proposed addendum, see `roadmap-drafts/`. |
 | `README.md` | Package overview and phase dependencies as generated. |
 | `BRD-Phase-1-Foundation-and-Production-Readiness.md` | Draft Phase 1 BRD. |
 | `BRD-Phase-2-HR-Functional-Excellence.md` | Draft Phase 2 BRD. |

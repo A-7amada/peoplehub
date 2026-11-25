@@ -77,7 +77,7 @@ Source: assistant reply in the same conversation, copied as text. UI widgets fro
 | Architecture | Modular Monolith |
 | Code Structure | Clean Architecture |
 | Database | PostgreSQL |
-| Multi-tenancy | Shared DB + TenantId initially |
+| Multi-tenancy | Shared DB + TenantId initially (operating model confirmed SaaS multi-tenant by Ahmed, 2026-11-25) |
 | ORM | EF Core |
 | API | REST API |
 | Application Pattern | CQRS selectively |
@@ -260,3 +260,6 @@ If you want, I can:
 - اطلب خطة تفصيلية لتنفيذ خدمات تعدد الشركات (Multi-Tenancy)
 - اطلب خطوات عملية لتحسين الأمان وحماية البيانات
 - اطلب توصيات لتطوير محرك تدفق العمل (Workflow Engine) وفق التحليل
+---
+## Decision record (added 2026-11-25)
+The open question above (SaaS, dedicated or hybrid) is resolved by Ahmed (WhatsApp, 2026-11-25 16:19): SaaS multi-tenant with subscriptions. Phase 0 designs tenancy in from day one: shared database + `TenantId` first, database-per-tenant as a later option for large customers. The current single-tenant build stays the demo and can be deployed dedicated for an early customer.
