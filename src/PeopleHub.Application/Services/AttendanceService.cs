@@ -165,7 +165,13 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
             recs.TryGetValue(d, out var rec);
             var leave = leaves.FirstOrDefault(l => l.StartDate <= d && l.EndDate >= d);
             var absent = working && leave == null && d < today && (rec == null || rec.Status == AttendanceStatus.Absent);
-            rows.Add(new DayRow(d, working, h?.Name, h?.NameAr, rec, leave, absent));
+            // Attendance visibility does not grant access to private leave types or medical evidence.
+            LeaveRequest? visibleLeave = leave == null ? null : new LeaveRequest
+            {
+                Id=leave.Id,EmployeeId=leave.EmployeeId,StartDate=leave.StartDate,EndDate=leave.EndDate,Days=leave.Days,Status=leave.Status,
+                LeaveType=new LeaveType { Name=me.EmployeeId==employeeId||me.Can(Perm.LeaveEvidence)?leave.LeaveType?.Name??"":"Private leave", NameAr=me.EmployeeId==employeeId||me.Can(Perm.LeaveEvidence)?leave.LeaveType?.NameAr??"":"إجازة خاصة" }
+            };
+            rows.Add(new DayRow(d, working, h?.Name, h?.NameAr, rec, visibleLeave, absent));
         }
         return rows;
     }
