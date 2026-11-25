@@ -25,7 +25,7 @@ public partial class PerfService
 
     public async Task<PerfTools> ToolsAsync(int id)
     {
-        var v = await GetAsync(id);
+        var v = await LoadViewAsync(id);
         var f = await repo.ToListAsync(repo.Query<Feedback360>().Where(f => f.AppraisalId == id));
         bool self=v.A.EmployeeId==me.EmployeeId;
         var complete=f.Where(x=>x.SubmittedAt!=null && x.Score!=null).ToList();
@@ -51,7 +51,7 @@ public partial class PerfService
 
     public async Task NominateAsync(int id, int reviewerEmployeeId)
     {
-        var v = await GetAsync(id); if (!v.CanManage || reviewerEmployeeId == v.A.EmployeeId) throw new DomainException("err.forbidden");
+        var v = await LoadViewAsync(id); if (!v.CanManage || reviewerEmployeeId == v.A.EmployeeId) throw new DomainException("err.forbidden");
         if (!await repo.AnyAsync(repo.Query<Employee>().Where(e => e.Id == reviewerEmployeeId && e.Status == EmployeeStatus.Active))) throw new DomainException("err.notFound");
         if (await repo.AnyAsync(repo.Query<Feedback360>().Where(f => f.AppraisalId == id && f.ReviewerEmployeeId == reviewerEmployeeId))) throw new DomainException("err.duplicateFeedback");
         repo.Add(new Feedback360 { AppraisalId = id, ReviewerEmployeeId = reviewerEmployeeId });
@@ -93,7 +93,7 @@ public partial class PerfService
     });
     public Task ApplyTemplateAsync(int id, int templateId)=>repo.AtomicAsync(async()=>
     {
-        var v = await GetAsync(id); if (!v.CanManage || v.A.ManagerDone || v.Goals.Count > 0) throw new DomainException("err.emptyGoals");
+        var v = await LoadViewAsync(id); if (!v.CanManage || v.A.ManagerDone || v.Goals.Count > 0) throw new DomainException("err.emptyGoals");
         var template=await repo.FirstOrDefaultAsync(repo.Query<CompetencyTemplate>().Where(t=>t.Id==templateId))??throw new DomainException("err.notFound");
         if(template.JobGrade!=null&&v.A.Employee?.JobTitle?.Grade!=template.JobGrade)throw new DomainException("err.forbidden");
         var items = await repo.ToListAsync(repo.Query<CompetencyItem>().Where(i => i.TemplateId == templateId).OrderBy(i=>i.Id));
@@ -104,11 +104,11 @@ public partial class PerfService
         repo.Add(new CompetencyApplication{AppraisalId=id,TemplateId=template.Id,TemplateName=template.Name,JobGrade=template.JobGrade,Content=content,Sha256=Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(content))),Actor=me.Email,At=clock.UtcNow});
         audit.Log("Template", "Appraisal", id, $"template {templateId}"); await repo.SaveAsync();
     });
-    public async Task<CompetencyApplication?> CompetencyEvidenceAsync(int id){await GetAsync(id);return await repo.FirstOrDefaultAsync(repo.Query<CompetencyApplication>().Where(x=>x.AppraisalId==id));}
+    public async Task<CompetencyApplication?> CompetencyEvidenceAsync(int id){await LoadViewAsync(id);return await repo.FirstOrDefaultAsync(repo.Query<CompetencyApplication>().Where(x=>x.AppraisalId==id));}
 
     public Task LinkCourseAsync(int id, int courseId)=>repo.AtomicAsync(async()=>
     {
-        var v = await GetAsync(id); if (!(Hr || v.CanManage || v.A.Employee?.ManagerId == me.EmployeeId)) throw new DomainException("err.forbidden");
+        var v = await LoadViewAsync(id); if (!(Hr || v.CanManage || v.A.Employee?.ManagerId == me.EmployeeId)) throw new DomainException("err.forbidden");
         var c = await repo.FirstOrDefaultAsync(repo.Query<TrainingCourse>().Where(c => c.Id == courseId)) ?? throw new DomainException("err.notFound");
         if(c.ApprovalStatus is not("Approved" or "Legacy"))throw new DomainException("err.forbidden");
         v.A.ResponseStamp=Guid.NewGuid().ToString("N");
@@ -124,7 +124,7 @@ public partial class PerfService
 
     public async Task ProposeBonusAsync(int id, decimal amount, string reason)
     {
-        var v = await GetAsync(id); if (!Hr || v.A.EmployeeId == me.EmployeeId || v.A.Cycle!.Status != CycleStatus.Closed || v.Final == null) throw new DomainException("err.forbidden");
+        var v = await LoadViewAsync(id); if (!Hr || v.A.EmployeeId == me.EmployeeId || v.A.Cycle!.Status != CycleStatus.Closed || v.Final == null) throw new DomainException("err.forbidden");
         if (amount <= 0 || string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.required");
         if (await repo.AnyAsync(repo.Query<PerfBonus>().Where(b => b.AppraisalId == id))) throw new DomainException("err.bonusExists");
         repo.Add(new PerfBonus { AppraisalId = id, EmployeeId = v.A.EmployeeId, Amount = amount, Reason = reason.Trim(), ProposedBy = me.Email }); audit.Log("ProposeBonus", "Appraisal", id, $"{amount}: {reason}"); await repo.SaveAsync();
