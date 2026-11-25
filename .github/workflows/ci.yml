@@ -27,6 +27,7 @@ jobs:
         env:
           TEST_POSTGRES: Host=localhost;Port=5432;Database=postgres;Username=postgres;Password=ci
         run: dotnet test -c Release --no-build --logger "trx;LogFileName=results.trx" --logger "console;verbosity=minimal"
-      - name: Summary
-        if: always()
-        run: grep -o 'total="[0-9]*" executed="[0-9]*" passed="[0-9]*" failed="[0-9]*"' tests/PeopleHub.Tests/TestResults/results.trx || true
+      - name: Fail if any test was skipped (proves the PostgreSQL tests really ran)
+        run: |
+          grep -o 'total="[0-9]*" executed="[0-9]*" passed="[0-9]*" failed="[0-9]*"[^>]*' tests/PeopleHub.Tests/TestResults/results.trx | head -1
+          if grep -q 'outcome="NotExecuted"' tests/PeopleHub.Tests/TestResults/results.trx; then echo "skipped tests found"; exit 1; fi
