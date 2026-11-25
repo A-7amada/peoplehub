@@ -6,8 +6,10 @@ namespace PeopleHub.Application.Services;
 public record DeptNode(Department Dept, string? ManagerName, string? ManagerNameAr, int Headcount, List<DeptNode> Children);
 public record OrgOverview(List<DeptNode> Tree, List<Branch> Branches, List<JobTitle> Titles, Dictionary<int, int> TitleCounts, Dictionary<int, int> BranchCounts);
 
-public class OrgService(IRepository repo, AuditService audit)
+public class OrgService(IRepository repo, AuditService audit, ICurrentUser me)
 {
+    private void NeedManage(){if(!me.Can(Perm.OrgManage))throw new DomainException("err.forbidden");}
+
     public async Task<OrgOverview> GetAsync()
     {
         var depts = await repo.ToListAsync(repo.Query<Department>().OrderBy(d => d.Name));
@@ -30,29 +32,36 @@ public class OrgService(IRepository repo, AuditService audit)
     public Task<List<JobTitle>> TitlesAsync() => repo.ToListAsync(repo.Query<JobTitle>().OrderBy(d => d.Name));
     public Task<List<Shift>> ShiftsAsync() => repo.ToListAsync(repo.Query<Shift>().OrderBy(d => d.Start));
 
-    public async Task AddDepartmentAsync(string name, string? nameAr, int? parentId, int? managerId, string? costCenter, int target)
+    public Task AddDepartmentAsync(string name, string? nameAr, int? parentId, int? managerId, string? costCenter, int target)=>repo.AtomicAsync(async()=>
     {
+        NeedManage();
         if (string.IsNullOrWhiteSpace(name)) throw new DomainException("err.name");
+        if(target<0)throw new DomainException("err.required");
+        if(parentId!=null&&!await repo.AnyAsync(repo.Query<Department>().Where(x=>x.Id==parentId)))throw new DomainException("err.notFound");
+        if(managerId!=null&&!await repo.AnyAsync(repo.Query<Employee>().Where(x=>x.Id==managerId&&(x.Status==EmployeeStatus.Active||x.Status==EmployeeStatus.OnLeave))))throw new DomainException("err.notFound");
         var d = new Department { Name = name.Trim(), NameAr = nameAr?.Trim() ?? "", ParentId = parentId, ManagerId = managerId, CostCenter = costCenter?.Trim() ?? "", TargetHeadcount = target };
         repo.Add(d);
         audit.Log("Create", "Department", name, $"parent={parentId} manager={managerId}");
         await repo.SaveAsync();
-    }
+    });
 
-    public async Task ToggleDepartmentAsync(int id)
+    public Task ToggleDepartmentAsync(int id)=>repo.AtomicAsync(async()=>
     {
+        NeedManage();
         var d = await repo.FirstOrDefaultAsync(repo.Query<Department>().Where(x => x.Id == id)) ?? throw new DomainException("err.notFound");
         d.IsActive = !d.IsActive;
         audit.Log("Update", "Department", id, $"IsActive {!d.IsActive} -> {d.IsActive}");
         await repo.SaveAsync();
-    }
+    });
 
-    public async Task AddJobTitleAsync(string name, string? nameAr, int grade, decimal min, decimal max, string? description)
+    public Task AddJobTitleAsync(string name, string? nameAr, int grade, decimal min, decimal max, string? description)=>repo.AtomicAsync(async()=>
     {
+        NeedManage();
         if (string.IsNullOrWhiteSpace(name)) throw new DomainException("err.name");
+        if(grade is <1 or >12)throw new DomainException("err.required");
         if (min < 0 || max < min) throw new DomainException("err.salaryRange");
         repo.Add(new JobTitle { Name = name.Trim(), NameAr = nameAr?.Trim() ?? "", Grade = grade, MinSalary = min, MaxSalary = max, Description = description?.Trim() ?? "" });
         audit.Log("Create", "JobTitle", name, $"grade={grade} range={min}-{max}");
         await repo.SaveAsync();
-    }
+    });
 }
