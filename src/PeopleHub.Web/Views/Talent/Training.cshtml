@@ -11,7 +11,7 @@
 <div class="small muted" style="margin-bottom:8px">@mine.Count @X("enrolled", "مسجل") · @mine.Count(m => m.Completed) @X("completed", "أتم")</div>
   @foreach (var m in mine) { <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0"><span>@T.Name(m.Employee!.FullName, m.Employee.FullNameAr)</span>
    @if (m.Completed) { @Ui.Chip(X("Completed", "مكتمل"), "green") } else if (mgr) { <form method="post" action="/Talent/Complete" asp-antiforgery="true" style="margin:0"><input type="hidden" name="id" value="@m.Id"><button class="btn btn-sm">@X("Mark complete", "تم الإتمام")</button></form> } else { @Ui.Chip(X("In progress", "جارٍ"), "amber") } </div> }
-  @if(c.ApprovalStatus is "Approved" or "Legacy"){<form method="post" action="/Talent/Enroll" asp-antiforgery="true" style="margin-top:10px"><input type="hidden" name="courseId" value="@c.Id"><button class="btn btn-sm btn-primary">@X("Enrol me", "سجّلني")</button></form>}</div></div> }
+  @if((c.ApprovalStatus is "Approved" or "Legacy")&&!mine.Any(x=>x.EmployeeId==Me.EmployeeId)){<form method="post" action="/Talent/Enroll" asp-antiforgery="true" style="margin-top:10px"><input type="hidden" name="courseId" value="@c.Id"><button class="btn btn-sm btn-primary">@X("Enrol me", "سجّلني")</button></form>}</div></div> }
 </div>
 @if (mgr) { <div class="card" style="margin-top:18px"><div class="card-h"><h2>@X("New course", "دورة جديدة")</h2></div><div class="card-b"><form method="post" action="/Talent/AddCourse" asp-antiforgery="true" class="grid g2">
  <div class="field"><label>@X("Title", "العنوان")</label><input name="title" required></div><div class="field"><label>@X("Title (Arabic)", "العنوان بالعربية")</label><input name="titleAr"></div>
