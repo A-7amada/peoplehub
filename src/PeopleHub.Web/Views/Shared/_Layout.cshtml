@@ -39,6 +39,7 @@ else {
     <div class="nav-label">@(T.IsAr ? "المواهب" : "Talent")</div>
     @if (Can(Perm.TalentManage)) { <a class="@On("Talent", "Recruitment")" href="/Talent/Recruitment">@Ui.Icon("users") @(T.IsAr ? "التوظيف" : "Recruitment")</a> }
     <a class="@On("Perf")" href="/Perf">@Ui.Icon("chart") @(T.IsAr ? "إدارة الأداء" : "Performance")</a>
+    @if(auth){<a class="@On("Grievances")" href="/Grievances">@Ui.Icon("inbox") @(T.IsAr?"طلب تظلم داخلي":"Grievance intake")</a>}
     @if(auth&&await Relations.CanEnterAsync()){<a class="@On("Relations")" href="/Relations">@Ui.Icon("shield") @(T.IsAr ? "علاقات الموظفين" : "Employee relations")</a>}
     <a class="@On("Benefits")" href="/Benefits">@Ui.Icon("users") @(T.IsAr ? "المزايا" : "Benefits")</a>
     <a class="@On("Talent", "Training")" href="/Talent/Training">@Ui.Icon("clock") @(T.IsAr ? "التدريب" : "Training")</a>

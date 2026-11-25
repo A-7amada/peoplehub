@@ -32,6 +32,7 @@ builder.Services.AddScoped<AuditService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<OrgService>();
+builder.Services.AddScoped<GrievanceIntake>();
 builder.Services.AddScoped<EmployeeService>();
 builder.Services.AddScoped<EmployeeLifecycle>();
 builder.Services.AddScoped<AssetService>();
