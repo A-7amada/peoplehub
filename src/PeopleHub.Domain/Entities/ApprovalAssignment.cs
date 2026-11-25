@@ -6,6 +6,7 @@ public class ApprovalAssignment
  public string Kind {get;set;}="";
  public int RequestId {get;set;}
  public int StageIndex {get;set;}
+ public int? ParticipantEmployeeId {get;set;}
  public int ToUserId {get;set;}
  public string ToEmail {get;set;}="";
  public string Actor {get;set;}="";

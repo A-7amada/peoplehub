@@ -103,3 +103,11 @@ Department approval follow-up: optional explicit department-manager stage added 
 Security advisory applicability review: Dockerfile uses standard .NET images without extra OS packages. Direct/transitive .NET dependency inventory and upload code contain no Ghostscript/ImageMagick/Pillow or process-based rendering. Uploads are signature/size checked and stored as bytes. Source/dependency review only, not a live container package attestation or compromise assessment.
 
 Department workflow full checkpoint: 404 executed passes plus one explicit PostgreSQL skip, 405 discovered. Five non-overlapping partitions r112: 88, 57+1 skip, 55, 85 and 119. No PostgreSQL stress or production NFR claim.
+
+## Captured parallel approval rules
+
+419 executed automated tests pass, one explicit PostgreSQL skip, 420 discovered. Six non-overlapping partitions: 88, 44+1 skip, 55, 85, 119, 28. A combined expanded partition exceeded the runner time cap and is not counted; its base and extra classes were rerun separately to completion. Fifteen new group tests cover captured one/all/count, identity deduplication, delegates, no administrator quorum bypass, immutable votes, captured roster stability, insufficient-roster guards, rejection/recall, single-seat reassignment, active-account guards, notification/reminder eligibility, revision changes and failed final-apply rollback.
+
+Fictional localhost MVC acceptance configures captured-all only after step-up, submits overtime, completes the direct-manager stage, retains the first vote without advancing, removes the first voter inbox action and finalizes on the second distinct participant. Both decisions retained. EN/AR workflow configuration and pending-vote viewport screenshots inspected after correcting role/single-approver labels and RTL vote count direction. No production definitions, participant assignments, business policy or grants changed. Both provider migrations generated; SQLite upgrade exercised. PostgreSQL race stress not executed.
+
+Current-build fresh-fixture navigation rerun: all 228 EN/AR role-route renders passed. A preceding same-server run after four functional logins hit the configured login rate limit on the eighth navigation login; it is not counted as a complete navigation run.

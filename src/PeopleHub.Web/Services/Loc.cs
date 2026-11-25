@@ -13,7 +13,7 @@ public partial class Loc
     public string RoleName(string code) =>
         PeopleHub.Domain.Entities.PermissionCache.NameOf(code) is { } n ? (IsAr && !string.IsNullOrWhiteSpace(n.Ar) ? n.Ar : n.En) : this["role." + code];
     /// <summary>Label of an approval step token: "Manager" or one or more role codes joined by |.</summary>
-    public string Stage(string token) => token=="DepartmentManager"?(IsAr?"مدير القسم عند تقديم الطلب":"Department manager at submission"):ApprovalStage.EmployeeId(token) is {} id?(IsAr?$"معتمد القسم المسجل #{id}":$"Recorded department approver #{id}"):token == "Manager" ? this["stage.Manager"] : string.Join(" / ", token.Split('|').Select(RoleName));
+    public string Stage(string token) => ApprovalStage.Group(token) is {} group?(IsAr?$"اعتماد جماعي: {group.Required} من {group.Employees.Length}":$"Group approval: {group.Required} of {group.Employees.Length}"):token=="DepartmentManager"?(IsAr?"مدير القسم عند تقديم الطلب":"Department manager at submission"):ApprovalStage.EmployeeId(token) is {} id?(IsAr?$"معتمد القسم المسجل #{id}":$"Recorded department approver #{id}"):token == "Manager" ? this["stage.Manager"] : string.Join(" / ", token.Split('|').Select(RoleName));
     public string Date(DateTime d) => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     public string Money(decimal m) => IsAr ? $"{m:N0} ج.م" : $"EGP {m:N0}";
 

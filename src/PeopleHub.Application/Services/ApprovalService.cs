@@ -5,7 +5,7 @@ namespace PeopleHub.Application.Services;
 
 public record RequestRow(string Kind, int Id, Employee Employee, string TypeName, string TypeNameAr, string Detail,
     RequestStatus Status, string? Stage, string Route, int StageIndex, DateTime CreatedAt, string? Comment, bool CanAct, bool CanCancel, string? AttachmentToken, string? AttachmentName,
-    List<ApprovalAction> History,string? WorkflowRevisionHash=null,bool ApprovalCommentRequired=false,string? AssignedTo=null);
+    List<ApprovalAction> History,string? WorkflowRevisionHash=null,bool ApprovalCommentRequired=false,string? AssignedTo=null,int GroupRequired=0,int GroupVotes=0,int[]? PendingSeats=null);
 
 public partial class ApprovalService(IRepository repo, AccessScope scope, ICurrentUser me, AuditService audit, NotificationService notify, AppClock clock, WorkflowService flows, DelegationService delegations)
 {
@@ -14,9 +14,12 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
     private List<(int FromEmployeeId, string[] Roles)>? _deleg;
     private List<ApprovalAssignment> _assignments=[];
     private HashSet<int> _activeUsers=[];
-    private async Task EnsureDelegationsAsync(){_deleg=await delegations.ActiveToMeAsync();_assignments=await repo.ToListAsync(repo.Query<ApprovalAssignment>());var working=(await repo.ToListAsync(repo.Query<Employee>())).Where(e=>e.IsWorking).Select(e=>e.Id).ToHashSet();_activeUsers=(await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive))).Where(u=>u.EmployeeId==null||working.Contains(u.EmployeeId.Value)).Select(u=>u.Id).ToHashSet();}
-    private ApprovalAssignment? Assigned(Approvable a)=>_assignments.Where(x=>x.Kind==KindOf(a)&&x.RequestId==a.Id&&x.StageIndex==a.StageIndex).OrderByDescending(x=>x.Id).FirstOrDefault();
+    private List<AppUser> _users=[];private List<Employee> _employees=[];private List<ApprovalVote> _votes=[];
+    private async Task EnsureDelegationsAsync(){_users=await repo.ToListAsync(repo.Query<AppUser>());_employees=await repo.ToListAsync(repo.Query<Employee>());_votes=await repo.ToListAsync(repo.Query<ApprovalVote>());_deleg=await delegations.ActiveToMeAsync();_assignments=await repo.ToListAsync(repo.Query<ApprovalAssignment>());var working=(await repo.ToListAsync(repo.Query<Employee>())).Where(e=>e.IsWorking).Select(e=>e.Id).ToHashSet();_activeUsers=(await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive))).Where(u=>u.EmployeeId==null||working.Contains(u.EmployeeId.Value)).Select(u=>u.Id).ToHashSet();}
+    private ApprovalAssignment? Assigned(Approvable a)=>_assignments.Where(x=>x.Kind==KindOf(a)&&x.RequestId==a.Id&&x.StageIndex==a.StageIndex&&x.ParticipantEmployeeId==null).OrderByDescending(x=>x.Id).FirstOrDefault();
     private static string KindOf(Approvable a)=>a switch{LeaveRequest=>"Leave",OvertimeRequest=>"Overtime",AttendanceCorrection=>"Correction",AdvanceRequest=>"Advance",_=>""};
+
+    private int? GroupSeat(Approvable a)=>_users.FirstOrDefault(u=>u.Id==me.UserId&&u.EmployeeId==me.EmployeeId) is {} user?ApprovalGroups.SeatFor(KindOf(a),a,user,(_deleg??[]).Select(d=>d.FromEmployeeId),_votes,_assignments,_users,_employees):null;
 
     private bool CanLeaveEvidence(Approvable a)=>a is not LeaveRequest||a.EmployeeId==me.EmployeeId||me.Can(Perm.LeaveEvidence);
 
@@ -24,6 +27,7 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
     {
         if (a.Status != RequestStatus.Pending || a.CurrentStage is not { } stage) return false;
         if (a.EmployeeId == me.EmployeeId) return false; // nobody approves their own request
+        if(ApprovalStage.Group(stage)!=null)return GroupSeat(a)!=null;
         if (me.IsInRole(Roles.SystemAdmin)) return true;
         if(Assigned(a) is {} assigned)return assigned.ToUserId==me.UserId && _activeUsers.Contains(me.UserId);
         if(ApprovalStage.EmployeeId(stage) is {} resolved)
@@ -56,7 +60,7 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         var actions = (await repo.ToListAsync(repo.Query<ApprovalAction>().OrderBy(x => x.At))).ToLookup(x => (x.Kind, x.RequestId));
         var rows = items.Select(i => new RequestRow(i.Kind, i.A.Id, new Employee{Id=i.A.EmployeeId,Code=i.A.Employee!.Code,FullName=i.A.Employee.FullName,FullNameAr=i.A.Employee.FullNameAr}, i.T, i.TAr, i.Detail, i.A.Status, i.A.CurrentStage, i.A.Route, i.A.StageIndex,
                 i.A.CreatedAt, CanLeaveEvidence(i.A)?i.A.Comment:null, CanActOn(i.A), i.A.Status == RequestStatus.Pending && (i.A.EmployeeId == me.EmployeeId || me.Can(Perm.LeaveAdmin)), CanLeaveEvidence(i.A)?i.A.AttachmentToken:null, CanLeaveEvidence(i.A)?i.A.AttachmentName:null,
-                CanLeaveEvidence(i.A)?actions[(i.Kind, i.A.Id)].ToList():[],i.A.WorkflowRevisionHash,requiredComments.Contains(i.Kind),Assigned(i.A)?.ToEmail))
+                CanLeaveEvidence(i.A)?actions[(i.Kind, i.A.Id)].ToList():[],i.A.WorkflowRevisionHash,requiredComments.Contains(i.Kind),Assigned(i.A)?.ToEmail,ApprovalStage.Group(i.A.CurrentStage)?.Required??0,_votes.Count(v=>v.Kind==i.Kind&&v.RequestId==i.A.Id&&v.StageIndex==i.A.StageIndex),ApprovalStage.Group(i.A.CurrentStage)?.Employees.Where(id=>!_votes.Any(v=>v.Kind==i.Kind&&v.RequestId==i.A.Id&&v.StageIndex==i.A.StageIndex&&v.ParticipantEmployeeId==id)).ToArray()))
             .Where(r => status == null || r.Status == status)
             .Where(r => !inboxOnly || r.CanAct)
             .OrderByDescending(r => r.CreatedAt).ToList();
@@ -82,7 +86,15 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
         if (!CanActOn(a)) throw new DomainException("err.forbidden");
         if(comment?.Length>2000 || ((await flows.RequiredApprovalCommentsAsync()).Contains(kind)&&string.IsNullOrWhiteSpace(comment)))throw new DomainException("err.reasonRequired");
         var stage = a.CurrentStage!;
-        var done = a.ApproveStage(clock.UtcNow);
+        var advance=true;
+        if(ApprovalStage.Group(stage) is {} group)
+        {
+            var seat=GroupSeat(a)??throw new DomainException("err.forbidden");
+            repo.Add(new ApprovalVote{Kind=kind,RequestId=id,StageIndex=a.StageIndex,ParticipantEmployeeId=seat,ActorEmployeeId=me.EmployeeId!.Value,ActorUserId=me.UserId,At=clock.UtcNow});
+            advance=_votes.Count(v=>v.Kind==kind&&v.RequestId==id&&v.StageIndex==a.StageIndex)+1>=group.Required;
+            a.AssignmentStamp=Guid.NewGuid().ToString("N");
+        }
+        var done = advance&&a.ApproveStage(clock.UtcNow);
         repo.Add(new ApprovalAction { Kind = kind, RequestId = id, Actor = me.Email, Action = $"Approved:{stage}", Comment = comment?.Trim(), At = clock.UtcNow });
         audit.Log("Approve", kind, id, $"stage {stage}{(done ? " (final)" : "")}");
         var name = a.Employee?.FullName ?? "";
@@ -91,7 +103,7 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
             await ApplyAsync(a);
             await notify.NotifyEmployeeAsync(a.EmployeeId, "notif.approved", $"{kind} #{id}", "/Requests");
         }
-        else await notify.NotifyStageAsync(a, $"{name}: {kind} #{id}");
+        else if(advance) await notify.NotifyStageAsync(a, $"{name}: {kind} #{id}");
         await repo.SaveAsync();
     }
 

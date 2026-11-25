@@ -6,6 +6,16 @@ public static class ApprovalStage
 {
     public static string EmployeeToken(int id)=>"Employee#"+id.ToString(System.Globalization.CultureInfo.InvariantCulture);
     public static int? EmployeeId(string? token)=>token!=null&&token.StartsWith("Employee#",StringComparison.Ordinal)&&int.TryParse(token[9..],System.Globalization.NumberStyles.None,System.Globalization.CultureInfo.InvariantCulture,out var id)&&id>0?id:null;
+    public static string GroupToken(int required,IEnumerable<int> employees)=>"Group#"+required+"#"+string.Join('.',employees.Distinct().Order());
+    public static (int Required,int[] Employees)? Group(string? token)
+    {
+        if(token==null||!token.StartsWith("Group#",StringComparison.Ordinal))return null;
+        var parts=token.Split('#');
+        if(parts.Length!=3||!int.TryParse(parts[1],out var n))throw new DomainException("err.approvalGroup");
+        var ids=parts[2].Split('.').Select(x=>int.TryParse(x,out var id)?id:0).ToArray();
+        if(ids.Length==0||ids.Any(x=>x<1)||ids.Distinct().Count()!=ids.Length||n<1||n>ids.Length)throw new DomainException("err.approvalGroup");
+        return(n,ids);
+    }
     public const string Manager = "Manager", HR = Roles.HRManager + "|" + Roles.HRSpecialist, Finance = Roles.FinanceManager;
 }
 

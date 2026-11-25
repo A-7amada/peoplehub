@@ -14,6 +14,7 @@ public class ApprovalReminders(IRepository repo,AppClock clock)
   requests.AddRange((await repo.ToListAsync(repo.Query<AdvanceRequest>().Where(x=>x.Status==RequestStatus.Pending))).Select(x=>("Advance",(Approvable)x)));
   var delegations=await repo.ToListAsync(repo.Query<Delegation>().Where(x=>!x.Revoked&&x.StartDate<=clock.Today&&x.EndDate>=clock.Today));
   var users=await repo.ToListAsync(repo.Query<AppUser>().Where(x=>x.IsActive));var employees=await repo.ToListAsync(repo.Query<Employee>());var assignments=await repo.ToListAsync(repo.Query<ApprovalAssignment>());var actions=await repo.ToListAsync(repo.Query<ApprovalAction>());var done=await repo.ToListAsync(repo.Query<ApprovalReminder>().Where(x=>x.OnDate==clock.Today));
+  var votes=await repo.ToListAsync(repo.Query<ApprovalVote>());
   foreach(var(kind,r)in requests)
   {
    if(!int.TryParse(settings.FirstOrDefault(x=>x.Key=="Workflow.ReminderHours."+kind)?.Value,out var hours)||hours<1||hours>8760||r.CurrentStage==null)continue;
@@ -22,7 +23,9 @@ public class ApprovalReminders(IRepository repo,AppClock clock)
    foreach(var u in users.Where(x=>x.EmployeeId!=r.EmployeeId&&(x.EmployeeId==null||employees.Any(e=>e.Id==x.EmployeeId&&e.IsWorking))))
    {
     bool eligible=u.RoleArray.Contains(Roles.SystemAdmin)||(assignment!=null?assignment.ToUserId==u.Id:ApprovalStage.EmployeeId(r.CurrentStage) is {} resolved?resolved==u.EmployeeId:r.CurrentStage==ApprovalStage.Manager?r.Employee?.ManagerId!=null&&r.Employee.ManagerId==u.EmployeeId:r.CurrentStage.Split('|').Intersect(u.RoleArray).Any());
-    if(!eligible&&assignment==null&&u.EmployeeId is {} employeeId){foreach(var d in delegations.Where(x=>x.ToEmployeeId==employeeId)){var sourceRoles=users.Where(x=>x.EmployeeId==d.FromEmployeeId).SelectMany(x=>x.RoleArray);if(ApprovalStage.EmployeeId(r.CurrentStage) is {} resolvedDelegate?resolvedDelegate==d.FromEmployeeId:r.CurrentStage==ApprovalStage.Manager?r.Employee?.ManagerId==d.FromEmployeeId:r.CurrentStage.Split('|').Intersect(sourceRoles).Any()){eligible=true;break;}}}
+    var group=ApprovalStage.Group(r.CurrentStage)!=null;
+    if(group)eligible=ApprovalGroups.SeatFor(kind,r,u,delegations.Where(d=>d.ToEmployeeId==u.EmployeeId).Select(d=>d.FromEmployeeId),votes,assignments,users,employees)!=null;
+    if(!group&&!eligible&&assignment==null&&u.EmployeeId is {} employeeId){foreach(var d in delegations.Where(x=>x.ToEmployeeId==employeeId)){var sourceRoles=users.Where(x=>x.EmployeeId==d.FromEmployeeId).SelectMany(x=>x.RoleArray);if(ApprovalStage.EmployeeId(r.CurrentStage) is {} resolvedDelegate?resolvedDelegate==d.FromEmployeeId:r.CurrentStage==ApprovalStage.Manager?r.Employee?.ManagerId==d.FromEmployeeId:r.CurrentStage.Split('|').Intersect(sourceRoles).Any()){eligible=true;break;}}}
     if(!eligible||done.Any(x=>x.Kind==kind&&x.RequestId==r.Id&&x.StageIndex==r.StageIndex&&x.UserId==u.Id))continue;
     repo.Add(new Notification{UserId=u.Id,TitleKey="notif.approvalReminder",Details=$"{kind} #{r.Id}, stage {r.StageIndex+1}",Link="/Requests?scope=inbox",CreatedAt=clock.UtcNow});repo.Add(new ApprovalReminder{Kind=kind,RequestId=r.Id,StageIndex=r.StageIndex,UserId=u.Id,OnDate=clock.Today,At=clock.UtcNow});
    }

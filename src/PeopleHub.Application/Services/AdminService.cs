@@ -31,9 +31,26 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
     {
         var definition=(await ListAsync()).FirstOrDefault(x=>x.Kind==kind);
         var steps=definition?.Steps??[];
-        var json=JsonSerializer.Serialize(new{Kind=kind,RoutingSemantics="sequential-any-role-department-snapshot-v2",Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold})});
+        var json=JsonSerializer.Serialize(new{Kind=kind,RoutingSemantics="captured-participant-rules-v3",Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold,x.Rule,x.RequiredCount})});
         var hash=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(json)));
         var route=RoutePlanner.Build(steps,employee,size,alwaysEscalate);
+        var routed=new List<string>();
+        var users=await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive));
+        var employees=await repo.ToListAsync(repo.Query<Employee>());
+        foreach(var token in route.Split(','))
+        {
+            var step=steps.FirstOrDefault(s=>s.Token==token);
+            if(step!=null&&step.Rule!=ApprovalRule.AnyRole)
+            {
+                var roles=(step.RoleCode??"").Split('|');
+                var roster=users.Where(u=>u.EmployeeId!=null&&u.EmployeeId!=employee.Id&&u.RoleArray.Intersect(roles).Any()).Select(u=>u.EmployeeId!.Value).Distinct().Where(id=>employees.Any(e=>e.Id==id&&e.IsWorking)).Order().ToArray();
+                var count=step.Rule==ApprovalRule.All?roster.Length:step.Rule==ApprovalRule.CapturedAny?1:step.RequiredCount??0;
+                if(roster.Length==0||count<1||count>roster.Length)throw new DomainException("err.approvalGroup");
+                routed.Add(ApprovalStage.GroupToken(count,roster));
+            }
+            else routed.Add(token);
+        }
+        route=string.Join(',',routed);
         foreach(var token in route.Split(','))if(ApprovalStage.EmployeeId(token) is {} resolved)
         {
             var target=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(e=>e.Id==resolved));
@@ -59,11 +76,12 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
     private async Task<WorkflowDefinition> LoadAsync(string kind) =>
         (await ListAsync()).FirstOrDefault(w => w.Kind == kind) ?? throw new DomainException("err.notFound");
 
-    public async Task AddStepAsync(string kind, ApproverType type, string[]? roles, decimal? threshold)
+    public async Task AddStepAsync(string kind, ApproverType type, string[]? roles, decimal? threshold, ApprovalRule rule=ApprovalRule.AnyRole,int? requiredCount=null)
     {
         Require();
         var w = await LoadAsync(kind);
         if(!Enum.IsDefined(type)||threshold is <0 or >100000000)throw new DomainException("err.required");
+        if(!Enum.IsDefined(rule)||(rule!=ApprovalRule.AnyRole&&type!=ApproverType.Role)||(rule==ApprovalRule.Quorum&&(requiredCount is null or <1 or >1000))||(rule!=ApprovalRule.Quorum&&requiredCount!=null))throw new DomainException("err.approvalGroup");
         var codes = (roles ?? []).Where(r => !string.IsNullOrWhiteSpace(r)).Distinct().ToArray();
         if (type == ApproverType.Role && codes.Length == 0) throw new DomainException("err.roleRequired");
         var knownRoles=(await repo.ToListAsync(repo.Query<Role>())).Select(r=>r.Code).ToHashSet();
@@ -71,7 +89,8 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
         if(type==ApproverType.DepartmentManager&&w.Steps.Any(s=>s.Approver==type))throw new DomainException("err.dupDepartmentManager");
         if (w.Steps.Count >= 6) throw new DomainException("err.maxSteps");
         if (type == ApproverType.DirectManager && w.Steps.Any(s => s.Approver == ApproverType.DirectManager)) throw new DomainException("err.dupManager");
-        var step = new WorkflowStep { WorkflowId = w.Id, Order = (w.Steps.Count == 0 ? 0 : w.Steps.Max(s => s.Order)) + 1, Approver = type,
+        if(w.Steps.Any(s=>s.Approver==type&&type==ApproverType.Role&&(rule!=ApprovalRule.AnyRole||s.Rule!=ApprovalRule.AnyRole)&&s.RoleCode==string.Join('|',codes)))throw new DomainException("err.approvalGroup");
+        var step = new WorkflowStep { Rule=rule,RequiredCount=requiredCount, WorkflowId = w.Id, Order = (w.Steps.Count == 0 ? 0 : w.Steps.Max(s => s.Order)) + 1, Approver = type,
             RoleCode = type == ApproverType.Role ? string.Join('|', codes) : null, Threshold = threshold is > 0 ? threshold : null };
         repo.Add(step);
         audit.Log("Update", "Workflow", w.Id, $"{kind}: added step {step.Token}");

@@ -72,6 +72,12 @@ public class NotificationService(IRepository repo, ICurrentUser me, AppClock clo
     {
         var stage = a.CurrentStage;
         if (stage == null) return;
+        if(ApprovalStage.Group(stage)!=null)
+        {
+            var users=await repo.ToListAsync(repo.Query<AppUser>());var employees=await repo.ToListAsync(repo.Query<Employee>());var votes=await repo.ToListAsync(repo.Query<ApprovalVote>());var assignments=await repo.ToListAsync(repo.Query<ApprovalAssignment>());var delegations=await repo.ToListAsync(repo.Query<Delegation>().Where(d=>!d.Revoked&&d.StartDate<=clock.Today&&d.EndDate>=clock.Today));
+            foreach(var user in users.Where(u=>u.EmployeeId!=null))if(ApprovalGroups.SeatFor(ApprovalGroups.Kind(a),a,user,delegations.Where(d=>d.ToEmployeeId==user.EmployeeId).Select(d=>d.FromEmployeeId),votes,assignments,users,employees)!=null)Add(user,"notif.pendingApproval",details,"/Requests?scope=inbox");
+            return;
+        }
         if(ApprovalStage.EmployeeId(stage) is {} resolved)
         {await NotifyEmployeeAsync(resolved,"notif.pendingApproval",details,"/Requests?scope=inbox");return;}
         if (stage == ApprovalStage.Manager)

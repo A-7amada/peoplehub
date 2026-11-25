@@ -133,10 +133,14 @@ public class WorkflowDefinition
     public List<WorkflowStep> Steps { get; set; } = [];
 }
 
+public enum ApprovalRule { AnyRole = 0, CapturedAny = 1, All = 2, Quorum = 3 }
+
 public class WorkflowStep
 {
     public int Id { get; set; }
     public int WorkflowId { get; set; }
+    public ApprovalRule Rule { get; set; }
+    public int? RequiredCount { get; set; }
     public int Order { get; set; }
     public ApproverType Approver { get; set; }
     /// <summary>Role code when Approver is Role.</summary>

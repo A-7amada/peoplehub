@@ -92,8 +92,8 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     public Task<IActionResult> ApprovalComment(string kind,bool required) => Do(()=>flows.SetApprovalCommentAsync(kind,required),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
 
     [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]
-    public Task<IActionResult> AddStep(string kind, ApproverType type, string[]? roles, decimal? threshold) =>
-        Do(() => flows.AddStepAsync(kind, type, roles, threshold), "msg.saved", () => RedirectToAction(nameof(Workflows)));
+    public Task<IActionResult> AddStep(string kind, ApproverType type, string[]? roles, decimal? threshold,ApprovalRule rule=ApprovalRule.AnyRole,int? requiredCount=null) =>
+        Do(() => {if(!ModelState.IsValid)throw new DomainException("err.required");return flows.AddStepAsync(kind, type, roles, threshold,rule,requiredCount);}, "msg.saved", () => RedirectToAction(nameof(Workflows)));
 
     [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]
     public Task<IActionResult> RemoveStep(int id) => Do(() => flows.RemoveStepAsync(id), "msg.saved", () => RedirectToAction(nameof(Workflows)));

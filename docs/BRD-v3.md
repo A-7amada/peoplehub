@@ -35,7 +35,7 @@ Requirement IDs and priorities are normative in TRACEABILITY.md. No documented f
 - Pending approval routes retain their route snapshot, but current manager resolution is existing behavior; explicit administrator reassignment of the current pending stage handles an unavailable approver with retained history. Automatic absence detection and escalation remain open.
 
 ## 10. Workflow requirements
-Sequential any-one-of-roles or direct-manager steps, no self-approval, dated delegation, immutable observed definition hashes, retained original routes, administrator pending-stage reassignment and per-kind required approval comments. Parallel/all/quorum/SLA/escalation requirements remain open. A label saying enterprise workflow does not implement these semantics.
+Sequential any-one-of-roles or direct-manager steps, no self-approval, dated delegation, immutable observed definition hashes, retained original routes, administrator pending-stage reassignment and per-kind required approval comments. Explicit opt-in captured-any/all/quorum role groups are implemented with frozen employee rosters and distinct-human votes. SLA escalation remains partial, with configured reminders but no automatic escalation. A label saying enterprise workflow does not implement these semantics.
 
 ## 11. Reporting
 Preserve CSV/XLSX and builder reports. New snapshots retain organizational and financial inputs at calculation time. Full historical organizational reporting remains open.

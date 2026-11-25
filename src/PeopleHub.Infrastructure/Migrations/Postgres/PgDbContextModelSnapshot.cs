@@ -245,6 +245,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<int?>("ParticipantEmployeeId")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Reason")
                         .IsRequired()
                         .HasColumnType("text");
@@ -314,6 +317,53 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .IsUnique();
 
                     b.ToTable("ApprovalReminder");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.ApprovalVote", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ActorEmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ActorUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ParticipantEmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("RequestId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("StageIndex")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Kind", "RequestId", "StageIndex", "ActorEmployeeId")
+                        .IsUnique();
+
+                    b.HasIndex("Kind", "RequestId", "StageIndex", "ParticipantEmployeeId")
+                        .IsUnique();
+
+                    b.ToTable("ApprovalVote");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.AssetMovement", b =>
@@ -4165,6 +4215,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<int>("Order")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("RequiredCount")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Revision")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAdd()
@@ -4173,6 +4226,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<string>("RoleCode")
                         .HasColumnType("text");
+
+                    b.Property<int>("Rule")
+                        .HasColumnType("integer");
 
                     b.Property<double?>("Threshold")
                         .HasColumnType("double precision");
