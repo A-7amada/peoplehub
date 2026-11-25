@@ -74,7 +74,7 @@
 | SEC-010 | Step-up auth for sensitive admin actions | P0 | Partial: five-minute current-session password + enabled TOTP challenge on settings/user/role/workflow writes, manual device/mail operations, database export, workflow reassignment, advance settlement, payroll manual adjustment/recalculation/Finance approval/paid state, referenced correction mutations and payroll finalization/bank/full snapshot exports; action is not replayed. Broader sensitive-action coverage remains under review |
 | ARC-001 | Modular monolith domain boundaries and policies | P1 | Existing layers; deeper policy extraction open |
 | ARC-002 | PostgreSQL/SQL Server | P0 | PostgreSQL existing |
-| ARC-003 | Explicit business transactions | P0 | Partial: payroll, attendance including overtime/correction submissions, device ingestion, final approvals, leave request/adjustment and employee save atomic; remaining service paths under review |
+| ARC-003 | Explicit business transactions | P0 | Partial: payroll, attendance including overtime/correction submissions, device ingestion, final approvals, leave request/adjustment and employee save atomic; holiday and shift-definition creation now explicitly atomic with post-save/outer rollback and retry coverage; remaining service paths under review |
 | ARC-004 | Durable background scheduler | P1 | Open |
 | ARC-005 | Distributed cache/multi-instance | P2 | Open |
 | ARC-006 | Private object storage | P1 | Open |

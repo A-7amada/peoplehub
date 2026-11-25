@@ -33,8 +33,8 @@ public class ShiftSchedule(IRepository repo,ICurrentUser me,AppClock clock,Audit
   for(var day=from;day<=to;day=day.AddDays(1))repo.Add(new EmployeeShiftDay{EmployeeId=employeeId,Date=day,ShiftId=sequence[(day-from).Days%sequence.Count],Reason=reason.Trim(),Actor=me.Email,At=clock.UtcNow});
   employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");audit.Log("RotateShifts","Employee",employeeId,$"{from:yyyy-MM-dd} to {to:yyyy-MM-dd}, calendar-day pattern {string.Join(',',sequence)}: {reason.Trim()}");await repo.SaveAsync();
  });
- public async Task AddShiftAsync(string name,string? nameAr,TimeSpan start,TimeSpan end,int grace,int maxLate,bool flexible=false,TimeSpan? latestStart=null,int? requiredMinutes=null)
+ public Task AddShiftAsync(string name,string? nameAr,TimeSpan start,TimeSpan end,int grace,int maxLate,bool flexible=false,TimeSpan? latestStart=null,int? requiredMinutes=null)=>repo.AtomicAsync(async()=>
  {
   if(!me.Can(Perm.OrgManage))throw new DomainException("err.forbidden");if(string.IsNullOrWhiteSpace(name)||name.Length>100||start<TimeSpan.Zero||start>=TimeSpan.FromDays(1)||end<TimeSpan.Zero||end>=TimeSpan.FromDays(1)||start==end||grace<0||maxLate<grace||maxLate>1440)throw new DomainException("err.required");if(flexible&&(latestStart==null||requiredMinutes is not >0||requiredMinutes>1440||latestStart<start||latestStart>=TimeSpan.FromDays(1)||latestStart.Value.TotalMinutes+requiredMinutes>1440||end.TotalMinutes!=latestStart.Value.TotalMinutes+requiredMinutes||end<=start))throw new DomainException("err.required");repo.Add(new Shift{Flexible=flexible,LatestStart=flexible?latestStart:null,RequiredMinutes=flexible?requiredMinutes:null,Name=name.Trim(),NameAr=nameAr?.Trim()??"",Start=start,End=end,GraceMinutes=grace,MaxLateMinutes=maxLate});audit.Log("Create","Shift",name.Trim(),$"{start}-{end}, grace {grace}");await repo.SaveAsync();
- }
+ });
 }
