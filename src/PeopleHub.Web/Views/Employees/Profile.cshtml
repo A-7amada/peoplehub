@@ -45,11 +45,11 @@
   @if (hr && !e.IsWorking && e.Status != EmployeeStatus.Suspended)
   {
    var rehires=(List<RehireRequest>)ViewBag.Rehires; var pend=rehires.FirstOrDefault(x=>x.Status=="Pending");
-   <div style="margin-top:14px"><h3 style="font-size:15px;margin:0 0 6px">@T["emp.rehireTitle"]</h3><div class="muted small">@T["emp.rehireHint"]</div>
+   <div class="card" style="margin-top:14px"><div class="card-h"><h2>@T["emp.rehireTitle"]</h2></div><div class="card-b"><div class="muted small" style="display:none"></div><div class="muted small" style="margin-bottom:8px">@T["emp.rehireHint"]</div>
    @if(pend==null){ <form method="post" action="/Employees/RequestRehire" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@e.Id"><input type="text" name="reason" required maxlength="1000" placeholder="@T["common.reason"]" style="flex:1"><button class="btn btn-sm">@T["emp.rehire"]</button></form> }
    else { <div class="kv"><span>@T.Date(pend.RequestedAt) · @pend.RequestedBy</span><b>@pend.Reason</b></div>
     @if(Me.IsInRole(Roles.HRManager)&&pend.RequestedByUserId!=Me.UserId){ <form method="post" action="/Employees/DecideRehire" asp-antiforgery="true" class="inline-form"><input type="hidden" name="requestId" value="@pend.Id"><input type="hidden" name="id" value="@e.Id"><input type="text" name="note" required maxlength="1000" placeholder="@T["emp.rehireNote"]" style="flex:1"><button class="btn btn-sm" name="approve" value="true">@T["emp.rehireApprove"]</button><button class="btn btn-sm btn-ghost" name="approve" value="false">@T["emp.rehireReject"]</button></form> } }
-   @foreach(var rr in rehires.Where(x=>x.Status!="Pending")){ <div class="kv"><span>@T.Date(rr.DecidedAt ?? rr.RequestedAt) · @rr.Status</span><b>@rr.DecisionNote</b></div> }</div>
+   @foreach(var rr in rehires.Where(x=>x.Status!="Pending")){ <div class="kv"><span>@T.Date(rr.DecidedAt ?? rr.RequestedAt) · @rr.Status</span><b>@rr.DecisionNote</b></div> }</div></div>
   }
 </div>
 }
