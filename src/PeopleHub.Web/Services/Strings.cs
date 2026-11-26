@@ -19,6 +19,7 @@ public partial class Loc
         A("emp.rehireNote","Decision note (required)","ملاحظة القرار (مطلوبة)");
         A("emp.rehireHint","Old records stay. A second HR Manager must approve.","السجلات القديمة تبقى كما هي. يلزم اعتماد مدير موارد بشرية ثاني.");
         A("err.payrollSelfFinance","The payroll preparer cannot approve the run at the Finance step.","معد دورة المرتبات لا يمكنه اعتمادها في خطوة المالية.");
+        A("err.badAuthSetting","Sign-in limits are out of range (failures 3-20, minutes 1-1440, requests per minute 3-120).","حدود تسجيل الدخول خارج النطاق (المحاولات 3-20، الدقائق 1-1440، الطلبات في الدقيقة 3-120).");
         A("err.payrollSelfFinal","The payroll creator cannot be the final approver.","منشئ دورة المرتبات لا يمكنه اعتمادها نهائيا.");
         A("err.payrollImmutable","Final payroll is immutable. Record a reasoned adjustment in a later period.","دورة المرتبات النهائية لا تعدل. سجل التصحيح بسبب موثق في فترة لاحقة.");
         A("notif.cancelled","Approved leave cancelled","تم إلغاء إجازة معتمدة");

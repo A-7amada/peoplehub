@@ -16,9 +16,18 @@ public class SettingsService(IRepository repo, ICurrentUser me, AuditService aud
     {
         ["att.mode"] = "System", ["zk.ip"] = "192.168.1.201", ["zk.port"] = "4370", ["zk.simulate"] = "true", ["zk.apiKey"] = "demo-device-key",
         ["email.notify"] = "true", ["smtp.host"] = "", ["smtp.port"] = "587", ["smtp.user"] = "", ["smtp.from"] = "hr@peoplehub.local",
-        ["eosb.days"] = "15", ["pwd.minLength"] = "8"
+        ["eosb.days"] = "15", ["pwd.minLength"] = "8",
+        ["auth.maxFailed"] = "5", ["auth.lockMinutes"] = "15", ["auth.failWindowMinutes"] = "15", ["auth.rateLimitPerMinute"] = "12"
     };
     public static string Get(string key) => Cache.TryGetValue(key, out var v) ? v : Defaults.GetValueOrDefault(key, "");
+    /// <summary>Sign-in throttling values. Defaults equal the values that were hardcoded before (5 failures, 15-minute window, 15-minute lock, 12 sign-in requests per minute per address). Out-of-range or unreadable values fall back to the default.</summary>
+    public static readonly Dictionary<string, (int Min, int Max)> AuthRanges = new() { ["auth.maxFailed"] = (3, 20), ["auth.lockMinutes"] = (1, 1440), ["auth.failWindowMinutes"] = (1, 1440), ["auth.rateLimitPerMinute"] = (3, 120) };
+    public static int GetInt(string key)
+    {
+        var def = int.Parse(Defaults[key]);
+        if (!int.TryParse(Get(key), out var v)) return def;
+        return AuthRanges.TryGetValue(key, out var r) && (v < r.Min || v > r.Max) ? def : v;
+    }
     public static bool DeviceMode => Get("att.mode") == "Device";
 
     public async Task LoadAsync()
@@ -41,6 +50,8 @@ public class SettingsService(IRepository repo, ICurrentUser me, AuditService aud
             if (!System.Net.IPAddress.TryParse(values.GetValueOrDefault("zk.ip", ""), out _) && Uri.CheckHostName(values.GetValueOrDefault("zk.ip", "")) == UriHostNameType.Unknown) throw new DomainException("err.badIp");
             if (!int.TryParse(values.GetValueOrDefault("zk.port", ""), out var p) || p is < 1 or > 65535) throw new DomainException("err.badPort");
         }
+        foreach (var (k, r) in AuthRanges)
+            if (values.TryGetValue(k, out var raw) && (!int.TryParse(raw, out var n) || n < r.Min || n > r.Max)) throw new DomainException("err.badAuthSetting");
         var rows = await repo.ToListAsync(repo.Query<AppSetting>());
         foreach (var (k, v) in values)
         {
