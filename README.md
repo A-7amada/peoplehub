@@ -14,10 +14,12 @@ Built since the BRD v3 baseline (details and evidence in [docs/TRACEABILITY.md](
 
 - **Phase 0, architecture:** modular monolith with module-boundary and transaction-boundary guard tests, tenant context, ADRs 0001 to 0021 ([docs/architecture/adr](docs/architecture/adr/README.md), [Blueprint](docs/architecture/BLUEPRINT.md)).
 - **Security:** separation of duties (the preparer is blocked at HR review and at Finance approve), configurable lockout and rate limit, optional TOTP MFA with recovery codes (off by default), field-level grants, and free app-level AES-256-GCM encryption of national id, IBAN, payroll IBAN snapshot and TOTP seeds (key from the `FIELD_ENCRYPTION_KEY` environment variable; custody limits in OPERATIONS.md).
-- **HR operations:** employment confirmation letters (employee request, a different HR user issues or declines, text frozen at issue, printable EN/AR), headcount and turnover report, six-month payroll cost trend (finance grant), email outbox delivery states with requeue (live email still off), 244 EN/AR role-navigation renders as a regression check.
+- **HR operations:** employment confirmation letters (employee request, a different HR user issues or declines, text frozen at issue, printable EN/AR), headcount and turnover report, six-month payroll cost trend (finance grant), approval statistics report, email outbox delivery states with requeue (live email still off), 244 EN/AR role-navigation renders as a regression check.
 - **Free-tier choices that stay:** internal scheduler, files stored in the database, no paid services, live email off.
 
-Not done, and held for owner decisions or spend: tenant isolation and subscriptions, OIDC/SSO, leave accrual and carry-forward policies, mobile GPS capture, Egypt payroll validation by a labour lawyer and payroll accountant (deferred), durable job hosting, staging (held), and paid services. Not verified: Postgres races and load, a real ZKTeco device, live email, real mobile devices, RLS on Neon.
+Decided and queued (not built yet): leave accrual, carry-forward and expiry defaults, configurable (ADR-0022), and the staged full tenant isolation build (ADR-0023).
+
+Not done, and held for owner decisions or spend: OIDC/SSO, mobile GPS capture, Egypt payroll validation by a labour lawyer and payroll accountant (deferred), durable job hosting, staging (held), and paid services. Not verified: Postgres races and load, a real ZKTeco device, live email, real mobile devices, RLS on Neon.
 
 Test status: the full suite runs by class partitions, each test counted once (673 tests in 96 classes on the last full run; 2 are skipped because they need a Postgres server). CI runs on every push.
 

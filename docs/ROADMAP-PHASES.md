@@ -31,3 +31,5 @@ Before any phase starts: gap-analyse each requirement against `docs/TRACEABILITY
 | 3 Enterprise | Mostly open | Executive analytics started (headcount, turnover, payroll cost trend) | Integrations, SSO, banking, AI features, country packs |
 
 The per-story evidence is in [GAP-ANALYSIS.md](roadmap-drafts/GAP-ANALYSIS.md) and the per-requirement register in [TRACEABILITY.md](TRACEABILITY.md). Items that need an owner decision or spend are listed there and are not started.
+
+Update 2026-11-27: two owner decisions recorded as ADR-0022 (leave policy defaults, built configurable) and ADR-0023 (staged full tenant isolation build). Both are decided and not yet built. Everything else on the held list stays deferred.

@@ -77,7 +77,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
         return new DashboardData(kpis, byDept, trend, payTrend, byStatus, expiring, pending, hires, company);
     }
 
-    public static readonly string[] ReportKeys = ["employees", "attendance", "leave", "payroll", "turnover", "headcount", "payrolltrend"];
+    public static readonly string[] ReportKeys = ["employees", "attendance", "leave", "payroll", "turnover", "headcount", "payrolltrend", "approvalstats"];
 
     public async Task<ReportTable> BuildAsync(string key, int year, int month)
     {
@@ -124,6 +124,15 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                     prevNet = net;
                 }
                 return new("payrolltrend", ["Month", "Employees", "Gross", "Deductions", "Net", "Net change % vs previous run"], trendRows);
+            case "approvalstats":
+                var visible = emps.Select(e => e.Id).ToHashSet();
+                var all = new List<(string Kind, Approvable R)>();
+                all.AddRange((await repo.ToListAsync(repo.Query<LeaveRequest>())).Select(x => ("Leave", (Approvable)x)));
+                all.AddRange((await repo.ToListAsync(repo.Query<OvertimeRequest>())).Select(x => ("Overtime", (Approvable)x)));
+                all.AddRange((await repo.ToListAsync(repo.Query<AttendanceCorrection>())).Select(x => ("Attendance correction", (Approvable)x)));
+                all.AddRange((await repo.ToListAsync(repo.Query<AdvanceRequest>())).Select(x => ("Salary advance", (Approvable)x)));
+                return new("approvalstats", ["Request kind", "Submitted", "Approved", "Rejected", "Cancelled", "Pending now", "Avg hours to decision", "Oldest pending (days)"],
+                    ApprovalRows(all.Where(x => visible.Contains(x.R.EmployeeId)), year, month, DateTime.UtcNow));
             case "headcount":
                 var allHist = await repo.ToListAsync(repo.Query<StatusHistory>());
                 var rows = HeadcountRows(emps, allHist, year, month);
@@ -134,6 +143,25 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                 return new("turnover", ["Code", "Name", "Department", "Status", "Date", "Reason"],
                     left.Select(e => { var h = hist.Where(x => x.EmployeeId == e.Id).OrderByDescending(x => x.At).FirstOrDefault(); return new List<string> { e.Code, e.FullName, e.Department?.Name ?? "", e.Status.ToString(), h?.At.ToString("yyyy-MM-dd") ?? "", me.EmployeeId==e.Id||me.Can(Perm.EmpIdentity)?h?.Reason??"":"" }; }).ToList());
         }
+    }
+
+    /// <summary>Approval volume per request kind for one month. Submitted, approved, rejected and cancelled are counted by the month of creation or decision. Pending now is every request still open today. Average hours runs from creation to decision for requests decided in the month. No names or comments are included.</summary>
+    public static List<List<string>> ApprovalRows(IEnumerable<(string Kind, Approvable R)> items, int year, int month, DateTime now)
+    {
+        var start = new DateTime(year, month, 1); var end = start.AddMonths(1);
+        var rows = new List<List<string>>();
+        foreach (var g in items.GroupBy(x => x.Kind).OrderBy(g => g.Key))
+        {
+            var rs = g.Select(x => x.R).ToList();
+            var decided = rs.Where(r => r.Status != RequestStatus.Pending && r.DecidedAt >= start && r.DecidedAt < end).ToList();
+            var timed = decided.Where(r => r.Status is RequestStatus.Approved or RequestStatus.Rejected).ToList();
+            var pending = rs.Where(r => r.Status == RequestStatus.Pending).ToList();
+            rows.Add([g.Key, rs.Count(r => r.CreatedAt >= start && r.CreatedAt < end).ToString(),
+                decided.Count(r => r.Status == RequestStatus.Approved).ToString(), decided.Count(r => r.Status == RequestStatus.Rejected).ToString(), decided.Count(r => r.Status == RequestStatus.Cancelled).ToString(),
+                pending.Count.ToString(), timed.Count == 0 ? "-" : timed.Average(r => (r.DecidedAt!.Value - r.CreatedAt).TotalHours).ToString("0.0", CultureInfo.InvariantCulture),
+                pending.Count == 0 ? "-" : Math.Floor(pending.Max(r => (now - r.CreatedAt).TotalDays)).ToString("0", CultureInfo.InvariantCulture)]);
+        }
+        return rows;
     }
 
     static bool Gone(EmployeeStatus s) => s is EmployeeStatus.Resigned or EmployeeStatus.Terminated or EmployeeStatus.Retired;

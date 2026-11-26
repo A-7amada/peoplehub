@@ -71,3 +71,25 @@ public class HeadcountReportTests
   Assert.Equal(new[]{"Ops","0","1","0","1","0","-"},r.ToArray());
  }
 }
+
+public class ApprovalStatsReportTests
+{
+ static (string,Approvable) L(RequestStatus st,DateTime created,DateTime? decided)=>("Leave",new LeaveRequest{EmployeeId=1,Status=st,CreatedAt=created,DecidedAt=decided});
+ [Fact]public void CountsByMonthAveragesHoursAndAgesPending()
+ {
+  var items=new List<(string,Approvable)>{
+   L(RequestStatus.Approved,new(2026,11,2,8,0,0),new(2026,11,2,20,0,0)),
+   L(RequestStatus.Rejected,new(2026,11,3,0,0,0),new(2026,11,4,0,0,0)),
+   L(RequestStatus.Cancelled,new(2026,11,5,0,0,0),new(2026,11,6,0,0,0)),
+   L(RequestStatus.Pending,new(2026,11,10,0,0,0),null),
+   L(RequestStatus.Approved,new(2026,10,2,0,0,0),new(2026,10,3,0,0,0))};
+  var r=PeopleHub.Application.Modules.Reporting.ReportService.ApprovalRows(items,2026,11,new DateTime(2026,11,20)).Single();
+  // submitted in Nov: 4; approved 1; rejected 1; cancelled 1; pending 1; avg of 12h and 24h = 18.0; oldest pending 10 days.
+  Assert.Equal(new[]{"Leave","4","1","1","1","1","18.0","10"},r.ToArray());
+ }
+ [Fact]public void KindWithNothingPendingOrDecidedShowsDashes()
+ {
+  var r=PeopleHub.Application.Modules.Reporting.ReportService.ApprovalRows([L(RequestStatus.Approved,new(2026,9,1),new(2026,9,2))],2026,11,new DateTime(2026,11,20)).Single();
+  Assert.Equal(new[]{"Leave","0","0","0","0","0","-","-"},r.ToArray());
+ }
+}
