@@ -94,3 +94,7 @@ ARC-005 multi-instance with shared cache (about 20 USD per month), custom domain
 
 ## Operational record, 2026-11-26
 TenantFoundation was applied to production Neon by the 478b849 lineage deploys. A restore drill of the same migration on a fresh copy of production passed (98 tenant tables, 0 rows outside tenant 1, employee count unchanged). The first Render start after the migration commit exited with status 139 while the migration ran; the schema was already migrated, a second deploy of the same commit succeeded, and the cause of the first exit is not proven. The service stayed on the previous deploy and answered health checks throughout.
+
+## Status update (2026-11-26)
+
+Built since this blueprint was written: module-boundary and transaction-boundary guard tests, internal scheduler (ADR-0012), files in the database (ADR-0014), sensitive-field encryption with an environment key (ADR-0021), SoD and lockout configuration, optional TOTP. Planned and not built: tenant isolation across all queries, REST/mobile API (ADR-0008, ADR-0020 conventions only), OIDC (ADR-0009), durable job hosting, a staging service (held). See [GAP-ANALYSIS](../roadmap-drafts/GAP-ANALYSIS.md) for story-level status.

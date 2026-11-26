@@ -45,6 +45,13 @@ public class ExportPrivacyAuditTests
   await using var d=await Db();var with=await new ReportBuilderService(d,new AccessScope(d,new User(4,Perm.ScopeCompany,Perm.Reports,Perm.EmpSalary)),new User(4,Perm.ScopeCompany,Perm.Reports,Perm.EmpSalary)).RunAsync("employees",null,null);
   Assert.Contains("salary",with.Columns);
  }
+ [Fact]public async Task PayrollTrendNeedsFinanceGrantAndShowsSixMonths()
+ {
+  await using var d=await Db();
+  await Assert.ThrowsAsync<DomainException>(()=>R(d,new User(4,Perm.ScopeCompany,Perm.Reports)).BuildAsync("payrolltrend",2026,11));
+  var t=await R(d,new User(4,Perm.ScopeCompany,Perm.Reports,Perm.ReportsFin)).BuildAsync("payrolltrend",2026,11);
+  Assert.Equal(6,t.Rows.Count);Assert.Equal("2026-06",t.Rows[0][0]);Assert.Equal("2026-11",t.Rows[5][0]);
+ }
  static string Root(){var d=new DirectoryInfo(AppContext.BaseDirectory);while(d!=null&&!Directory.Exists(Path.Combine(d.FullName,"src")))d=d.Parent;Assert.NotNull(d);return d!.FullName;}
  /// <summary>Every source file that touches a private Employee field must be on this audited list. A new file fails the test until someone reviews its guard and adds it here.</summary>
  static readonly string[] Audited=

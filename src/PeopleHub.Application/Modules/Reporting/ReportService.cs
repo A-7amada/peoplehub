@@ -77,7 +77,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
         return new DashboardData(kpis, byDept, trend, payTrend, byStatus, expiring, pending, hires, company);
     }
 
-    public static readonly string[] ReportKeys = ["employees", "attendance", "leave", "payroll", "turnover", "headcount"];
+    public static readonly string[] ReportKeys = ["employees", "attendance", "leave", "payroll", "turnover", "headcount", "payrolltrend"];
 
     public async Task<ReportTable> BuildAsync(string key, int year, int month)
     {
@@ -108,6 +108,22 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                 var byDept = lines.GroupBy(l => string.IsNullOrEmpty(l.EmployeeCodeSnapshot)?l.Employee!.Department?.Name ?? "":l.DepartmentSnapshot).OrderBy(g => g.Key);
                 return new("payroll", ["Department", "Employees", "Gross", "Deductions", "Net"],
                     byDept.Select(g => new List<string> { g.Key, g.Count().ToString(), F(g.Sum(l => l.Gross)), F(g.Sum(l => l.TotalDeductions)), F(g.Sum(l => l.Net)) }).ToList());
+            case "payrolltrend":
+                if (!me.Can(Perm.ReportsFin)) throw new DomainException("err.forbidden");
+                var months = Enumerable.Range(0, 6).Select(i => new DateTime(year, month, 1).AddMonths(i - 5)).ToList();
+                var runs = await repo.ToListAsync(repo.Query<PayrollRun>());
+                var trendRows = new List<List<string>>(); decimal? prevNet = null;
+                foreach (var m in months)
+                {
+                    var r = runs.FirstOrDefault(x => x.Year == m.Year && x.Month == m.Month);
+                    var ls = r == null ? [] : await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == r.Id));
+                    if (r == null || ls.Count == 0) { trendRows.Add([m.ToString("yyyy-MM"), "0", "-", "-", "-", "-"]); continue; }
+                    var net = ls.Sum(l => l.Net);
+                    trendRows.Add([m.ToString("yyyy-MM"), ls.Count.ToString(), F(ls.Sum(l => l.Gross)), F(ls.Sum(l => l.TotalDeductions)), F(net),
+                        prevNet is > 0 ? ((net - prevNet.Value) / prevNet.Value * 100).ToString("+0.0;-0.0;0.0", CultureInfo.InvariantCulture) : "-"]);
+                    prevNet = net;
+                }
+                return new("payrolltrend", ["Month", "Employees", "Gross", "Deductions", "Net", "Net change % vs previous run"], trendRows);
             case "headcount":
                 var allHist = await repo.ToListAsync(repo.Query<StatusHistory>());
                 var rows = HeadcountRows(emps, allHist, year, month);

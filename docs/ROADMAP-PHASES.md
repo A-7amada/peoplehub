@@ -20,3 +20,14 @@ Files in `docs/roadmap-drafts/`:
 | `USER-STORIES-Phase-1.md` / `-2.md` / `-3.md` | 13 / 19 / 18 stories split from the phase BRDs, each with its source requirement id, the draft's own statement, acceptance criteria and phase-level priority. No actors, estimates or per-story priorities were added. See each file header for the assumptions (the owner's voice note about this was partly garbled). |
 
 Before any phase starts: gap-analyse each requirement against `docs/TRACEABILITY.md` and the code so existing features are not rebuilt, and settle the owner decisions it lists.
+
+## Progress by phase (updated 2026-11-26)
+
+| Phase | State | Built so far | Still open |
+|---|---|---|---|
+| 0 Architecture | In progress, decisions recorded as ADR-0001 to ADR-0021 | Module and transaction guard tests, tenant context, internal scheduler, files in DB, field encryption (ADR-0021), API conventions (ADR-0020, convention only) | Full tenant isolation build, REST/mobile API endpoints, OIDC provider |
+| 1 Foundation | Partial (7 of 13 stories partial, 6 gap) | SoD at HR review and Finance approve, lockout and rate limit config, optional TOTP MFA, field encryption, metrics endpoint, correlation ids | Tenancy and subscriptions, durable jobs hosting, off-host backups and restore drill, release governance |
+| 2 HR functionality | Partial (decision-free items being built) | Employee lifecycle items, mobile-responsive pass, employment letters, headcount and turnover report | Leave accrual and expiry, hourly leave, GPS capture, Egypt payroll validation, category grace |
+| 3 Enterprise | Mostly open | Executive analytics started (headcount, turnover, payroll cost trend) | Integrations, SSO, banking, AI features, country packs |
+
+The per-story evidence is in [GAP-ANALYSIS.md](roadmap-drafts/GAP-ANALYSIS.md) and the per-requirement register in [TRACEABILITY.md](TRACEABILITY.md). Items that need an owner decision or spend are listed there and are not started.

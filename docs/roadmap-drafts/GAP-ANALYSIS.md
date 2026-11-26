@@ -75,7 +75,7 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 | US-PH3-007 Workflow service levels and escalation | Partial | Per-kind reminder policy, daily ledger, targeting through delegation `[WFL-001]`; no escalation or business-hours calendar. | Escalation policy; durable scheduler |
 | US-PH3-008 Advanced delegation and approval governance | Partial | Dated delegation `[WFL-006]`, reassignment `[WFL-005]`, parallel/quorum rules `[WFL-002]`, required comments `[WFL-007]`, versioned definitions `[WFL-004]`. Missing: draft/publish lifecycle, version comparison. | Engineering |
 | US-PH3-009 Workflow simulation and analytics | Gap | No simulation; no approval analytics beyond request metrics. | Engineering |
-| US-PH3-010 Executive HR analytics | Partial | Dashboard and four reports; no headcount, turnover or cost trend analytics `[ENT-006]` Open. | Engineering |
+| US-PH3-010 Executive HR analytics | Partial | Dashboard and reports now include headcount and turnover (2026-11-26) and a six-month payroll cost trend (finance grant only). No forecasting or cost planning `[ENT-006]` Open. | Engineering |
 | US-PH3-011 Workforce cost and headcount planning | Partial | Target headcount on departments, annual training cost summary `[HR-002]`, cost-centre projection `[PAY-011]`; no planning module `[ENT-006]`. | Engineering |
 | US-PH3-012 Skills and competency intelligence | Gap | Competency frameworks per grade `[PER-001]` exist; no skills inventory or gap analysis. | Engineering |
 | US-PH3-013 Succession and talent planning | Gap | `[ENT-006]` Open. | Engineering and policy |
