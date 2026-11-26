@@ -170,7 +170,7 @@ app.Use(async (ctx,next)=>{
     var trace=System.Diagnostics.Activity.Current?.TraceId.ToString()??ctx.TraceIdentifier;
     ctx.Response.OnStarting(()=>{ctx.Response.Headers["X-Correlation-ID"]=trace;return Task.CompletedTask;});
     // Structured log scope: every log line written during the request carries the tenant and the trace id.
-    using var logScope=app.Logger.BeginScope(new Dictionary<string,object>{["TenantId"]=ctx.RequestServices.GetRequiredService<PeopleHub.Application.Common.Tenancy.ITenantContext>().TenantId,["Trace"]=trace});
+    using var logScope=app.Logger.BeginScope("tenant={TenantId} trace={Trace}",ctx.RequestServices.GetRequiredService<PeopleHub.Application.Common.Tenancy.ITenantContext>().TenantId,trace);
     try{await next();status=ctx.Response.StatusCode;}catch(DbUpdateConcurrencyException){status=409;throw;}finally{metric.End(route,started,status);app.Logger.LogInformation("HTTP {Route} status {Status} trace {Trace}",route,status,trace);}
 });
 app.UseRateLimiter();
