@@ -186,7 +186,7 @@ public partial class Loc
 
         // reports / system
         A("rep.sub", "Pick a report, filter the period and export to CSV.", "اختر تقريراً وحدد الفترة وصدّره بصيغة CSV.");
-        A("rep.employees", "Employees", "الموظفون"); A("rep.attendance", "Attendance", "الحضور"); A("rep.leave", "Leave balances", "أرصدة الإجازات"); A("rep.payroll", "Payroll cost", "تكلفة الرواتب"); A("rep.turnover", "Leavers", "المغادرون");
+        A("rep.employees", "Employees", "الموظفون"); A("rep.attendance", "Attendance", "الحضور"); A("rep.leave", "Leave balances", "أرصدة الإجازات"); A("rep.payroll", "Payroll cost", "تكلفة الرواتب"); A("rep.turnover", "Leavers", "المغادرون"); A("rep.headcount", "Headcount and turnover", "عدد الموظفين ومعدل الدوران");
         foreach (var (c, en, ar) in new[] { ("Code", "Code", "الكود"), ("Name", "Name", "الاسم"), ("Department", "Department", "الإدارة"), ("Title", "Title", "المسمى"), ("Branch", "Branch", "الفرع"), ("Status", "Status", "الحالة"),
             ("Hire date", "Hire date", "تاريخ التعيين"), ("Manager", "Manager", "المدير"), ("Working days", "Working days", "أيام العمل"), ("Present", "Present", "حضور"), ("Late (count)", "Late (count)", "مرات التأخير"),
             ("Late (min)", "Late (min)", "دقائق التأخير"), ("Absent", "Absent", "غياب"), ("Excused", "Excused", "بعذر"), ("Leave days", "Leave days", "أيام الإجازة"), ("Overtime h", "Overtime h", "ساعات الإضافي"),

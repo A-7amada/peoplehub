@@ -47,3 +47,27 @@ public class FieldEncryptionBackfillTests
   Assert.False(r.Enabled);Assert.Equal(0,r.Encrypted);
  }
 }
+
+public class HeadcountReportTests
+{
+ static Employee E(int id,string dept,DateTime hire)=>new(){Id=id,Code="E"+id,FullName="N"+id,Department=new Department{Name=dept},HireDate=hire};
+ static StatusHistory H(int id,int emp,EmployeeStatus from,EmployeeStatus to,DateTime at)=>new(){Id=id,EmployeeId=emp,From=from,To=to,At=at};
+ [Fact]public void CountsStartEndHiresExitsRehiresAndTurnover()
+ {
+  var emps=new List<Employee>{E(1,"Ops",new(2020,1,1)),E(2,"Ops",new(2021,1,1)),E(3,"Ops",new(2026,11,10)),E(4,"Ops",new(2022,1,1)),E(5,"Fin",new(2026,12,5))};
+  var hist=new List<StatusHistory>{H(1,2,EmployeeStatus.Active,EmployeeStatus.Resigned,new(2026,11,20)),H(2,4,EmployeeStatus.Active,EmployeeStatus.Terminated,new(2026,9,1)),H(3,4,EmployeeStatus.Terminated,EmployeeStatus.Active,new(2026,11,25))};
+  var rows=PeopleHub.Application.Modules.Reporting.ReportService.HeadcountRows(emps,hist,2026,11);
+  var ops=rows.Single(r=>r[0]=="Ops");
+  // start (Oct 31): 1 and 2 employed, 4 gone since Sept. end (Nov 30): 1, 3, 4 employed; 2 left.
+  Assert.Equal(new[]{"Ops","2","1","1","1","3","40.0"},ops.ToArray());
+  var fin=rows.Single(r=>r[0]=="Fin");
+  Assert.Equal(new[]{"Fin","0","0","0","0","0","-"},fin.ToArray());
+ }
+ [Fact]public void SuspendedStillCountsAndSameMonthHireAndExitAreBothCounted()
+ {
+  var emps=new List<Employee>{E(1,"Ops",new(2026,11,2))};
+  var hist=new List<StatusHistory>{H(1,1,EmployeeStatus.Active,EmployeeStatus.Suspended,new(2026,11,5)),H(2,1,EmployeeStatus.Suspended,EmployeeStatus.Resigned,new(2026,11,28))};
+  var r=PeopleHub.Application.Modules.Reporting.ReportService.HeadcountRows(emps,hist,2026,11).Single();
+  Assert.Equal(new[]{"Ops","0","1","0","1","0","-"},r.ToArray());
+ }
+}

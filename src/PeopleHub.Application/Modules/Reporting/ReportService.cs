@@ -77,7 +77,7 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
         return new DashboardData(kpis, byDept, trend, payTrend, byStatus, expiring, pending, hires, company);
     }
 
-    public static readonly string[] ReportKeys = ["employees", "attendance", "leave", "payroll", "turnover"];
+    public static readonly string[] ReportKeys = ["employees", "attendance", "leave", "payroll", "turnover", "headcount"];
 
     public async Task<ReportTable> BuildAsync(string key, int year, int month)
     {
@@ -108,12 +108,46 @@ public class ReportService(IRepository repo, AccessScope scope, ICurrentUser me,
                 var byDept = lines.GroupBy(l => string.IsNullOrEmpty(l.EmployeeCodeSnapshot)?l.Employee!.Department?.Name ?? "":l.DepartmentSnapshot).OrderBy(g => g.Key);
                 return new("payroll", ["Department", "Employees", "Gross", "Deductions", "Net"],
                     byDept.Select(g => new List<string> { g.Key, g.Count().ToString(), F(g.Sum(l => l.Gross)), F(g.Sum(l => l.TotalDeductions)), F(g.Sum(l => l.Net)) }).ToList());
+            case "headcount":
+                var allHist = await repo.ToListAsync(repo.Query<StatusHistory>());
+                var rows = HeadcountRows(emps, allHist, year, month);
+                return new("headcount", ["Department", "Headcount at start", "Hires", "Rehires", "Exits", "Headcount at end", "Turnover %"], rows);
             default: // turnover
                 var left = emps.Where(e => !e.IsWorking).ToList();
                 var hist = await repo.ToListAsync(repo.Query<StatusHistory>());
                 return new("turnover", ["Code", "Name", "Department", "Status", "Date", "Reason"],
                     left.Select(e => { var h = hist.Where(x => x.EmployeeId == e.Id).OrderByDescending(x => x.At).FirstOrDefault(); return new List<string> { e.Code, e.FullName, e.Department?.Name ?? "", e.Status.ToString(), h?.At.ToString("yyyy-MM-dd") ?? "", me.EmployeeId==e.Id||me.Can(Perm.EmpIdentity)?h?.Reason??"":"" }; }).ToList());
         }
+    }
+
+    static bool Gone(EmployeeStatus s) => s is EmployeeStatus.Resigned or EmployeeStatus.Terminated or EmployeeStatus.Retired;
+
+    /// <summary>Headcount means employed on the day: hired on or before it and not in a final status (Resigned, Terminated, Retired) after replaying
+    /// the status history up to that day. Suspended and on-leave employees still count. Turnover % is exits in the month divided by the average
+    /// of start and end headcount, shown as "-" when that average is zero. Rehires are counted separately from hires.</summary>
+    public static List<List<string>> HeadcountRows(List<Employee> emps, List<StatusHistory> history, int year, int month)
+    {
+        var monthStart = new DateTime(year, month, 1);
+        var nextMonth = monthStart.AddMonths(1);
+        bool Employed(Employee e, DateTime before)
+        {
+            if (e.HireDate >= before) return false;
+            var last = history.Where(h => h.EmployeeId == e.Id && h.At < before).OrderBy(h => h.At).ThenBy(h => h.Id).LastOrDefault();
+            return last == null || !Gone(last.To);
+        }
+        return emps.GroupBy(e => e.Department?.Name ?? "").OrderBy(g => g.Key).Select(g =>
+        {
+            var start = g.Count(e => Employed(e, monthStart));
+            var end = g.Count(e => Employed(e, nextMonth));
+            var hires = g.Count(e => e.HireDate >= monthStart && e.HireDate < nextMonth);
+            var ids = g.Select(e => e.Id).ToHashSet();
+            var inMonth = history.Where(h => ids.Contains(h.EmployeeId) && h.At >= monthStart && h.At < nextMonth).ToList();
+            var exits = inMonth.Count(h => !Gone(h.From) && Gone(h.To));
+            var rehires = inMonth.Count(h => Gone(h.From) && !Gone(h.To));
+            var avg = (start + end) / 2m;
+            var rate = avg == 0 ? "-" : (exits / avg * 100m).ToString("0.0", CultureInfo.InvariantCulture);
+            return new List<string> { g.Key, start.ToString(), hires.ToString(), rehires.ToString(), exits.ToString(), end.ToString(), rate };
+        }).ToList();
     }
 
     // Quoting alone does not stop spreadsheet formula interpretation. Keep this
