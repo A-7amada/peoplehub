@@ -217,3 +217,14 @@ bdi{unicode-bidi:isolate}
 .advances-grid{grid-template-columns:minmax(0,1fr)}.advances-grid>.card{min-width:0}.advances-grid .tbl{min-width:760px}@media(max-width:1100px){.advances-grid{grid-template-columns:minmax(0,1fr)}}
 
 .advances-grid>.card:last-child{width:100%;max-width:620px}
+
+/* Phone width (US-PH2-017): filter groups scroll inside themselves, the month calendar scrolls as a block, nothing widens the page. */
+@media(max-width:600px){
+.seg{max-width:100%;overflow-x:auto;white-space:nowrap}
+.page-head .actions{min-width:0;max-width:100%}
+.cal{min-width:520px}
+.card-b:has(>.cal){overflow-x:auto}
+.content{min-width:0}
+.profile-hero{flex-wrap:wrap}
+.dl{grid-template-columns:110px minmax(0,1fr)}.dl dd{overflow-wrap:anywhere}
+}
