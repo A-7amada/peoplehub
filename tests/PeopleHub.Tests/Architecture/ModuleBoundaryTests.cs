@@ -13,6 +13,7 @@ public class ModuleBoundaryTests
         ["Attendance"] = ["Organization", "Platform", "Requests"],
         ["Leave"] = ["Organization", "Requests"],
         ["Employees"] = ["Platform"],
+        ["Identity"] = ["Platform"], // sign-in throttling reads Settings values and recovery-code hashing (decided 2026-11-26); Platform does not reference Identity, so no cycle
         ["Payroll"] = ["Attendance", "Reporting"],
         ["Platform"] = ["Attendance"],
         ["Relations"] = ["Platform"],
