@@ -71,7 +71,7 @@ Internal scheduler with persisted run state and a 10-minute database lease (Buil
 Adapter per external system (devices, banks, accounting, email/SMS, identity, government) with outbox, idempotency and retry. Outbox with idempotent enqueue, backoff and dead-letter after 5 attempts is Built. Adapters per system are Planned. Live email is off for the demo (provider mail does not reach the agent mailbox).
 
 ## 11. Observability and testing (ADR-0017, 0018)
-Health live and ready, in-process metrics, correlation ids, Diagnostics page (Built). Structured logs with tenant id and an OpenTelemetry-format metrics endpoint (Planned). 590 tests on SQLite. Architecture tests, tenant-isolation tests and Postgres tests in GitHub Actions (**Built**: CI runs on a Postgres 17 service and fails on any skipped test). 611 tests.
+Health live and ready, in-process metrics, correlation ids, Diagnostics page (Built). Structured logs with tenant id and an OpenTelemetry-compatible /metrics endpoint in OpenMetrics text, off unless METRICS_TOKEN is set (Built). 590 tests on SQLite. Architecture tests, tenant-isolation tests and Postgres tests in GitHub Actions (**Built**: CI runs on a Postgres 17 service and fails on any skipped test). 611 tests.
 
 ## 12. Environments and deployment (ADR-0019)
 Production: Render Free, manual deploy, Neon Free. Staging (Planned): second free Render service and a Neon branch. Backups: daily encrypted pg_dump from a private repository.
@@ -85,7 +85,7 @@ Production: Render Free, manual deploy, Neon Free. Staging (Planned): second fre
 6. Module boundaries and domain events, with the folder reorganization above.
 7. Egypt Pack and policy separation (**Partial**: ICountryPack Strategy and an effective-dated registry with the 2026 Egypt values are **Built** and tested; the calculator takes its defaults from the pack with identical results. Not yet: the engine resolving the pack by payroll period date, company-policy and employee-exception layers, specialist review).
 8. API conventions and OIDC preparation (**Done as ADR-0020**: conventions recorded; no new endpoints built, OIDC provider is a spend decision).
-9. Observability and staging (**Partial**: log scope with tenant id and trace id on every request is **Built**; OpenTelemetry-format metrics endpoint **Planned**; staging (approved free in ADR-0019: second free Render service plus a Neon branch) is **Planned**, not created yet).
+9. Observability and staging (**Partial**: log scope with tenant id and trace id on every request is **Built**; OpenTelemetry-compatible /metrics endpoint **Built** (OpenMetrics text, bearer token METRICS_TOKEN, off by default); staging (approved free in ADR-0019: second free Render service plus a Neon branch) is **Planned**, not created yet).
 Each step: focused tests, full gate with every test accounted for once, EN/AR role-navigation renders and pixels for UI changes, SQLite upgrade and Postgres SQL inspection for schema changes, manual deploy, checkpoint to Main.
 
 ## 14. Needs approval before any spend
