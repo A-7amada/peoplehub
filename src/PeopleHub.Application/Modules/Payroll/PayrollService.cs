@@ -82,7 +82,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
             var inst = advances.Where(a => a.EmployeeId == e.Id && a.DueIn(run.Year, run.Month)).Sum(a => a.InstallmentFor());
             manual.TryGetValue(e.Id, out var m);
             var line = new PayrollLine { RunId = run.Id, EmployeeId = e.Id, Employee = e, OvertimeHours = s.OvertimeWeightedHours, AdjustmentNote = m.Note, EmployeeCodeSnapshot=e.Code,EmployeeNameSnapshot=e.FullName,EmployeeNameArSnapshot=e.FullNameAr,DepartmentSnapshot=e.Department?.Name ?? "",DepartmentArSnapshot=e.Department?.NameAr ?? "",CostCenterSnapshot=e.Department?.CostCenter ?? "",BankSnapshot=e.BankName,IbanSnapshot=e.Iban,FixedDeduction=fixedDed };
-            PayrollCalculator.Apply(line, new PayrollInput(e.BasicSalary, allowances, 0, m.Bonus, s.DeductibleDays, s.LateMinutes, s.OvertimeWeightedHours, inst, fixedDed + m.Other));
+            PayrollCalculator.Apply(line, new PayrollInput(e.BasicSalary, allowances, 0, m.Bonus, s.DeductibleDays, s.LateMinutes, s.OvertimeWeightedHours, inst, fixedDed + m.Other), PayrollCalculator.PackFor(run.Year, run.Month));
             repo.Add(line);
         }
     }
@@ -120,7 +120,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         if (string.IsNullOrWhiteSpace(note)) throw new DomainException("err.reasonRequired");
         var fixedDed = string.IsNullOrEmpty(l.EmployeeCodeSnapshot) ? (await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>().Where(c=>c.EmployeeId==l.EmployeeId))).Where(c=>c.Component?.Type==ComponentType.Deduction).Sum(c=>c.Amount) : l.FixedDeduction;
         var before = $"bonus {l.Bonus}, other {l.OtherDeduction}, net {l.Net}";
-        PayrollCalculator.Apply(l, new PayrollInput(l.Basic, l.Allowances, 0, bonus, l.AbsentDays, l.LateMinutes, l.OvertimeHours, l.AdvanceInstallment, fixedDed + otherDeduction));
+        PayrollCalculator.Apply(l, new PayrollInput(l.Basic, l.Allowances, 0, bonus, l.AbsentDays, l.LateMinutes, l.OvertimeHours, l.AdvanceInstallment, fixedDed + otherDeduction), PayrollCalculator.PackFor(run.Year, run.Month));
         l.AdjustmentNote = note.Trim();
         await repo.SaveAsync(); await SnapshotAsync(run,"Adjusted");
         audit.Log("Adjust", "PayrollLine", lineId, $"{before} -> bonus {bonus}, other {otherDeduction}, net {l.Net}; {note}");

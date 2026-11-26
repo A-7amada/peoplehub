@@ -165,12 +165,14 @@ public static class PayrollCalculator
     public static decimal Round(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
 
     /// <summary>Annual brackets: 0-40k 0%, 40-55k 10%, 55-70k 15%, 70-200k 20%, 200-400k 22.5%, 400-600k 25%, above 27.5%.</summary>
-    public static decimal AnnualTax(decimal annualTaxable)
+    public static decimal AnnualTax(decimal annualTaxable) => AnnualTax(annualTaxable, EgyptPack.Y2026);
+
+    /// <summary>Annual tax using the slabs of the given country pack.</summary>
+    public static decimal AnnualTax(decimal annualTaxable, ICountryPack pack)
     {
         if (annualTaxable <= 0) return 0;
-        (decimal upTo, decimal rate)[] slabs = [(40000, 0m), (55000, 0.10m), (70000, 0.15m), (200000, 0.20m), (400000, 0.225m), (600000, 0.25m), (decimal.MaxValue, 0.275m)];
         decimal tax = 0, prev = 0;
-        foreach (var (upTo, rate) in slabs)
+        foreach (var (upTo, rate) in pack.TaxSlabs)
         {
             if (annualTaxable > prev) tax += (Math.Min(annualTaxable, upTo) - prev) * rate;
             prev = upTo;
@@ -179,11 +181,23 @@ public static class PayrollCalculator
     }
 
     /// <summary>Monthly tax for a monthly taxable amount (already net of the personal exemption).</summary>
-    public static decimal Tax(decimal monthlyTaxable) => monthlyTaxable <= 0 ? 0 : Round(AnnualTax(monthlyTaxable * 12m) / 12m);
+    public static decimal Tax(decimal monthlyTaxable) => Tax(monthlyTaxable, EgyptPack.Y2026);
+    public static decimal Tax(decimal monthlyTaxable, ICountryPack pack) => monthlyTaxable <= 0 ? 0 : Round(AnnualTax(monthlyTaxable * 12m, pack) / 12m);
 
-    public static decimal InsuranceOf(decimal insurableWage) => Round(Math.Min(Math.Max(insurableWage, InsuranceMin), InsuranceCap) * InsuranceRate);
+    public static decimal InsuranceOf(decimal insurableWage) => InsuranceOf(insurableWage, EgyptPack.Y2026);
+    public static decimal InsuranceOf(decimal insurableWage, ICountryPack pack) => Round(Math.Min(Math.Max(insurableWage, pack.InsuranceMin), pack.InsuranceCap) * pack.InsuranceRate);
 
-    public static void Apply(PayrollLine l, PayrollInput i)
+    /// <summary>The pack in force for a payroll period. A period before the first known pack keeps using the first pack, which is what the engine did before packs were effective-dated; that case is reported by <see cref="IsFallback"/>, not guessed silently.</summary>
+    public static ICountryPack PackFor(int year, int month, string country = "EG")
+    {
+        try { return CountryPacks.Resolve(country, new DateTime(year, month, 1)); }
+        catch (DomainException) when (country == "EG") { return EgyptPack.Y2026; }
+    }
+    public static bool IsFallback(int year, int month, string country = "EG") => !CountryPacks.Covers(country, new DateTime(year, month, 1));
+
+    public static void Apply(PayrollLine l, PayrollInput i) => Apply(l, i, EgyptPack.Y2026);
+
+    public static void Apply(PayrollLine l, PayrollInput i, ICountryPack pack)
     {
         var daily = i.Basic / DaysPerMonth;
         var hourly = daily / HoursPerDay;
@@ -196,10 +210,10 @@ public static class PayrollCalculator
         l.LateMinutes = i.LateMinutes;
         l.AbsenceDeduction = Round(i.AbsentDays * daily);
         l.LateDeduction = Round(i.LateMinutes * (hourly / 60m));
-        l.Insurance = InsuranceOf(i.Basic + i.Allowances);
-        l.Martyrs = Round(l.Gross * MartyrsRate);
-        var taxable = l.Gross - l.AbsenceDeduction - l.LateDeduction - l.Insurance - MonthlyExemption;
-        l.Tax = Tax(taxable);
+        l.Insurance = InsuranceOf(i.Basic + i.Allowances, pack);
+        l.Martyrs = Round(l.Gross * pack.MartyrsRate);
+        var taxable = l.Gross - l.AbsenceDeduction - l.LateDeduction - l.Insurance - pack.AnnualExemption / 12m;
+        l.Tax = Tax(taxable, pack);
         l.AdvanceInstallment = Round(i.AdvanceInstallment);
         l.OtherDeduction = Round(i.OtherDeduction);
         l.TotalDeductions = l.LateDeduction + l.AbsenceDeduction + l.Insurance + l.Martyrs + l.Tax + l.AdvanceInstallment + l.OtherDeduction;

@@ -41,6 +41,7 @@ public sealed class EgyptPack : ICountryPack
 public static class CountryPacks
 {
     static readonly ICountryPack[] All = [EgyptPack.Y2026];
+    public static bool Covers(string country, DateTime on) => All.Any(p => p.Country == country && p.EffectiveFrom <= on);
     public static ICountryPack Resolve(string country, DateTime on) =>
         All.Where(p => p.Country == country && p.EffectiveFrom <= on).OrderByDescending(p => p.EffectiveFrom).FirstOrDefault()
         ?? throw new DomainException("err.countryPackMissing");
