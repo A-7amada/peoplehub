@@ -154,12 +154,13 @@ public static class PayrollCalculator
 {
     public const decimal DaysPerMonth = 30m;
     public const decimal HoursPerDay = 8m;
-    public const decimal InsuranceRate = 0.11m;       // employee share, Law 148/2019
-    public const decimal InsuranceMin = 2700m;        // insurable wage floor, 2026
-    public const decimal InsuranceCap = 16700m;       // insurable wage ceiling, 2026
-    public const decimal AnnualExemption = 20000m;    // personal exemption
+    // Values come from the active country pack (Strategy, ADR-0007). They stay as constants for existing callers and tests.
+    public const decimal InsuranceRate = EgyptPack.InsuranceRate;
+    public const decimal InsuranceMin = EgyptPack.InsuranceMin;
+    public const decimal InsuranceCap = EgyptPack.InsuranceCap;
+    public const decimal AnnualExemption = EgyptPack.AnnualExemption;
     public const decimal MonthlyExemption = AnnualExemption / 12m;
-    public const decimal MartyrsRate = 0.0005m;       // Martyrs and Victims Fund, on gross
+    public const decimal MartyrsRate = EgyptPack.MartyrsRate;
 
     public static decimal Round(decimal v) => Math.Round(v, 2, MidpointRounding.AwayFromZero);
 
