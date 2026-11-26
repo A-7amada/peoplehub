@@ -36,14 +36,15 @@ src/PeopleHub.Web/
 tests/PeopleHub.Tests/
   Architecture/ Tenancy/ Modules/<Module>/ Postgres/
 ```
-Namespaces follow folders. Files move module by module in small commits; every move keeps the full gate green. Current state (2026-11-26): Application is **Built** as `Modules/<Module>/` with one namespace per module (`PeopleHub.Application.Modules.Employees`, Leave, Attendance, Payroll, Talent, Benefits, Relations, Requests, Identity, Operations, Reporting, Organization, Platform) plus `Common/` (current user, clock, audit, notification, access scope, Tenancy, Caching, Files). Domain is **Built** as `Modules/<Module>/` folders; the C# namespace stays `PeopleHub.Domain.Entities` on purpose, because EF migration snapshots store entity type names and a namespace change would make every migration diff noisy and risky. Infrastructure (`Persistence`, `Caching`, `Files`, `Operations`) is partly organized; Web controllers and Infrastructure configurations per module are **Planned**. Module boundary tests (a module may use another module only through its public contract) are **Planned**; today every module may see every other (known coupling, recorded for step 6b).
+Namespaces follow folders. Files move module by module in small commits; every move keeps the full gate green. Current state (2026-11-26): Application is **Built** as `Modules/<Module>/` with one namespace per module (`PeopleHub.Application.Modules.Employees`, Leave, Attendance, Payroll, Talent, Benefits, Relations, Requests, Identity, Operations, Reporting, Organization, Platform) plus `Common/` (current user, clock, audit, notification, access scope, Tenancy, Caching, Files). Domain is **Built** as `Modules/<Module>/` folders; the C# namespace stays `PeopleHub.Domain.Entities` on purpose, because EF migration snapshots store entity type names and a namespace change would make every migration diff noisy and risky. Infrastructure (`Persistence`, `Caching`, `Files`, `Operations`) is partly organized; Web controllers and Infrastructure configurations per module are **Planned**. Module boundary tests are **Built** as a ratchet (tests/PeopleHub.Tests/Architecture/ModuleBoundaryTests.cs): the current Application module dependency graph is recorded as an allow-list, a new cross-module `using` fails the gate, and a namespace-matches-folder rule is enforced. Known cycles to remove: Attendance-Requests, Attendance-Platform, Payroll-Reporting. A real public-contract facade per module stays **Planned**.
 
 ## 4. Design patterns, named where they are used
 - Repository and Unit of Work: AppDbContext behind IRepository (exists, Built). `AtomicAsync` is the unit of work boundary.
 - Transactional Outbox: IntegrationEvent and email outbox (Built, Partial for domain events).
 - Strategy: country calculation contracts, ICache, IFileStore, identity providers (Planned).
 - Decorator: tenant-keyed cache (Planned).
-- Domain Event and Observer: in-aggregate events turned into outbox rows (Planned).
+- Domain Event and Observer: IDomainEvent, IDomainEventHandler<T>, IDomainEventDispatcher (Mediator) in Application/Common/Events; AppDbContext derives events from tracked state and publishes them after a successful save (**Built** 2026-11-26, first event EmployeeStatusChanged with a logging subscriber). Turning events into outbox rows for external adapters is Planned.
+- Retry: startup migrations retry up to 4 times with the full error logged (**Built**; added after a first Render start exited 139 during the TenantFoundation deploy).
 - Specification / global query filter: tenant filter (Planned).
 - Facade: one public contract per module (Planned).
 - CQRS (selective): Payroll and Reports only (Planned).
@@ -70,7 +71,7 @@ Internal scheduler with persisted run state and a 10-minute database lease (Buil
 Adapter per external system (devices, banks, accounting, email/SMS, identity, government) with outbox, idempotency and retry. Outbox with idempotent enqueue, backoff and dead-letter after 5 attempts is Built. Adapters per system are Planned. Live email is off for the demo (provider mail does not reach the agent mailbox).
 
 ## 11. Observability and testing (ADR-0017, 0018)
-Health live and ready, in-process metrics, correlation ids, Diagnostics page (Built). Structured logs with tenant id and an OpenTelemetry-format metrics endpoint (Planned). 590 tests on SQLite. Architecture tests, tenant-isolation tests and Postgres tests in GitHub Actions (Planned).
+Health live and ready, in-process metrics, correlation ids, Diagnostics page (Built). Structured logs with tenant id and an OpenTelemetry-format metrics endpoint (Planned). 590 tests on SQLite. Architecture tests, tenant-isolation tests and Postgres tests in GitHub Actions (**Built**: CI runs on a Postgres 17 service and fails on any skipped test). 611 tests.
 
 ## 12. Environments and deployment (ADR-0019)
 Production: Render Free, manual deploy, Neon Free. Staging (Planned): second free Render service and a Neon branch. Backups: daily encrypted pg_dump from a private repository.
@@ -89,3 +90,7 @@ Each step: focused tests, full gate with every test accounted for once, EN/AR ro
 
 ## 14. Needs approval before any spend
 ARC-005 multi-instance with shared cache (about 20 USD per month), custom domain for subdomains, paid identity provider, labour lawyer and payroll accountant review, managed key service, Render Starter at the first paying client.
+
+
+## Operational record, 2026-11-26
+TenantFoundation was applied to production Neon by the 478b849 lineage deploys. A restore drill of the same migration on a fresh copy of production passed (98 tenant tables, 0 rows outside tenant 1, employee count unchanged). The first Render start after the migration commit exited with status 139 while the migration ran; the schema was already migrated, a second deploy of the same commit succeeded, and the cause of the first exit is not proven. The service stayed on the previous deploy and answered health checks throughout.
