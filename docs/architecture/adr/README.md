@@ -23,3 +23,4 @@ Status of every record below: **Accepted** by Ahmed on 2026-11-25 22:50 (WhatsAp
 | [0017](ADR-0017.md) | Testing architecture |
 | [0018](ADR-0018.md) | Observability |
 | [0019](ADR-0019.md) | Staging |
+| [0021](ADR-0021.md) | Sensitive field encryption (free, app level) |
