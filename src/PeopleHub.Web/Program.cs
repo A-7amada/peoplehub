@@ -127,6 +127,7 @@ builder.Services.AddHostedService<PerfWorker>();
 builder.Services.AddHostedService<MailWorker>();
 builder.Services.AddHostedService<BackupWorker>();
 builder.Services.AddScoped<OperationsService>();
+builder.Logging.AddSimpleConsole(o => { o.IncludeScopes = true; o.SingleLine = true; });
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
@@ -168,6 +169,8 @@ app.Use(async (ctx,next)=>{
     var started=metric.Begin(route);var status=500;
     var trace=System.Diagnostics.Activity.Current?.TraceId.ToString()??ctx.TraceIdentifier;
     ctx.Response.OnStarting(()=>{ctx.Response.Headers["X-Correlation-ID"]=trace;return Task.CompletedTask;});
+    // Structured log scope: every log line written during the request carries the tenant and the trace id.
+    using var logScope=app.Logger.BeginScope(new Dictionary<string,object>{["TenantId"]=ctx.RequestServices.GetRequiredService<PeopleHub.Application.Common.Tenancy.ITenantContext>().TenantId,["Trace"]=trace});
     try{await next();status=ctx.Response.StatusCode;}catch(DbUpdateConcurrencyException){status=409;throw;}finally{metric.End(route,started,status);app.Logger.LogInformation("HTTP {Route} status {Status} trace {Trace}",route,status,trace);}
 });
 app.UseRateLimiter();

@@ -83,9 +83,9 @@ Production: Render Free, manual deploy, Neon Free. Staging (Planned): second fre
 4. Interfaces: ITenantContext, ICache, IFileStore (**Done**; DB-backed IFileStore with the file migration is **Planned**).
 5. TenantId, backfill, query filter, isolation tests (**Done**).
 6. Module boundaries and domain events, with the folder reorganization above.
-7. Egypt Pack and policy separation.
-8. API conventions and OIDC preparation.
-9. Observability and staging.
+7. Egypt Pack and policy separation (**Partial**: ICountryPack Strategy and an effective-dated registry with the 2026 Egypt values are **Built** and tested; the calculator takes its defaults from the pack with identical results. Not yet: the engine resolving the pack by payroll period date, company-policy and employee-exception layers, specialist review).
+8. API conventions and OIDC preparation (**Done as ADR-0020**: conventions recorded; no new endpoints built, OIDC provider is a spend decision).
+9. Observability and staging (**Partial**: log scope with tenant id and trace id on every request is **Built**; OpenTelemetry-format metrics endpoint **Planned**; staging (approved free in ADR-0019: second free Render service plus a Neon branch) is **Planned**, not created yet).
 Each step: focused tests, full gate with every test accounted for once, EN/AR role-navigation renders and pixels for UI changes, SQLite upgrade and Postgres SQL inspection for schema changes, manual deploy, checkpoint to Main.
 
 ## 14. Needs approval before any spend
