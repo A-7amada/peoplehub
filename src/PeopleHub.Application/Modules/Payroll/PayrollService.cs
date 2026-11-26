@@ -164,7 +164,10 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
     public async Task FinanceApproveAsync(int id)
     {
         Require(Perm.PayFinance);
-        var r = await LoadRunAsync(id); r.FinanceApprove(); Trail(r, "FinanceApproved");
+        var r = await LoadRunAsync(id);
+        // Owner decision 2026-11-26: the preparer cannot approve at Finance either (not only at Finalize).
+        if (string.Equals(r.CreatedBy, me.Email, StringComparison.OrdinalIgnoreCase)) throw new DomainException("err.payrollSelfFinance");
+        r.FinanceApprove(); Trail(r, "FinanceApproved");
         await notify.NotifyPermAsync(Perm.PayFinalize, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
         await repo.SaveAsync();
     }
