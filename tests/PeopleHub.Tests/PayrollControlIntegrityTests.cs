@@ -1,0 +1,27 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Attendance;
+using PeopleHub.Application.Modules.Employees;
+using PeopleHub.Application.Modules.Leave;
+using PeopleHub.Application.Modules.Payroll;
+using PeopleHub.Application.Modules.Requests;
+using PeopleHub.Domain.Entities;
+namespace PeopleHub.Tests;
+
+public class PayrollControlIntegrityTests
+{
+ class User(string email="tester@example.local",bool financial=true):ICurrentUser { public string Email=>email;public int? EmployeeId=>6;public int UserId=>1;public bool IsAuthenticated=>true;public bool IsInRole(string r)=>true;public bool Can(string p)=>financial||p is not(Perm.EmpPay or Perm.EmpSalary or Perm.EmpBankEdit or Perm.EmpIdentity or Perm.EmpBank); }
+ static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
+ static PayrollService Pay(AppDbContext d,User u){var c=new AppClock(TimeProvider.System);var a=new AuditService(d,u,c);var n=new NotificationService(d,u,c);return new(d,u,a,n,new AttendanceService(d,new AccessScope(d,u),u,a,n,c,new WorkflowService(d,u,a)),c);}
+ static async Task<int> ApprovedRun(AppDbContext d,PayrollService p,int y,int m){var id=await p.CreateAsync(y,m);await p.ReviewAsync(id);await p.FinanceApproveAsync(id);return id;}
+ [Fact]public async Task PreparerCannotFinalizeOwnRun(){await using var d=await Db();var p=Pay(d,new());var id=await ApprovedRun(d,p,2027,6);await Assert.ThrowsAsync<DomainException>(()=>p.FinalizeAsync(id));Assert.Equal(PayrollStatus.FinanceApproved,(await d.Set<PayrollRun>().SingleAsync(r=>r.Id==id)).Status);}
+ [Fact]public async Task FinalizationIsNotRepeatable(){await using var d=await Db();var p=Pay(d,new());var id=await ApprovedRun(d,p,2027,6);var o=Pay(d,new("approver@example.local"));await o.FinalizeAsync(id);await Assert.ThrowsAsync<DomainException>(()=>o.FinalizeAsync(id));Assert.Equal(1,await d.Set<ApprovalAction>().CountAsync(a=>a.Kind=="Payroll"&&a.RequestId==id&&a.Action=="Finalized"));}
+ [Fact]public async Task FinalizationDoesNotApplyAdvancesTwice(){await using var d=await Db();var p=Pay(d,new());var id=await ApprovedRun(d,p,2027,6);var o=Pay(d,new("approver@example.local"));await o.FinalizeAsync(id);var paid=(await d.Set<AdvanceRequest>().ToListAsync()).Sum(a=>a.Paid);try{await o.FinalizeAsync(id);}catch(DomainException){}Assert.Equal(paid,(await d.Set<AdvanceRequest>().ToListAsync()).Sum(a=>a.Paid));}
+ [Fact]public async Task SendBackKeepsDecisionHistory(){await using var d=await Db();var p=Pay(d,new());var id=await p.CreateAsync(2027,6);await p.ReviewAsync(id);await p.SendBackAsync(id,"figures wrong");await p.ReviewAsync(id);var acts=(await d.Set<ApprovalAction>().Where(a=>a.Kind=="Payroll"&&a.RequestId==id).OrderBy(a=>a.Id).ToListAsync()).Select(a=>a.Action).ToList();Assert.Equal(new[]{"Created","HRReviewed","SentBack","HRReviewed"},acts);Assert.Equal("figures wrong",(await d.Set<ApprovalAction>().SingleAsync(a=>a.Action=="SentBack"&&a.RequestId==id)).Comment);}
+ [Fact]public async Task SendBackRequiresReason(){await using var d=await Db();var p=Pay(d,new());var id=await p.CreateAsync(2027,6);await p.ReviewAsync(id);await Assert.ThrowsAsync<DomainException>(()=>p.SendBackAsync(id," "));}
+ [Fact]public async Task EachMaterialStepIsAudited(){await using var d=await Db();var p=Pay(d,new());var id=await ApprovedRun(d,p,2027,6);await Pay(d,new("approver@example.local")).FinalizeAsync(id);var a=(await d.Set<AuditLog>().Where(x=>x.Entity=="PayrollRun"&&x.EntityId=="2027-06").ToListAsync()).Select(x=>x.Action).ToHashSet();Assert.Contains("HRReviewed",a);Assert.Contains("FinanceApproved",a);Assert.Contains("Finalized",a);}
+ [Fact]public async Task BankFileIsPermissionControlledAndAudited(){await using var d=await Db();var p=Pay(d,new());var id=await ApprovedRun(d,p,2027,6);await Pay(d,new("approver@example.local")).FinalizeAsync(id);await Assert.ThrowsAsync<DomainException>(()=>Pay(d,new("hr@example.local",false)).BankFileAsync(id));var before=await d.Set<AuditLog>().CountAsync(x=>x.Action=="Export");var csv=await p.BankFileAsync(id);Assert.StartsWith("Code,Name,Bank,IBAN,Net,Currency",csv);Assert.Equal(before+1,await d.Set<AuditLog>().CountAsync(x=>x.Action=="Export"));}
+ [Fact]public async Task BankFileRefusedBeforeFinalization(){await using var d=await Db();var p=Pay(d,new());var id=await ApprovedRun(d,p,2027,6);await Assert.ThrowsAsync<DomainException>(()=>p.BankFileAsync(id));}
+ [Fact]public async Task StageOrderIsEnforced(){await using var d=await Db();var p=Pay(d,new());var id=await p.CreateAsync(2027,6);await Assert.ThrowsAsync<DomainException>(()=>p.FinanceApproveAsync(id));await Assert.ThrowsAsync<DomainException>(()=>Pay(d,new("approver@example.local")).FinalizeAsync(id));}
+}
