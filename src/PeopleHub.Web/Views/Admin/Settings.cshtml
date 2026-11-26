@@ -1,6 +1,7 @@
 @model Dictionary<string, string>
+@using PeopleHub.Application.Modules.Platform
 @{ ViewData["Title"] = T.IsAr ? "إعدادات النظام" : "System settings"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en;
-   var punches = (List<DevicePunch>)ViewBag.Punches; var outbox = (List<EmailOutbox>)ViewBag.Outbox; bool dev = Model["att.mode"] == "Device"; }
+   var punches = (List<DevicePunch>)ViewBag.Punches; var outbox = (List<EmailOutbox>)ViewBag.Outbox; var mailSum = (Dictionary<string,int>)ViewBag.MailSummary; bool dev = Model["att.mode"] == "Device"; }
 <div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Choose where attendance comes from and how the system sends email. Changes apply immediately.", "اختر مصدر الحضور وطريقة إرسال البريد. التغييرات تسري فورًا.")</div></div></div>
 <p><a class="btn" href="/Admin/Operations">@X("Operations and backups", "التشغيل والنسخ الاحتياطي")</a></p>
 <form method="post" action="/Admin/SaveSettings" asp-antiforgery="true">
@@ -33,7 +34,8 @@
   @foreach (var p in punches) { <tr><td dir="ltr">@p.DeviceUserId</td><td class="num">@p.Time.ToString("yyyy-MM-dd HH:mm")</td><td>@(p.Matched ? Ui.Chip(X("Employee", "موظف"), "green") : Ui.Chip(X("Unknown ID", "رقم غير معروف"), "rose"))</td></tr> }
   @if (punches.Count == 0) { <tr><td colspan="3" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>
  <div class="card"><div class="card-h"><h2>@X("Email outbox", "صندوق البريد الصادر")</h2><form method="post" action="/Admin/FlushMail" asp-antiforgery="true" style="margin:0"><button class="btn btn-sm">@X("Send queued", "إرسال المعلّق")</button></form></div>
-  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("To", "إلى")</th><th>@X("Subject", "الموضوع")</th><th>@T["common.status"]</th></tr></thead><tbody>
-  @foreach (var m in outbox.Take(12)) { <tr><td dir="ltr" style="text-align:start">@m.To</td><td>@m.Subject</td><td>@(m.Sent ? Ui.Chip(X("Sent", "أُرسل"), "green") : Ui.Chip(X("Queued", "معلّق"), "amber"))</td></tr> }
-  @if (outbox.Count == 0) { <tr><td colspan="3" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>
+  <div class="faint small" style="padding:8px 16px">@X("Queued", "معلّق") @mailSum["Queued"] · @X("Retrying", "إعادة محاولة") @mailSum["Retrying"] · @X("Blocked by allowlist", "محظور بقائمة السماح") @mailSum["Blocked"] · @X("Failed", "فشل") @mailSum["Failed"] · @X("Accepted by provider", "قبِله المزوّد") @mailSum["Sent"]. @X("Accepted is not proof of inbox delivery. Live email stays off until a provider is configured.", "القبول لا يعني وصول الرسالة للصندوق. البريد الفعلي متوقف حتى يُضبط مزوّد.") @if (mailSum["Failed"] > 0) { <form method="post" action="/Admin/RequeueMail" asp-antiforgery="true" style="display:inline"><button class="btn btn-sm">@X("Requeue failed", "إعادة جدولة الفاشل")</button></form> }</div>
+  <div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("To", "إلى")</th><th>@X("Subject", "الموضوع")</th><th>@T["common.status"]</th><th>@X("Attempts", "المحاولات")</th></tr></thead><tbody>
+  @foreach (var m in outbox.Take(12)) { <tr><td dir="ltr" style="text-align:start">@m.To</td><td>@m.Subject</td><td>@{ var st = EmailService.StatusOf(m); } @(st == "Sent" ? Ui.Chip(X("Accepted", "مقبول"), "green") : st == "Failed" ? Ui.Chip(X("Failed", "فشل"), "rose") : st == "Blocked" ? Ui.Chip(X("Blocked", "محظور"), "rose") : st == "Retrying" ? Ui.Chip(X("Retrying", "إعادة محاولة"), "amber") : Ui.Chip(X("Queued", "معلّق"), "amber"))</td><td class="num">@m.Attempts</td></tr> }
+  @if (outbox.Count == 0) { <tr><td colspan="4" class="empty">@T["common.none"]</td></tr> }</tbody></table></div></div>
 </div>

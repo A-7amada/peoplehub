@@ -207,6 +207,25 @@ public class EmailService(IRepository repo, AppClock clock)
         } finally { SendGate.Release(); }
     }
 
+    /// <summary>Delivery state of one outbox row: Sent, Failed (5 attempts used), Blocked (recipient not on the allowlist), Retrying (at least one failed attempt) or Queued. "Sent" means accepted by the provider, not proof of inbox delivery.</summary>
+    public static string StatusOf(EmailOutbox m) => m.Sent ? "Sent" : m.Attempts >= 5 ? "Failed" : (m.Note ?? "").StartsWith("Blocked") ? "Blocked" : m.Attempts > 0 ? "Retrying" : "Queued";
+
+    public async Task<Dictionary<string, int>> DeliverySummaryAsync()
+    {
+        var all = await repo.ToListAsync(repo.Query<EmailOutbox>());
+        var d = new[] { "Queued", "Retrying", "Blocked", "Failed", "Sent" }.ToDictionary(k => k, _ => 0);
+        foreach (var m in all) d[StatusOf(m)]++;
+        return d;
+    }
+
+    /// <summary>Gives failed rows a fresh set of attempts. Does not send anything by itself; the worker or "Send queued" does, and only when a provider is configured and the recipient is allowed.</summary>
+    public async Task<int> RequeueFailedAsync()
+    {
+        var rows = await repo.ToListAsync(repo.Query<EmailOutbox>().Where(x => !x.Sent && x.Attempts >= 5));
+        foreach (var m in rows) { m.Attempts = 0; m.NextAttemptAt = null; m.Note = "Requeued by an administrator"; }
+        await repo.SaveAsync(); return rows.Count;
+    }
+
     public Task<List<EmailOutbox>> OutboxAsync() => repo.ToListAsync(repo.Query<EmailOutbox>().OrderByDescending(m => m.CreatedAt).Take(50));
 }
 

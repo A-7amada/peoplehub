@@ -13,7 +13,7 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     [RequirePerm(Perm.AdmSettings)]
     public async Task<IActionResult> Settings()
     {
-        ViewBag.Punches = await device.RecentAsync(); ViewBag.Outbox = await mail.OutboxAsync();
+        ViewBag.Punches = await device.RecentAsync(); ViewBag.Outbox = await mail.OutboxAsync(); ViewBag.MailSummary = await mail.DeliverySummaryAsync();
         return View(await settings.AllAsync());
     }
 
@@ -30,6 +30,9 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
 
     [RequirePerm(Perm.AdmSettings), HttpPost,RequireStepUp]
     public async Task<IActionResult> FlushMail() { await mail.FlushAsync(); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Settings)); }
+
+    [RequirePerm(Perm.AdmSettings), HttpPost, RequireStepUp]
+    public async Task<IActionResult> RequeueMail() { await mail.RequeueFailedAsync(); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Settings)); }
 
     [RequirePerm(Perm.AdmSettings)]
     public IActionResult Operations() => View(ops);
