@@ -108,6 +108,9 @@ public class AppDbContext : DbContext, IRepository
         void Encrypt<T>(System.Linq.Expressions.Expression<Func<T, string?>> property, string column) where T : class =>
             b.Entity<T>().Property(property).HasConversion(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<string?, string?>(v => cipher.Encrypt(v, column), v => cipher.Decrypt(v, column)));
         Encrypt<AppUser>(x => x.TotpSecret, "AppUser.TotpSecret");
+        Encrypt<Employee>(x => x.NationalId, "Employee.NationalId");
+        Encrypt<Employee>(x => x.Iban, "Employee.Iban");
+        Encrypt<PayrollLine>(x => x.IbanSnapshot, "PayrollLine.IbanSnapshot");
     }
 
     protected override void OnModelCreating(ModelBuilder b)

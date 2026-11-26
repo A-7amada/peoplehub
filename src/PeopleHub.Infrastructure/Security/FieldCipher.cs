@@ -31,6 +31,8 @@ public sealed class FieldCipher
 
     public static bool IsEncrypted(string? stored) => stored != null && stored.StartsWith(Prefix, StringComparison.Ordinal);
 
+    public bool IsCurrentKey(string? stored) => Enabled && IsEncrypted(stored) && stored!.Substring(Prefix.Length).StartsWith(current.Id + ":", StringComparison.Ordinal);
+
     public string? Encrypt(string? plain, string column)
     {
         if (!Enabled || string.IsNullOrEmpty(plain)) return plain;

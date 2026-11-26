@@ -150,6 +150,8 @@ using (var scope = app.Services.CreateScope())
     await scope.ServiceProvider.GetRequiredService<SettingsService>().LoadAsync();
     await AdminService.ReloadCacheAsync(db);
     await scope.ServiceProvider.GetRequiredService<PerfService>().MigrateLegacyAsync();
+    var enc = await PeopleHub.Infrastructure.Security.FieldEncryptionBackfill.RunAsync(db, PeopleHub.Infrastructure.Security.FieldCipher.Default);
+    startupLog.LogInformation("Field encryption: enabled={Enabled} encryptedNow={Encrypted} plaintextRemaining={Remaining} keyId={KeyId}", enc.Enabled, enc.Encrypted, enc.Remaining, enc.KeyId);
 }
 if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Home/Error");
 app.UseForwardedHeaders();

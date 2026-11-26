@@ -19,3 +19,31 @@ public class FieldEncryptionTests
   d.ChangeTracker.Clear();Assert.Equal("JBSWY3DPEHPK3PXP",(await d.Set<AppUser>().SingleAsync(x=>x.Email=="enc@example.local")).TotpSecret);
   using var legacy=cn.CreateCommand();legacy.CommandText="update AppUser set TotpSecret='LEGACYPLAINTEXT' where Email='enc@example.local'";await legacy.ExecuteNonQueryAsync();d.ChangeTracker.Clear();Assert.Equal("LEGACYPLAINTEXT",(await d.Set<AppUser>().SingleAsync(x=>x.Email=="enc@example.local")).TotpSecret);}
 }
+
+public class FieldEncryptionBackfillTests
+{
+ // EF caches the model per context type, and the converter captures the cipher, so each cipher needs its own type.
+ sealed class PlainDb(DbContextOptions<PlainDb> o):AppDbContext(o){protected override FieldCipher Cipher=>new(null,null);}
+ sealed class KeyedDb(DbContextOptions<KeyedDb> o):AppDbContext(o){public static readonly FieldCipher C=new("k1",null);protected override FieldCipher Cipher=>C;}
+ static async Task<(Microsoft.Data.Sqlite.SqliteConnection cn,PlainDb db)> Open(){var cn=new Microsoft.Data.Sqlite.SqliteConnection("Data Source=:memory:");await cn.OpenAsync();var db=new PlainDb(new DbContextOptionsBuilder<PlainDb>().UseSqlite(cn).Options);await db.Database.EnsureCreatedAsync();return(cn,db);}
+ static async Task<string> Raw(Microsoft.Data.Sqlite.SqliteConnection cn,string sql){using var c=cn.CreateCommand();c.CommandText=sql;return (string)(await c.ExecuteScalarAsync())!;}
+ [Fact]public async Task LegacyPlaintextIsEncryptedOnceAndStillReadable()
+ {
+  var (cn,plainDb)=await Open();
+  plainDb.Set<AppUser>().Add(new AppUser{Email="b@example.local",PasswordHash="x",TotpSecret="LEGACYSEED",TotpEnabled=true});await plainDb.SaveChangesAsync();
+  Assert.Equal("LEGACYSEED",await Raw(cn,"select TotpSecret from AppUser where Email='b@example.local'"));
+  var cipher=KeyedDb.C;
+  await using var db=new KeyedDb(new DbContextOptionsBuilder<KeyedDb>().UseSqlite(cn).Options);
+  var first=await PeopleHub.Infrastructure.Security.FieldEncryptionBackfill.RunAsync(db,cipher);
+  Assert.True(first.Enabled);Assert.True(first.Encrypted>=1);Assert.Equal(0,first.Remaining);
+  var second=await PeopleHub.Infrastructure.Security.FieldEncryptionBackfill.RunAsync(db,cipher);Assert.Equal(0,second.Encrypted);
+  Assert.StartsWith("enc:v1:",await Raw(cn,"select TotpSecret from AppUser where Email='b@example.local'"));
+  Assert.Equal("LEGACYSEED",(await db.Set<AppUser>().SingleAsync(x=>x.Email=="b@example.local")).TotpSecret);
+ }
+ [Fact]public async Task DisabledCipherReportsPlaintextAndWritesNothing()
+ {
+  var (cn,db)=await Open();
+  var r=await PeopleHub.Infrastructure.Security.FieldEncryptionBackfill.RunAsync(db,new FieldCipher(null,null));
+  Assert.False(r.Enabled);Assert.Equal(0,r.Encrypted);
+ }
+}
