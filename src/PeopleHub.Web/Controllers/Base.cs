@@ -68,7 +68,7 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
             var parts = Prot.Unprotect(pending ?? "").Split('|');
             if (parts.Length != 2 || new DateTime(long.Parse(parts[1]), DateTimeKind.Utc) < clock.UtcNow) throw new Exception();
             var u = await accounts.ByIdAsync(int.Parse(parts[0]));
-            if (u?.TotpSecret != null && PeopleHub.Domain.Security.Totp.Verify(u.TotpSecret, code, clock.UtcNow)) { await SignIn(u); return Redirect("/"); }
+            if (u != null && await auth.VerifySecondFactorAsync(u, code)) { await SignIn(u); return Redirect("/"); }
         }
         catch { }
         ViewBag.Error = loc["err.badCode"]; ViewBag.Pending = pending; return View("Login");

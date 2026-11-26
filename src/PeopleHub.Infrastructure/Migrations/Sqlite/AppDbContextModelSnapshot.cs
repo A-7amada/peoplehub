@@ -154,6 +154,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime?>("LastFailedLoginAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<long>("LastTotpStep")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("LockedUntil")
                         .HasColumnType("TEXT");
 

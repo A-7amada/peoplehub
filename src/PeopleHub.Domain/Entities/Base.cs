@@ -36,6 +36,8 @@ public class AppUser
     public bool IsActive { get; set; } = true;
     public string? TotpSecret { get; set; }
     public bool TotpEnabled { get; set; }
+    /// <summary>Last accepted 30-second step at sign-in. A code from this step or an earlier one is refused, so a code cannot be replayed.</summary>
+    public long LastTotpStep { get; set; }
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
     public string[] RoleArray => RoleList.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 }

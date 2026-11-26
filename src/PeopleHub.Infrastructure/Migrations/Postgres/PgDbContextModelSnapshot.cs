@@ -167,6 +167,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime?>("LastFailedLoginAt")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<long>("LastTotpStep")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("LockedUntil")
                         .HasColumnType("timestamp without time zone");
 
