@@ -5,6 +5,7 @@ using PeopleHub.Application.Modules.Identity;
 using PeopleHub.Application.Modules.Platform;
 using PeopleHub.Domain.Entities;
 
+namespace PeopleHub.Tests;
 public class AuthThrottlingTests
 {
  static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
