@@ -72,7 +72,7 @@
 | SEC-003 | Session expiry/revocation/device management | P0 | Implemented hashed per-login sessions, 8h absolute expiry, owner inventory/revocation, logout and credential-change invalidation; no verified physical-device binding |
 | SEC-004 | Sensitive-field encryption at rest | P0 | Open: key management required. DEFERRED, not now: owner decision 2026-11-25, no paid infrastructure; not built |
 | SEC-005 | Append-only audit history | P0 | Implemented repository guard; database-owner tampering not prevented |
-| SEC-006 | Failed-login lockout and suspicious detection | P0 | Implemented password lockout after five failures for 15 minutes plus audit; broader anomaly detection open |
+| SEC-006 | Failed-login lockout and suspicious detection | P0 | Implemented password lockout (defaults 5 failures, 15 minutes, configurable in Settings) plus audit; wrong second-factor codes count too; broader anomaly detection open |
 | SEC-007 | Retention/deletion/access policies | P0 | Open: owner policy decisions required |
 | SEC-008 | Malware scan, signatures/private attachments | P0 | Partial: private scoped storage, size/extension and file signature checks; malware scanner remains unconnected |
 | SEC-009 | Encrypted backup and controlled restore | P0 | Partial: free off-host backup approved by Ahmed 2026-11-25 and running: daily GPG-encrypted pg_dump of the Neon database from a private repo's scheduled workflow, kept as 90-day artifacts; key escrow protected by a vault-held passphrase; decryption verified. PostgreSQL restore drill, long-term archive and database roles are not covered; key custody policy remains an owner decision |

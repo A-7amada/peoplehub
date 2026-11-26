@@ -27,6 +27,8 @@ public class EmailOutbox
     public string? Note { get; set; }
 }
 
+/// <summary>One-time recovery code for a user with an authenticator. Only the SHA-256 hash is stored; a used code stays as a record.</summary>
+public class TotpRecoveryCode { public int Id { get; set; } public int UserId { get; set; } public string CodeHash { get; set; } = ""; public DateTime? UsedAt { get; set; } }
 public class PasswordReset { public int Id { get; set; } public int UserId { get; set; } public string Token { get; set; } = ""; public DateTime Expires { get; set; } public bool Used { get; set; } }
 
 public enum CandidateStage { Applied = 0, Screening = 1, Interview = 2, Offer = 3, Hired = 4, Rejected = 5 }

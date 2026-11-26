@@ -7,6 +7,9 @@
   <button class="btn btn-primary">@T["common.save"]</button></form></div></div>
  <div class="card"><div class="card-h"><h2>@X("Two-factor authentication", "المصادقة الثنائية")</h2>@Ui.Chip(u.TotpEnabled ? X("On", "مفعّلة") : X("Off", "متوقفة"), u.TotpEnabled ? "green" : "amber")</div><div class="card-b">
   @if (u.TotpEnabled) {
+   @if (TempData["recovery"] is string rec) {
+    <div class="alert"><b>@X("Recovery codes. Save them now; they are shown once. Each works one time if you lose your phone.", "أكواد الاسترداد. احفظها الآن فهي تظهر مرة واحدة. كل كود يعمل مرة واحدة إذا فقدت هاتفك.")</b><div dir="ltr" style="font-family:monospace;columns:2;margin-top:8px">@foreach (var rc in rec.Split(' ')) { <div>@rc</div> }</div></div>
+   }
    <p class="muted">@X("Sign in needs a 6-digit code from your authenticator app.", "تسجيل الدخول يطلب كود من 6 أرقام من تطبيق المصادقة.")</p>
    <form method="post" action="/Account/DisableTotp" asp-antiforgery="true"><div class="field"><label>@X("Confirm with your password", "أكد بكلمة المرور")</label><input type="password" name="password" required dir="ltr"></div><button class="btn">@X("Turn off", "إيقاف")</button></form>
   } else if (setup) {

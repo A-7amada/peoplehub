@@ -258,16 +258,23 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
         if (u.TotpEnabled) throw new DomainException("err.forbidden");
         u.TotpSecret = Totp.NewSecret(); u.TotpEnabled = false; await repo.SaveAsync(); return (u, u.TotpSecret);
     }
-    public async Task EnableTotpAsync(string code)
+    public static string HashRecovery(string code) => Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes((code ?? "").Replace("-", "").Replace(" ", "").ToUpperInvariant())));
+    public async Task<string[]> EnableTotpAsync(string code)
     {
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
         if (u.TotpSecret == null || !Totp.Verify(u.TotpSecret, code, clock.UtcNow)) throw new DomainException("err.badCode");
-        u.TotpEnabled = true; audit.Log("Update", "2FA", u.Email, "enabled"); await repo.SaveAsync();
+        u.TotpEnabled = true; u.LastTotpStep = Totp.MatchStep(u.TotpSecret, code, clock.UtcNow) ?? 0;
+        foreach (var old in await repo.ToListAsync(repo.Query<TotpRecoveryCode>().Where(x => x.UserId == u.Id))) repo.Remove(old);
+        var codes = Enumerable.Range(0, 10).Select(_ => { var t = Totp.Base32(System.Security.Cryptography.RandomNumberGenerator.GetBytes(7))[..10]; return t[..5] + "-" + t[5..]; }).ToArray();
+        foreach (var c in codes) repo.Add(new TotpRecoveryCode { UserId = u.Id, CodeHash = HashRecovery(c) });
+        audit.Log("Update", "2FA", u.Email, "enabled, 10 recovery codes issued"); await repo.SaveAsync();
+        return codes;
     }
     public async Task DisableTotpAsync(string password)
     {
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId)) ?? throw new DomainException("err.forbidden");
         if (!PasswordHasher.Verify(password ?? "", u.PasswordHash)) throw new DomainException("err.wrongPassword");
+        foreach (var old in await repo.ToListAsync(repo.Query<TotpRecoveryCode>().Where(x => x.UserId == u.Id))) repo.Remove(old);
         await RevokeSignInsAsync(u.Id);u.TotpEnabled = false; u.TotpSecret = null; u.SecurityStamp = Guid.NewGuid().ToString("N"); audit.Log("Update", "2FA", u.Email, "disabled"); await repo.SaveAsync();
     }
     public Task<AppUser?> CurrentAsync() => repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Id == me.UserId));

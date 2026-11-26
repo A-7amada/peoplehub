@@ -38,6 +38,14 @@ public class AuthService(IRepository repo, AppClock clock)
     public async Task<bool> VerifySecondFactorAsync(AppUser u, string? code)
     {
         if(u.LockedUntil>clock.UtcNow || u.TotpSecret==null) return false;
+        var trimmed=(code??"").Trim();
+        if(trimmed.Any(char.IsLetter))
+        {
+            var h=AccountService.HashRecovery(trimmed);
+            var rc=await repo.FirstOrDefaultAsync(repo.Query<TotpRecoveryCode>().Where(x=>x.UserId==u.Id&&x.CodeHash==h&&x.UsedAt==null));
+            if(rc==null){RegisterFailure(u);await repo.SaveAsync();return false;}
+            rc.UsedAt=clock.UtcNow;u.FailedLoginCount=0;u.LockedUntil=null;repo.Add(new AuditLog {At=clock.UtcNow,User=u.Email,Action="RecoveryCodeUsed",Entity="AppUser",EntityId=u.Id.ToString(),Details="one-time recovery code accepted at sign-in"});await repo.SaveAsync();return true;
+        }
         var step=Totp.MatchStep(u.TotpSecret,code,clock.UtcNow);
         if(step==null || step<=u.LastTotpStep){RegisterFailure(u);await repo.SaveAsync();return false;}
         u.LastTotpStep=step.Value;u.FailedLoginCount=0;u.LockedUntil=null;await repo.SaveAsync();return true;

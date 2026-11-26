@@ -4971,6 +4971,42 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         });
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.TotpRecoveryCode", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "UserId", "CodeHash");
+
+                    b.ToTable("TotpRecoveryCode");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.TrainingCertificate", b =>
                 {
                     b.Property<int>("Id")

@@ -16,7 +16,7 @@
     @if (ViewBag.Pending is string pend) {
     <p class="faint small">@(T.IsAr?"خمس محاولات كلمة مرور خاطئة توقف الحساب 15 دقيقة. رسالة الخطأ لا تكشف وجود الحساب.":"Five failed password attempts lock the account for 15 minutes. The error does not reveal whether an account exists.")</p>
 <form method="post" action="/Account/Verify" asp-antiforgery="true"><input type="hidden" name="pending" value="@pend">
-      <div class="field"><label>@(ar ? "كود المصادقة (6 أرقام)" : "Authenticator code (6 digits)")</label><input name="code" inputmode="numeric" maxlength="6" required autofocus dir="ltr"></div>
+      <div class="field"><label>@(ar ? "كود المصادقة (6 أرقام) أو كود استرداد" : "Authenticator code (6 digits) or a recovery code")</label><input name="code" autocomplete="one-time-code" maxlength="11" required autofocus dir="ltr"></div>
       <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">@T["login.submit"]</button></form>
     } else {
     <form method="post" action="/Account/Login" asp-antiforgery="true">
