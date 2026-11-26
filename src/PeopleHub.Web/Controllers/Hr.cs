@@ -34,6 +34,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
             var p = await svc.ProfileAsync(eid);
             ViewBag.Scheduled=await timeline.ListAsync(eid,access);
             ViewBag.Rehires=me.Can(Perm.EmpManage)?await HttpContext.RequestServices.GetRequiredService<RehireService>().ListAsync(eid,access):new List<RehireRequest>();
+            if(tab=="letters"&&(me.Can(Perm.EmpManage)||me.EmployeeId==eid))ViewBag.Letters=await HttpContext.RequestServices.GetRequiredService<LetterService>().ListAsync(eid,access);
             if(tab=="assets"){ViewBag.Assets=await assets.GetAsync(eid);if(me.Can(Perm.EmpManage))ViewBag.Inventory=await assets.InventoryAsync();}
             if(tab=="shifts")ViewBag.ShiftDays=await shifts.ListAsync(eid,access);
             if(tab=="documents") ViewBag.Documents=await documents.ListAsync(eid);
@@ -82,6 +83,18 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     [HttpPost]public Task<IActionResult> DecideProbation(int employeeId,string decision,string reason)=>Do(()=>lifecycle.DecideProbationAsync(employeeId,decision,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
     [HttpPost]public Task<IActionResult> AddField(int employeeId,string label,string? labelAr,string kind)=>Do(()=>lifecycle.AddFieldAsync(label,labelAr,kind),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
     [HttpPost]public Task<IActionResult> SetField(int employeeId,int fieldId,string value)=>Do(()=>lifecycle.SetFieldAsync(employeeId,fieldId,value),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+
+    [HttpPost]
+    public Task<IActionResult> RequestLetter(string? addressedTo, bool includeSalary) => Do(() => HttpContext.RequestServices.GetRequiredService<LetterService>().RequestAsync(addressedTo, includeSalary), "msg.saved", () => RedirectToAction(nameof(Profile), new { id = me.EmployeeId, tab = "letters" }));
+    [RequirePerm(Perm.EmpManage), HttpPost]
+    public Task<IActionResult> IssueLetter(int letterId, int id) => Do(() => HttpContext.RequestServices.GetRequiredService<LetterService>().IssueAsync(letterId), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "letters" }));
+    [RequirePerm(Perm.EmpManage), HttpPost]
+    public Task<IActionResult> DeclineLetter(int letterId, int id, string? note) => Do(() => HttpContext.RequestServices.GetRequiredService<LetterService>().DeclineAsync(letterId, note), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "letters" }));
+    public async Task<IActionResult> Letter(int id)
+    {
+        try { var (l, e) = await HttpContext.RequestServices.GetRequiredService<LetterService>().OpenAsync(id, access); ViewBag.Employee = e; return View(l); }
+        catch (DomainException) { return NotFound(); }
+    }
 
     [RequirePerm(Perm.EmpManage), HttpPost]
     public Task<IActionResult> RequestRehire(int id, string? reason) => Do(() => HttpContext.RequestServices.GetRequiredService<RehireService>().RequestAsync(id, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));

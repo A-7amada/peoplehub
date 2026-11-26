@@ -1,0 +1,9 @@
+@model EmployeeLetter
+@{Layout=null;var e=(Employee)ViewBag.Employee;}
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>@Model.Reference</title>
+<style>body{font-family:system-ui,Arial,sans-serif;max-width:720px;margin:32px auto;padding:0 20px;color:#111;line-height:1.6}.demo{background:#fff4cc;border:1px solid #e6cf7a;padding:8px 12px;font-size:13px;margin-bottom:24px}pre{white-space:pre-wrap;font-family:inherit;font-size:15px;margin:0}.ar{direction:rtl;text-align:right;margin-top:32px;padding-top:24px;border-top:1px solid #ccc}.bar{margin-bottom:16px}@@media print{.demo,.bar{display:none}body{margin:0}}</style></head>
+<body><div class="demo">Portfolio demo with fictional data. Not a real company and not client work.</div>
+<div class="bar"><button onclick="window.print()">Print</button></div>
+<pre>@Model.BodyEn</pre>
+<div class="ar"><pre>@Model.BodyAr</pre></div>
+</body></html>

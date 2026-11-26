@@ -189,7 +189,7 @@ public class AppDbContext : DbContext, IRepository
         
         b.Entity<StagedEmployeeRow>().HasIndex(x => new { x.BatchId, x.RowNumber }).IsUnique();
         b.Entity<StagedEmployeeRow>().HasOne<EmployeeImportBatch>().WithMany().HasForeignKey(x => x.BatchId).OnDelete(DeleteBehavior.Cascade);
-        b.Entity<CompanyAsset>(); b.Entity<Employee>(); b.Entity<PayrollRun>(); b.Entity<EmployeeImportBatch>(); b.Entity<Role>(); b.Entity<RehireRequest>(); b.Entity<TotpRecoveryCode>(); // registered before tenant columns are added
+        b.Entity<CompanyAsset>(); b.Entity<Employee>(); b.Entity<PayrollRun>(); b.Entity<EmployeeImportBatch>(); b.Entity<Role>(); b.Entity<RehireRequest>(); b.Entity<TotpRecoveryCode>(); b.Entity<EmployeeLetter>(); // registered before tenant columns are added
         b.Entity<Tenant>().HasData(new Tenant { Id = TenantIds.Default, Name = "Demo company", Slug = "demo" });
         b.Entity<Tenant>().HasIndex(x => x.Slug).IsUnique();
         // Shared database, TenantId on every customer table with a global query filter (ADR-0001, ADR-0002).
@@ -208,6 +208,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<EmployeeImportBatch>().HasIndex("TenantId", nameof(EmployeeImportBatch.FileHash)).IsUnique();
         b.Entity<TotpRecoveryCode>().HasIndex("TenantId", nameof(TotpRecoveryCode.UserId), nameof(TotpRecoveryCode.CodeHash));
         b.Entity<RehireRequest>().HasIndex("TenantId", nameof(RehireRequest.EmployeeId), nameof(RehireRequest.Status));
+        b.Entity<EmployeeLetter>().HasIndex("TenantId", nameof(EmployeeLetter.EmployeeId), nameof(EmployeeLetter.Status));
         b.Entity<Role>().HasIndex("TenantId", nameof(Role.Code)).IsUnique();
         foreach (var entity in b.Model.GetEntityTypes())
             b.Entity(entity.ClrType).Property<string>("Revision").HasDefaultValue("").IsConcurrencyToken();

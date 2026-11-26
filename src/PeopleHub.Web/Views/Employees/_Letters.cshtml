@@ -1,0 +1,16 @@
+@model (List<EmployeeLetter> Letters,int EmployeeId,bool Self)
+@{Func<string,string,string>X=(e,a)=>T.IsAr?a:e;
+  string St(string s)=>s switch{"Issued"=>X("Issued","صدر"),"Declined"=>X("Declined","مرفوض"),_=>X("Requested","مطلوب")};}
+<div class="card"><div class="card-h"><h2>@X("Employment letters","خطابات العمل")</h2></div><div class="card-b">
+<p class="muted">@X("An employee asks for a letter confirming employment. HR issues or declines it. The text is fixed at issue time. Salary is included only if the employee asks for it and the issuing HR user may see salaries. Demonstration data only.","يطلب الموظف خطاب تأكيد عمل ويقوم الموارد البشرية بإصداره أو رفضه. يثبت النص وقت الإصدار. لا يظهر الراتب إلا إذا طلبه الموظف وكان لمصدر الخطاب صلاحية عرض الرواتب. بيانات توضيحية فقط.")</p>
+@if(Model.Self){<form method="post" action="/Employees/RequestLetter" asp-antiforgery="true" class="form-grid" style="margin:14px 0">
+<div class="field"><label>@X("Addressed to","موجّه إلى")</label><input type="text" name="addressedTo" maxlength="150" required></div>
+<div class="field"><label><input type="checkbox" name="includeSalary" value="true"> @X("Include my monthly basic salary","تضمين راتبي الأساسي الشهري")</label></div>
+<div class="field"><button class="btn btn-primary" type="submit">@X("Request letter","طلب خطاب")</button></div></form>}
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("Reference","المرجع")</th><th>@X("Addressed to","موجّه إلى")</th><th>@X("Salary","الراتب")</th><th>@X("Status","الحالة")</th><th>@X("Requested","تاريخ الطلب")</th><th></th></tr></thead><tbody>
+@foreach(var l in Model.Letters){<tr><td class="num">@(l.Reference==""?"-":l.Reference)</td><td>@l.AddressedTo</td><td>@(l.IncludeSalary?X("Yes","نعم"):X("No","لا"))</td><td>@St(l.Status)@if(l.Status=="Declined"&&l.DecisionNote!=""){<div class="muted small">@l.DecisionNote</div>}</td><td>@T.Date(l.RequestedAt)</td>
+<td>@if(l.Status=="Issued"){<a href="/Employees/Letter/@l.Id" target="_blank">@X("Open and print","فتح وطباعة")</a>}
+@if(l.Status=="Requested"&&Me.Can(Perm.EmpManage)&&l.RequestedByUserId!=Me.UserId){<form method="post" action="/Employees/IssueLetter" asp-antiforgery="true" class="inline-form"><input type="hidden" name="letterId" value="@l.Id"><input type="hidden" name="id" value="@Model.EmployeeId"><button class="btn btn-sm" type="submit">@X("Issue","إصدار")</button></form>
+<form method="post" action="/Employees/DeclineLetter" asp-antiforgery="true" class="inline-form"><input type="hidden" name="letterId" value="@l.Id"><input type="hidden" name="id" value="@Model.EmployeeId"><input type="text" name="note" maxlength="1000" placeholder="@X("Reason","السبب")" required><button class="btn btn-sm" type="submit">@X("Decline","رفض")</button></form>}</td></tr>}
+@if(Model.Letters.Count==0){<tr><td colspan="6" class="muted">@X("No letters yet.","لا توجد خطابات بعد.")</td></tr>}
+</tbody></table></div></div></div>

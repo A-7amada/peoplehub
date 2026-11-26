@@ -10,6 +10,7 @@ public partial class Loc
         void A(string k, string en, string ar) => m[k] = (en, ar);
 
         A("err.rehireNotFinal","Only an employee with a final status (resigned, terminated or retired) can be rehired.","إعادة التعيين متاحة فقط لموظف حالته نهائية (استقالة أو إنهاء خدمة أو تقاعد).");
+        A("err.letterLimit","You already have the maximum number of letter requests waiting. Wait for HR to answer one first.","لديك الحد الأقصى من طلبات الخطابات بانتظار الرد. انتظر رد الموارد البشرية على أحدها أولاً.");
         A("err.rehirePending","A rehire request for this employee is already waiting for approval.","يوجد طلب إعادة تعيين لهذا الموظف بانتظار الاعتماد.");
         A("err.rehireSelf","The person who requested the rehire cannot approve it. A second HR Manager must decide.","من طلب إعادة التعيين لا يمكنه اعتماده. يجب أن يعتمده مدير موارد بشرية آخر.");
         A("err.rehireManagerOnly","Only an HR Manager can approve or reject a rehire request.","اعتماد أو رفض إعادة التعيين لمدير الموارد البشرية فقط.");
