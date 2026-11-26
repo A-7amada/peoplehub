@@ -1,0 +1,19 @@
+using Microsoft.EntityFrameworkCore;
+using PeopleHub.Infrastructure.Persistence;
+using PeopleHub.Application.Common;
+using PeopleHub.Application.Modules.Employees;
+using PeopleHub.Domain.Entities;
+namespace PeopleHub.Tests;
+public class RehireTests
+{
+ class U(int id,bool manager,bool hr=true):ICurrentUser{public string Email=>$"u{id}@example.local";public int? EmployeeId=>null;public int UserId=>id;public bool IsAuthenticated=>true;public bool IsInRole(string r)=>manager&&r==Roles.HRManager;public bool Can(string p)=>hr;}
+ static async Task<AppDbContext> Db(){var d=new AppDbContext(new DbContextOptionsBuilder<AppDbContext>().UseSqlite("Data Source=:memory:").Options);await d.Database.OpenConnectionAsync();await d.Database.MigrateAsync();await SeedData.InitializeAsync(d,"Admin123!","Demo123!",new DateTime(2026,11,24));return d;}
+ static RehireService S(AppDbContext d,U u){var c=new AppClock(TimeProvider.System);return new(d,u,c,new AuditService(d,u,c));}
+ static async Task<Employee> Resigned(AppDbContext d){var e=await d.Set<Employee>().FirstAsync();e.Status=EmployeeStatus.Resigned;await d.SaveChangesAsync();return e;}
+ [Fact]public async Task ActiveEmployeeCannotBeRehired(){await using var d=await Db();var e=await d.Set<Employee>().FirstAsync();await Assert.ThrowsAsync<DomainException>(()=>S(d,new(1,true)).RequestAsync(e.Id,"x"));}
+ [Fact]public async Task RequestNeedsReasonAndOnlyOnePendingAtATime(){await using var d=await Db();var e=await Resigned(d);var s=S(d,new(1,false));await Assert.ThrowsAsync<DomainException>(()=>s.RequestAsync(e.Id," "));await s.RequestAsync(e.Id,"Returned after a break");await Assert.ThrowsAsync<DomainException>(()=>s.RequestAsync(e.Id,"again"));Assert.Equal(EmployeeStatus.Resigned,(await d.Set<Employee>().FindAsync(e.Id))!.Status);}
+ [Fact]public async Task RequesterCannotApproveOwnRequest(){await using var d=await Db();var e=await Resigned(d);await S(d,new(1,true)).RequestAsync(e.Id,"reason");var r=await d.Set<RehireRequest>().SingleAsync();await Assert.ThrowsAsync<DomainException>(()=>S(d,new(1,true)).DecideAsync(r.Id,true,"ok"));Assert.Equal("Pending",(await d.Set<RehireRequest>().SingleAsync()).Status);}
+ [Fact]public async Task NonManagerCannotDecide(){await using var d=await Db();var e=await Resigned(d);await S(d,new(1,false)).RequestAsync(e.Id,"reason");var r=await d.Set<RehireRequest>().SingleAsync();await Assert.ThrowsAsync<DomainException>(()=>S(d,new(2,false)).DecideAsync(r.Id,true,"ok"));}
+ [Fact]public async Task SecondHrManagerApprovalReactivatesAndKeepsHistory(){await using var d=await Db();var e=await Resigned(d);d.Add(new StatusHistory{EmployeeId=e.Id,From=EmployeeStatus.Active,To=EmployeeStatus.Resigned,At=DateTime.UtcNow,ChangedBy="x",Reason="left"});await d.SaveChangesAsync();await S(d,new(1,false)).RequestAsync(e.Id,"Comes back");var r=await d.Set<RehireRequest>().SingleAsync();await Assert.ThrowsAsync<DomainException>(()=>S(d,new(2,true)).DecideAsync(r.Id,true,""));await S(d,new(2,true)).DecideAsync(r.Id,true,"Approved");Assert.Equal(EmployeeStatus.Active,(await d.Set<Employee>().FindAsync(e.Id))!.Status);Assert.Equal(2,await d.Set<StatusHistory>().CountAsync(x=>x.EmployeeId==e.Id));Assert.Equal("Approved",(await d.Set<RehireRequest>().SingleAsync()).Status);await Assert.ThrowsAsync<DomainException>(()=>S(d,new(3,true)).DecideAsync(r.Id,true,"again"));}
+ [Fact]public async Task RejectionLeavesEmployeeFinalAndAllowsNewRequest(){await using var d=await Db();var e=await Resigned(d);await S(d,new(1,false)).RequestAsync(e.Id,"r1");var r=await d.Set<RehireRequest>().SingleAsync();await S(d,new(2,true)).DecideAsync(r.Id,false,"No");Assert.Equal(EmployeeStatus.Resigned,(await d.Set<Employee>().FindAsync(e.Id))!.Status);await S(d,new(1,false)).RequestAsync(e.Id,"r2");Assert.Equal(2,await d.Set<RehireRequest>().CountAsync());}
+}

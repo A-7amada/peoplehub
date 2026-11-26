@@ -173,7 +173,7 @@ public class AppDbContext : DbContext, IRepository
         
         b.Entity<StagedEmployeeRow>().HasIndex(x => new { x.BatchId, x.RowNumber }).IsUnique();
         b.Entity<StagedEmployeeRow>().HasOne<EmployeeImportBatch>().WithMany().HasForeignKey(x => x.BatchId).OnDelete(DeleteBehavior.Cascade);
-        b.Entity<CompanyAsset>(); b.Entity<Employee>(); b.Entity<PayrollRun>(); b.Entity<EmployeeImportBatch>(); b.Entity<Role>(); // registered before tenant columns are added
+        b.Entity<CompanyAsset>(); b.Entity<Employee>(); b.Entity<PayrollRun>(); b.Entity<EmployeeImportBatch>(); b.Entity<Role>(); b.Entity<RehireRequest>(); // registered before tenant columns are added
         b.Entity<Tenant>().HasData(new Tenant { Id = TenantIds.Default, Name = "Demo company", Slug = "demo" });
         b.Entity<Tenant>().HasIndex(x => x.Slug).IsUnique();
         // Shared database, TenantId on every customer table with a global query filter (ADR-0001, ADR-0002).
@@ -190,6 +190,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<Employee>().HasIndex("TenantId", nameof(Employee.Email)).IsUnique();
         b.Entity<PayrollRun>().HasIndex("TenantId", nameof(PayrollRun.Year), nameof(PayrollRun.Month)).IsUnique();
         b.Entity<EmployeeImportBatch>().HasIndex("TenantId", nameof(EmployeeImportBatch.FileHash)).IsUnique();
+        b.Entity<RehireRequest>().HasIndex("TenantId", nameof(RehireRequest.EmployeeId), nameof(RehireRequest.Status));
         b.Entity<Role>().HasIndex("TenantId", nameof(Role.Code)).IsUnique();
         foreach (var entity in b.Model.GetEntityTypes())
             b.Entity(entity.ClrType).Property<string>("Revision").HasDefaultValue("").IsConcurrencyToken();

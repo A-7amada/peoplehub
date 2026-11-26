@@ -61,6 +61,16 @@ public class Employee
         Status = to;
         return h;
     }
+
+    /// <summary>Returns a final-status employee to Active after a second approver agreed. Nothing is deleted; the history gains one row.</summary>
+    public StatusHistory Rehire(string by, string reason, DateTime now)
+    {
+        if (Status is not (EmployeeStatus.Terminated or EmployeeStatus.Resigned or EmployeeStatus.Retired)) throw new DomainException("err.rehireNotFinal");
+        if (string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
+        var h = new StatusHistory { EmployeeId = Id, From = Status, To = EmployeeStatus.Active, ChangedBy = by, Reason = reason.Trim(), At = now };
+        Status = EmployeeStatus.Active;
+        return h;
+    }
 }
 
 public class StatusHistory

@@ -42,6 +42,15 @@
  <div class="card"><div class="card-h"><h2>@T["emp.statusHistory"]</h2></div><div class="card-b"><ul class="timeline">@foreach (var h in Model.StatusHistory) { <li>@Ui.Chip(T.E(h.From), "gray") → @Ui.Chip(T.E(h.To), Ui.StatusTone(h.To)) <span class="faint small">· @T.Date(h.At)</span><div class="muted small">@h.ChangedBy @(string.IsNullOrEmpty(h.Reason) ? "" : "· " + h.Reason)</div></li> }
   @if (Model.StatusHistory.Count == 0) { <li class="faint">@T["common.none"]</li> }</ul>
   @if (hr && e.IsWorking) { <form method="post" action="/Employees/Status" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@e.Id"><select name="to">@foreach (var s in Enum.GetValues<EmployeeStatus>().Where(s => s != e.Status)) { <option value="@((int)s)">@T.E(s)</option> }</select><input type="text" name="reason" placeholder="@T["common.reason"]" style="flex:1"><button class="btn btn-sm">@T["emp.changeStatus"]</button></form> }</div></div>
+  @if (hr && !e.IsWorking && e.Status != EmployeeStatus.Suspended)
+  {
+   var rehires=(List<RehireRequest>)ViewBag.Rehires; var pend=rehires.FirstOrDefault(x=>x.Status=="Pending");
+   <div style="margin-top:14px"><h3 style="font-size:15px;margin:0 0 6px">@T["emp.rehireTitle"]</h3><div class="muted small">@T["emp.rehireHint"]</div>
+   @if(pend==null){ <form method="post" action="/Employees/RequestRehire" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@e.Id"><input type="text" name="reason" required maxlength="1000" placeholder="@T["common.reason"]" style="flex:1"><button class="btn btn-sm">@T["emp.rehire"]</button></form> }
+   else { <div class="kv"><span>@T.Date(pend.RequestedAt) · @pend.RequestedBy</span><b>@pend.Reason</b></div>
+    @if(Me.IsInRole(Roles.HRManager)&&pend.RequestedByUserId!=Me.UserId){ <form method="post" action="/Employees/DecideRehire" asp-antiforgery="true" class="inline-form"><input type="hidden" name="requestId" value="@pend.Id"><input type="hidden" name="id" value="@e.Id"><input type="text" name="note" required maxlength="1000" placeholder="@T["emp.rehireNote"]" style="flex:1"><button class="btn btn-sm" name="approve" value="true">@T["emp.rehireApprove"]</button><button class="btn btn-sm btn-ghost" name="approve" value="false">@T["emp.rehireReject"]</button></form> } }
+   @foreach(var rr in rehires.Where(x=>x.Status!="Pending")){ <div class="kv"><span>@T.Date(rr.DecidedAt ?? rr.RequestedAt) · @rr.Status</span><b>@rr.DecisionNote</b></div> }</div>
+  }
 </div>
 }
 @if (tab == "leave") {

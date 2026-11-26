@@ -33,6 +33,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
             var eid = id ?? me.EmployeeId ?? throw new DomainException("err.notFound");
             var p = await svc.ProfileAsync(eid);
             ViewBag.Scheduled=await timeline.ListAsync(eid,access);
+            ViewBag.Rehires=me.Can(Perm.EmpManage)?await HttpContext.RequestServices.GetRequiredService<RehireService>().ListAsync(eid,access):new List<RehireRequest>();
             if(tab=="assets"){ViewBag.Assets=await assets.GetAsync(eid);if(me.Can(Perm.EmpManage))ViewBag.Inventory=await assets.InventoryAsync();}
             if(tab=="shifts")ViewBag.ShiftDays=await shifts.ListAsync(eid,access);
             if(tab=="documents") ViewBag.Documents=await documents.ListAsync(eid);
@@ -81,6 +82,11 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     [HttpPost]public Task<IActionResult> DecideProbation(int employeeId,string decision,string reason)=>Do(()=>lifecycle.DecideProbationAsync(employeeId,decision,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
     [HttpPost]public Task<IActionResult> AddField(int employeeId,string label,string? labelAr,string kind)=>Do(()=>lifecycle.AddFieldAsync(label,labelAr,kind),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
     [HttpPost]public Task<IActionResult> SetField(int employeeId,int fieldId,string value)=>Do(()=>lifecycle.SetFieldAsync(employeeId,fieldId,value),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="lifecycle"}));
+
+    [RequirePerm(Perm.EmpManage), HttpPost]
+    public Task<IActionResult> RequestRehire(int id, string? reason) => Do(() => HttpContext.RequestServices.GetRequiredService<RehireService>().RequestAsync(id, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));
+    [RequirePerm(Perm.EmpManage), HttpPost, RequireStepUp]
+    public Task<IActionResult> DecideRehire(int requestId, int id, bool approve, string? note) => Do(() => HttpContext.RequestServices.GetRequiredService<RehireService>().DecideAsync(requestId, approve, note), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "history" }));
 
     [RequirePerm(Perm.EmpManage),HttpPost]
     public Task<IActionResult> Schedule(EmploymentChange change)=>Do(()=>timeline.ScheduleAsync(change),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=change.EmployeeId,tab="history"}));

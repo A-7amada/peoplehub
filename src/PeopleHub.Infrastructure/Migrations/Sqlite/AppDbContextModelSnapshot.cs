@@ -4429,6 +4429,70 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("RecruitmentEvent");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.RehireRequest", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DecidedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("DecidedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("DecisionNote")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FromStatus")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("RequestedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RequestedByUserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "EmployeeId", "Status");
+
+                    b.ToTable("RehireRequest");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.Role", b =>
                 {
                     b.Property<int>("Id")

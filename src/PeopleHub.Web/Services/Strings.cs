@@ -9,6 +9,15 @@ public partial class Loc
         var m = new Dictionary<string, (string, string)>();
         void A(string k, string en, string ar) => m[k] = (en, ar);
 
+        A("err.rehireNotFinal","Only an employee with a final status (resigned, terminated or retired) can be rehired.","إعادة التعيين متاحة فقط لموظف حالته نهائية (استقالة أو إنهاء خدمة أو تقاعد).");
+        A("err.rehirePending","A rehire request for this employee is already waiting for approval.","يوجد طلب إعادة تعيين لهذا الموظف بانتظار الاعتماد.");
+        A("err.rehireSelf","The person who requested the rehire cannot approve it. A second HR Manager must decide.","من طلب إعادة التعيين لا يمكنه اعتماده. يجب أن يعتمده مدير موارد بشرية آخر.");
+        A("err.rehireManagerOnly","Only an HR Manager can approve or reject a rehire request.","اعتماد أو رفض إعادة التعيين لمدير الموارد البشرية فقط.");
+        A("err.rehireDecided","This rehire request was already decided.","تم البت في طلب إعادة التعيين بالفعل.");
+        A("emp.rehire","Request rehire","طلب إعادة تعيين"); A("emp.rehireTitle","Rehire (final status)","إعادة التعيين (حالة نهائية)");
+        A("emp.rehireApprove","Approve","اعتماد"); A("emp.rehireReject","Reject","رفض");
+        A("emp.rehireNote","Decision note (required)","ملاحظة القرار (مطلوبة)");
+        A("emp.rehireHint","Old records stay. A second HR Manager must approve.","السجلات القديمة تبقى كما هي. يلزم اعتماد مدير موارد بشرية ثاني.");
         A("err.payrollSelfFinal","The payroll creator cannot be the final approver.","منشئ دورة المرتبات لا يمكنه اعتمادها نهائيا.");
         A("err.payrollImmutable","Final payroll is immutable. Record a reasoned adjustment in a later period.","دورة المرتبات النهائية لا تعدل. سجل التصحيح بسبب موثق في فترة لاحقة.");
         A("notif.cancelled","Approved leave cancelled","تم إلغاء إجازة معتمدة");
