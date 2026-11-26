@@ -129,6 +129,7 @@ builder.Services.AddHostedService<MailWorker>();
 builder.Services.AddHostedService<BackupWorker>();
 builder.Services.AddScoped<OperationsService>();
 builder.Logging.AddSimpleConsole(o => { o.IncludeScopes = true; o.SingleLine = true; });
+PeopleHub.Infrastructure.Security.FieldCipher.ConfigureDefault(builder.Configuration["FIELD_ENCRYPTION_KEY"], builder.Configuration["FIELD_ENCRYPTION_KEY_PREVIOUS"]);
 var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {

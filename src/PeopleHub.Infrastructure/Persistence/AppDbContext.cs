@@ -98,8 +98,21 @@ public class AppDbContext : DbContext, IRepository
         c.Properties<decimal?>().HaveConversion<double>();
     }
 
+    /// <summary>Cipher for sensitive columns (ADR-0021). Tests override it with their own key.</summary>
+    protected virtual PeopleHub.Infrastructure.Security.FieldCipher Cipher => PeopleHub.Infrastructure.Security.FieldCipher.Default;
+
+    /// <summary>The one list of encrypted columns. Encrypted columns cannot be filtered or sorted in SQL.</summary>
+    void ApplyFieldEncryption(ModelBuilder b)
+    {
+        var cipher = Cipher;
+        void Encrypt<T>(System.Linq.Expressions.Expression<Func<T, string?>> property, string column) where T : class =>
+            b.Entity<T>().Property(property).HasConversion(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<string?, string?>(v => cipher.Encrypt(v, column), v => cipher.Decrypt(v, column)));
+        Encrypt<AppUser>(x => x.TotpSecret, "AppUser.TotpSecret");
+    }
+
     protected override void OnModelCreating(ModelBuilder b)
     {
+        ApplyFieldEncryption(b);
         b.Entity<ApprovalVote>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.ParticipantEmployeeId}).IsUnique();
         b.Entity<ApprovalVote>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.ActorEmployeeId}).IsUnique();
         b.Entity<PayrollAdjustment>().HasIndex(x=>x.TargetRunId);b.Entity<PayrollAdjustmentEvent>().HasIndex(x=>new{x.AdjustmentId,x.Sequence}).IsUnique();
