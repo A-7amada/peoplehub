@@ -123,7 +123,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<ApprovalReminder>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.UserId,x.OnDate}).IsUnique();
         b.Entity<PayrollBankResult>().HasIndex(x=>new{x.LineId,x.Version}).IsUnique();
         b.Entity<EmployeeCaseFile>().HasIndex(x=>x.Token).IsUnique();
-        b.Entity<IntegrationEvent>().HasIndex(x=>x.IdempotencyKey).IsUnique();b.Entity<IntegrationEvent>().HasIndex(x=>new{x.Status,x.NextAttemptAt});
+        b.Entity<IntegrationEvent>().HasIndex(x=>x.IdempotencyKey);b.Entity<IntegrationEvent>().HasIndex(x=>new{x.Status,x.NextAttemptAt});
         b.Entity<EmployeeGrievanceAppeal>().HasIndex(x=>x.ResponseId).IsUnique();
         b.Entity<EmployeeGrievanceAppealDecision>().HasIndex(x=>x.AppealId).IsUnique();
         b.Entity<EmployeeGrievance>().HasIndex(x=>x.EmployeeId);
@@ -139,17 +139,17 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<TrainingCertificate>().HasIndex(x=>x.AttachmentToken).IsUnique();b.Entity<TrainingOutcome>().HasIndex(x=>x.EnrollmentId);
         b.Entity<ApprovalAssignment>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex});
         b.Entity<PipMilestone>().HasIndex(x=>x.AppraisalId);b.Entity<PipProgress>().HasIndex(x=>x.MilestoneId);
-        b.Entity<WorkflowRevision>().HasIndex(x=>new{x.Kind,x.Hash}).IsUnique();
+        b.Entity<WorkflowRevision>().HasIndex(x=>new{x.Kind,x.Hash});
         b.Entity<LoginSession>().HasIndex(x=>x.TokenHash).IsUnique();
         b.Entity<PerformanceResponse>().HasIndex(x=>new{x.AppraisalId,x.Kind});
         b.Entity<AssetMovement>().HasIndex(x=>x.AssetId);
         b.Entity<EmployeeShiftDay>().HasIndex(x=>new{x.EmployeeId,x.Date}).IsUnique();
         b.Entity<EmployeeDocument>().HasIndex(x=>x.AttachmentToken).IsUnique();
-        b.Entity<EmployeeDependent>();b.Entity<LifecycleTask>();b.Entity<EmployeeProbation>().HasIndex(x=>x.EmployeeId).IsUnique();b.Entity<HrFieldDefinition>().HasIndex(x=>x.Label).IsUnique();b.Entity<EmployeeFieldValue>().HasIndex(x=>new{x.EmployeeId,x.FieldId}).IsUnique();
+        b.Entity<EmployeeDependent>();b.Entity<LifecycleTask>();b.Entity<EmployeeProbation>().HasIndex(x=>x.EmployeeId).IsUnique();b.Entity<HrFieldDefinition>().HasIndex(x=>x.Label);b.Entity<EmployeeFieldValue>().HasIndex(x=>new{x.EmployeeId,x.FieldId}).IsUnique();
         b.Entity<AttendancePeriodLock>().HasIndex(x=>new{x.EmployeeId,x.Year,x.Month}).IsUnique();
         b.Entity<EmploymentChange>().HasIndex(x=>new{x.EmployeeId,x.EffectiveOn,x.Kind}).IsUnique();
         b.Entity<AttendanceEvidence>().HasIndex(x=>new{x.EmployeeId,x.Date});
-        b.Entity<DevicePunch>().HasIndex(x=>x.IdempotencyKey).IsUnique();
+        b.Entity<DevicePunch>().HasIndex(x=>x.IdempotencyKey);
         b.Entity<PayrollCalculationSnapshot>().HasIndex(x => new { x.RunId, x.Version }).IsUnique();
         b.Entity<LeaveTransaction>();
         b.Entity<EmployeeAssignment>();
@@ -177,7 +177,7 @@ public class AppDbContext : DbContext, IRepository
         
         b.Entity<Branch>(); b.Entity<Department>(); b.Entity<JobTitle>(); b.Entity<Shift>(); b.Entity<Holiday>(); b.Entity<LeaveType>();
         b.Entity<SalaryComponent>(); b.Entity<Contract>(); b.Entity<StatusHistory>(); b.Entity<CareerEvent>();
-        b.Entity<ApprovalAction>();  b.Entity<RolePermission>(); b.Entity<Delegation>(); b.Entity<AppSetting>().HasIndex(x => x.Key).IsUnique(); b.Entity<DevicePunch>().HasIndex(x => new { x.DeviceUserId, x.Time }); b.Entity<EmailOutbox>(); b.Entity<PasswordReset>(); b.Entity<JobOpening>().Navigation(x => x.Department).AutoInclude(); b.Entity<Candidate>().Navigation(x => x.Job).AutoInclude(); b.Entity<PerformanceReview>().Navigation(x => x.Employee).AutoInclude(); b.Entity<TrainingCourse>(); b.Entity<PerfCycle>(); b.Entity<Feedback360>().HasOne(x => x.Reviewer).WithMany().HasForeignKey(x => x.ReviewerEmployeeId).OnDelete(DeleteBehavior.Restrict); b.Entity<Feedback360>().Navigation(x => x.Reviewer).AutoInclude(); b.Entity<CompetencyTemplate>(); b.Entity<CompetencyItem>(); b.Entity<PerfReminder>(); b.Entity<PerfBonus>(); b.Entity<PerfGoal>(); b.Entity<DevItem>(); b.Entity<PerfAppraisal>().Navigation(x => x.Employee).AutoInclude(); b.Entity<PerfAppraisal>().Navigation(x => x.Cycle).AutoInclude(); b.Entity<TrainingEnrollment>().Navigation(x => x.Course).AutoInclude(); b.Entity<TrainingEnrollment>().Navigation(x => x.Employee).AutoInclude(); b.Entity<Attachment>().HasIndex(x => x.Token).IsUnique();
+        b.Entity<ApprovalAction>();  b.Entity<RolePermission>(); b.Entity<Delegation>(); b.Entity<AppSetting>().HasIndex(x => x.Key); b.Entity<DevicePunch>().HasIndex(x => new { x.DeviceUserId, x.Time }); b.Entity<EmailOutbox>(); b.Entity<PasswordReset>(); b.Entity<JobOpening>().Navigation(x => x.Department).AutoInclude(); b.Entity<Candidate>().Navigation(x => x.Job).AutoInclude(); b.Entity<PerformanceReview>().Navigation(x => x.Employee).AutoInclude(); b.Entity<TrainingCourse>(); b.Entity<PerfCycle>(); b.Entity<Feedback360>().HasOne(x => x.Reviewer).WithMany().HasForeignKey(x => x.ReviewerEmployeeId).OnDelete(DeleteBehavior.Restrict); b.Entity<Feedback360>().Navigation(x => x.Reviewer).AutoInclude(); b.Entity<CompetencyTemplate>(); b.Entity<CompetencyItem>(); b.Entity<PerfReminder>(); b.Entity<PerfBonus>(); b.Entity<PerfGoal>(); b.Entity<DevItem>(); b.Entity<PerfAppraisal>().Navigation(x => x.Employee).AutoInclude(); b.Entity<PerfAppraisal>().Navigation(x => x.Cycle).AutoInclude(); b.Entity<TrainingEnrollment>().Navigation(x => x.Course).AutoInclude(); b.Entity<TrainingEnrollment>().Navigation(x => x.Employee).AutoInclude(); b.Entity<Attachment>().HasIndex(x => x.Token).IsUnique();
         b.Entity<WorkflowDefinition>().Ignore(x => x.Steps); b.Entity<WorkflowStep>().Ignore(x => x.Token); b.Entity<Notification>(); b.Entity<AuditLog>();
         b.Ignore<Approvable>();
         b.Entity<PerfBonus>().HasIndex(x => x.AppraisalId).IsUnique();
@@ -209,6 +209,12 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<TotpRecoveryCode>().HasIndex("TenantId", nameof(TotpRecoveryCode.UserId), nameof(TotpRecoveryCode.CodeHash));
         b.Entity<RehireRequest>().HasIndex("TenantId", nameof(RehireRequest.EmployeeId), nameof(RehireRequest.Status));
         b.Entity<EmployeeLetter>().HasIndex("TenantId", nameof(EmployeeLetter.EmployeeId), nameof(EmployeeLetter.Status));
+        // ADR-0023 stage 1: values people or devices choose are unique per tenant, not across the whole database.
+        b.Entity<IntegrationEvent>().HasIndex("TenantId", nameof(IntegrationEvent.IdempotencyKey)).IsUnique();
+        b.Entity<WorkflowRevision>().HasIndex("TenantId", nameof(WorkflowRevision.Kind), nameof(WorkflowRevision.Hash)).IsUnique();
+        b.Entity<HrFieldDefinition>().HasIndex("TenantId", nameof(HrFieldDefinition.Label)).IsUnique();
+        b.Entity<DevicePunch>().HasIndex("TenantId", nameof(DevicePunch.IdempotencyKey)).IsUnique();
+        b.Entity<AppSetting>().HasIndex("TenantId", nameof(AppSetting.Key)).IsUnique();
         b.Entity<LeavePolicy>().HasIndex("TenantId", nameof(LeavePolicy.LeaveTypeId)).IsUnique();
         b.Entity<LeaveEntitlementTier>().HasIndex("TenantId", nameof(LeaveEntitlementTier.LeaveTypeId));
         b.Entity<Role>().HasIndex("TenantId", nameof(Role.Code)).IsUnique();

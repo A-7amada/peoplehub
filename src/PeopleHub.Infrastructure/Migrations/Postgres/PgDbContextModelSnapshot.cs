@@ -135,10 +135,12 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Key")
-                        .IsUnique();
+                    b.HasIndex("Key");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Key")
+                        .IsUnique();
 
                     b.ToTable("AppSetting");
                 });
@@ -1725,12 +1727,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdempotencyKey")
-                        .IsUnique();
+                    b.HasIndex("IdempotencyKey");
 
                     b.HasIndex("TenantId");
 
                     b.HasIndex("DeviceUserId", "Time");
+
+                    b.HasIndex("TenantId", "IdempotencyKey")
+                        .IsUnique();
 
                     b.ToTable("DevicePunch");
                 });
@@ -3021,10 +3025,12 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Label")
-                        .IsUnique();
+                    b.HasIndex("Label");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Label")
+                        .IsUnique();
 
                     b.ToTable("HrFieldDefinition");
                 });
@@ -3084,12 +3090,14 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasKey("Id");
 
-                    b.HasIndex("IdempotencyKey")
-                        .IsUnique();
+                    b.HasIndex("IdempotencyKey");
 
                     b.HasIndex("TenantId");
 
                     b.HasIndex("Status", "NextAttemptAt");
+
+                    b.HasIndex("TenantId", "IdempotencyKey")
+                        .IsUnique();
 
                     b.ToTable("IntegrationEvent");
                 });
@@ -5737,7 +5745,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.HasIndex("TenantId");
 
-                    b.HasIndex("Kind", "Hash")
+                    b.HasIndex("Kind", "Hash");
+
+                    b.HasIndex("TenantId", "Kind", "Hash")
                         .IsUnique();
 
                     b.ToTable("WorkflowRevision");
