@@ -51,6 +51,15 @@ public static class LeavePolicyRules
         return new(true, eligibleFrom, full, grant, accrued);
     }
 
+    /// <summary>Whole days written as the opening entitlement of a year. Null when the policy is off or uses monthly accrual (not applied yet), so the type default stays. Zero when the waiting period ends after the year does.</summary>
+    public static int? OpeningDays(LeavePolicy? policy, IReadOnlyList<LeaveEntitlementTier> tiers, int defaultDays, DateTime hire, DateTime? birth, int year)
+    {
+        if (policy is not { Enabled: true } || policy.Accrual != "Annual") return null;
+        if (hire.Year > year) return 0;
+        var r = Calculate(policy, tiers, defaultDays, hire, birth, new DateTime(year, 12, 31));
+        return r.Eligible ? (int)Math.Floor(r.GrantThisYear) : 0;
+    }
+
     /// <summary>Parses tier lines "serviceYears,age,days" (age may be empty). Throws a DomainException on a bad line.</summary>
     public static List<(int Years, int? Age, int Days)> ParseTiers(string? text)
     {

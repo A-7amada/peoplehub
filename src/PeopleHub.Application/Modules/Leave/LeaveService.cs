@@ -33,12 +33,16 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         var types = await TypesAsync();
         var existing = await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == employeeId && b.Year == year));
         var prev = await repo.ToListAsync(repo.Query<LeaveBalance>().Where(b => b.EmployeeId == employeeId && b.Year == year - 1));
+        var policies = await repo.ToListAsync(repo.Query<LeavePolicy>());
+        var allTiers = await repo.ToListAsync(repo.Query<LeaveEntitlementTier>());
         var created = false;
         var addedTypes=new HashSet<int>();
         foreach (var t in types.Where(t => t.DeductsBalance && existing.All(b => b.LeaveTypeId != t.Id)))
         {
             var p = prev.FirstOrDefault(b => b.LeaveTypeId == t.Id);
             var nb = p != null ? LeaveBalance.Rollover(p, t) : new LeaveBalance { EmployeeId = employeeId, LeaveTypeId = t.Id, Year = year, Entitled = t.DefaultDays };
+            var policyDays = LeavePolicyRules.OpeningDays(policies.FirstOrDefault(x => x.LeaveTypeId == t.Id), allTiers.Where(x => x.LeaveTypeId == t.Id).ToList(), t.DefaultDays, employee.HireDate, employee.BirthDate, year);
+            if (policyDays != null) nb.Entitled = policyDays.Value;
             nb.LeaveType = t;
             repo.Add(nb); existing.Add(nb); created = true; addedTypes.Add(t.Id);
             Entry(employeeId,t.Id,year,nb.Remaining,"Opening","Annual entitlement and carry-forward");

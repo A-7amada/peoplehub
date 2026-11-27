@@ -69,4 +69,16 @@ public class LeavePolicyTests
   Assert.Equal(balancesBefore,await d.Set<LeaveBalance>().CountAsync());
   Assert.True(await d.Set<AuditLog>().AnyAsync(a=>a.Entity=="LeavePolicy"));
  }
+ [Fact]public void OpeningDaysAppliesOnlyToEnabledAnnualPoliciesInWholeDays()
+ {
+  var on=P();on.Enabled=true;
+  Assert.Null(LeavePolicyRules.OpeningDays(P(),Tiers(),21,new(2020,1,1),null,2026));
+  Assert.Null(LeavePolicyRules.OpeningDays(null,Tiers(),21,new(2020,1,1),null,2026));
+  var mo=P("Monthly");mo.Enabled=true;
+  Assert.Null(LeavePolicyRules.OpeningDays(mo,Tiers(),21,new(2020,1,1),null,2026));
+  Assert.Equal(21,LeavePolicyRules.OpeningDays(on,Tiers(),21,new(2020,1,1),null,2026));
+  Assert.Equal(15,LeavePolicyRules.OpeningDays(on,Tiers(),21,new(2026,3,10),null,2026));
+  Assert.Equal(0,LeavePolicyRules.OpeningDays(on,Tiers(),21,new(2026,9,10),null,2026));
+  Assert.Equal(0,LeavePolicyRules.OpeningDays(on,Tiers(),21,new(2027,1,1),null,2026));
+ }
 }
