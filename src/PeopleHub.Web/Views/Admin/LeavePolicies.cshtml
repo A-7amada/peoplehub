@@ -1,0 +1,34 @@
+@model List<PeopleHub.Application.Modules.Leave.LeavePolicyService.Row>
+@using PeopleHub.Application.Modules.Leave
+@using PeopleHub.Web.Services
+@{ ViewData["Title"] = T.IsAr ? "سياسات الإجازات" : "Leave policies"; Func<string, string, string> X = (en, a) => T.IsAr ? a : en;
+   var prev = ViewBag.Preview as (PeopleHub.Domain.Entities.Employee Employee, PeopleHub.Domain.Entities.LeaveType Type, LeavePolicyRules.Preview Result)?; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@X("Editable defaults for each leave type: waiting period, entitlement by service or age, accrual, first-year proration, units and carried-day expiry. Illustrative demo values, not legally validated.", "قيم افتراضية قابلة للتعديل لكل نوع إجازة: فترة الانتظار والاستحقاق حسب الخدمة أو السن والاستحقاق والتناسب في السنة الأولى والوحدات وانتهاء الأيام المرحّلة. قيم توضيحية للعرض وغير موثقة قانونيا.")</div></div></div>
+<p class="faint small">@X("While a policy is not enabled, the leave type keeps its fixed days and carry-over, and the policy is a preview only. Tier lines are: service years, age (optional), days. The highest matching line wins.", "ما دامت السياسة غير مفعّلة يبقى نوع الإجازة بأيامه وترحيله الثابتين وتكون السياسة للمعاينة فقط. سطور الشرائح: سنوات الخدمة، السن (اختياري)، الأيام. يُطبّق أعلى سطر مطابق.")</p>
+@foreach (var r in Model)
+{
+ var p = r.Policy; var tierText = r.Tiers.Count == 0 && r.Type.Code == "ANN" ? "0,,21\n10,,30\n,50,30" : string.Join("\n", r.Tiers.Select(t => $"{t.FromServiceYears},{t.FromAge},{t.Days}"));
+ <div class="card" style="margin-bottom:16px"><div class="card-h"><h2>@(T.IsAr ? r.Type.NameAr : r.Type.Name)</h2>@Ui.Chip(p.Enabled ? X("Enabled", "مفعّلة") : X("Preview only", "معاينة فقط"), p.Enabled ? "green" : "amber")</div><div class="card-b">
+ <form method="post" action="/Admin/SaveLeavePolicy" asp-antiforgery="true">
+  <input type="hidden" name="typeId" value="@r.Type.Id">
+  <div class="grid g2">
+   <div class="field"><label>@X("Waiting period (months)", "فترة الانتظار (أشهر)")</label><input name="waitingMonths" type="number" min="0" max="60" value="@p.WaitingMonths"></div>
+   <div class="field"><label>@X("Accrual", "طريقة الاستحقاق")</label><select name="accrual"><option value="Annual" selected="@(p.Accrual == "Annual")">@X("Annual grant", "منحة سنوية")</option><option value="Monthly" selected="@(p.Accrual == "Monthly")">@X("Monthly (entitlement / 12)", "شهري (الاستحقاق / 12)")</option></select></div>
+   <div class="field"><label>@X("Carried days expire after (months, 0 = never)", "انتهاء الأيام المرحّلة بعد (أشهر، 0 = لا تنتهي)")</label><input name="expiryMonths" type="number" min="0" max="24" value="@p.CarryExpiryMonths"></div>
+   <div class="field"><label>@X("Hours per day", "ساعات اليوم")</label><input name="hoursPerDay" type="number" min="1" max="24" value="@p.HoursPerDay"></div>
+  </div>
+  <div class="field"><label>@X("Entitlement tiers (service years, age, days)", "شرائح الاستحقاق (سنوات الخدمة، السن، الأيام)")</label><textarea name="tiers" rows="4" dir="ltr">@tierText</textarea></div>
+  <label class="check"><input type="checkbox" name="prorate" value="true" checked="@p.ProrateFirstYear"> @X("Pro rata in the first year", "تناسب في السنة الأولى")</label>
+  <label class="check"><input type="checkbox" name="halfDay" value="true" checked="@p.AllowHalfDay"> @X("Allow half days", "السماح بنصف يوم")</label>
+  <label class="check"><input type="checkbox" name="hourly" value="true" checked="@p.AllowHourly"> @X("Allow hourly leave", "السماح بإجازة بالساعات")</label>
+  <label class="check"><input type="checkbox" name="enabled" value="true" checked="@p.Enabled"> @X("Enabled (drives balances)", "مفعّلة (تحدد الأرصدة)")</label>
+  <div style="margin-top:10px"><button class="btn btn-primary">@T["common.save"]</button></div>
+ </form>
+ <form method="get" action="/Admin/LeavePolicies" style="margin-top:12px"><input type="hidden" name="typeId" value="@r.Type.Id"><div class="faint small">@X("Preview for an employee code", "معاينة لرقم موظف")</div><input name="code" placeholder="PH-001" dir="ltr" style="max-width:160px"> <button class="btn btn-sm">@X("Preview", "معاينة")</button></form>
+ @if (prev != null && (int?)ViewBag.PreviewType == r.Type.Id)
+ {
+  var v = prev.Value.Result;
+  <div class="faint small" style="margin-top:8px"><b>@prev.Value.Employee.FullName</b>: @(v.Eligible ? X("eligible", "مؤهل") : X("not yet eligible, from ", "غير مؤهل بعد، من ") + v.EligibleFrom.ToString("yyyy-MM-dd")) · @X("full year", "سنة كاملة") @v.FullYearDays · @X("grant this year", "منحة هذا العام") @v.GrantThisYear.ToString("0.0") · @X("accrued to date", "المستحق حتى اليوم") @v.AccruedToDate.ToString("0.0")</div>
+ }
+ </div></div>
+}

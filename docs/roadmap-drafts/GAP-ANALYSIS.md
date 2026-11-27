@@ -42,7 +42,7 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 
 | Story | Class | Evidence | Blocker type |
 |---|---|---|---|
-| US-PH2-001 Leave accrual policies | Gap | `[LEV-001]` Open. Leave types carry a default number of days only (`LeaveType.DefaultDays`); no accrual frequency, eligibility, proration or preview. | Decided 2026-11-27 as ADR-0022 (configurable defaults); not built yet |
+| US-PH2-001 Leave accrual policies | Gap | `[LEV-001]` Open. Leave types carry a default number of days only (`LeaveType.DefaultDays`); no accrual frequency, eligibility, proration or preview. | Decided 2026-11-27 as ADR-0022. Unit 1 built: editable per-type policy and tiers with preview, not yet driving balances |
 | US-PH2-002 Hourly and partial-day leave | Gap | `[LEV-002]` Open. | Owner decision: units and rounding |
 | US-PH2-003 Leave carry-forward and expiry | Gap | `[LEV-003]` Open. A `MaxCarryOver` field exists on leave types but no expiry rules. | Owner decision |
 | US-PH2-004 Leave encashment | Partial | `[LEV-005]` settlement estimate only; no approval or payout cycle. | Owner decision: eligibility and formula |

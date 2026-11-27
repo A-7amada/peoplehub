@@ -15,6 +15,34 @@ public class LeaveType
     public bool AllowBackdated { get; set; }
 }
 
+/// <summary>ADR-0022: editable policy for one leave type. While Enabled is false the type keeps using DefaultDays and MaxCarryOver and the policy is preview only.</summary>
+public class LeavePolicy
+{
+    public int Id { get; set; }
+    public int LeaveTypeId { get; set; }
+    public bool Enabled { get; set; }
+    /// <summary>Months of service before the type is available.</summary>
+    public int WaitingMonths { get; set; } = 6;
+    /// <summary>"Annual" (whole grant at the entitlement date) or "Monthly" (entitlement / 12 per full month).</summary>
+    public string Accrual { get; set; } = "Annual";
+    public bool ProrateFirstYear { get; set; } = true;
+    /// <summary>Carried days lapse this many months after year end. 0 means they never lapse.</summary>
+    public int CarryExpiryMonths { get; set; } = 3;
+    public bool AllowHalfDay { get; set; } = true;
+    public bool AllowHourly { get; set; }
+    public int HoursPerDay { get; set; } = 8;
+}
+
+/// <summary>One row of the entitlement table: days granted once the employee reaches the service years, or the age when FromAge is set. The highest matching row wins.</summary>
+public class LeaveEntitlementTier
+{
+    public int Id { get; set; }
+    public int LeaveTypeId { get; set; }
+    public int FromServiceYears { get; set; }
+    public int? FromAge { get; set; }
+    public int Days { get; set; }
+}
+
 public class LeaveBalance
 {
     public int Id { get; set; }

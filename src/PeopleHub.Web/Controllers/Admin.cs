@@ -7,7 +7,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class AdminController(Loc loc, AdminService admin, WorkflowService flows, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail, OperationsService ops) : BaseController(loc)
+public class AdminController(Loc loc, AdminService admin, WorkflowService flows, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail, OperationsService ops, PeopleHub.Application.Modules.Leave.LeavePolicyService leavePolicies) : BaseController(loc)
 {
     // ---- system settings (attendance source, device, email, policies)
     [RequirePerm(Perm.AdmSettings)]
@@ -33,6 +33,20 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
 
     [RequirePerm(Perm.AdmSettings), HttpPost, RequireStepUp]
     public async Task<IActionResult> RequeueMail() { await mail.RequeueFailedAsync(); TempData["ok"] = L["msg.saved"]; return RedirectToAction(nameof(Settings)); }
+
+    // ---- leave policies (ADR-0022): editable defaults, preview first
+    [RequirePerm(Perm.AdmSettings)]
+    public async Task<IActionResult> LeavePolicies(int? typeId, string? code)
+    {
+        ViewBag.Today = DateTime.Today;
+        if (typeId != null && !string.IsNullOrWhiteSpace(code))
+            try { ViewBag.Preview = await leavePolicies.PreviewAsync(typeId.Value, code, null); ViewBag.PreviewType = typeId; } catch (DomainException ex) { TempData["err"] = L[ex.Message]; }
+        return View(await leavePolicies.ListAsync());
+    }
+
+    [RequirePerm(Perm.AdmSettings), HttpPost, RequireStepUp]
+    public Task<IActionResult> SaveLeavePolicy(int typeId, bool enabled, int waitingMonths, string accrual, bool prorate, int expiryMonths, bool halfDay, bool hourly, int hoursPerDay, string? tiers)
+        => Do(() => leavePolicies.SaveAsync(typeId, enabled, waitingMonths, accrual, prorate, expiryMonths, halfDay, hourly, hoursPerDay, tiers), "msg.saved", () => RedirectToAction(nameof(LeavePolicies)));
 
     [RequirePerm(Perm.AdmSettings)]
     public IActionResult Operations() => View(ops);

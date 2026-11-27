@@ -3126,6 +3126,99 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("LeaveBalance");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.LeaveEntitlementTier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Days")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("FromAge")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FromServiceYears")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LeaveTypeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "LeaveTypeId");
+
+                    b.ToTable("LeaveEntitlementTier");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.LeavePolicy", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Accrual")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("AllowHalfDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("AllowHourly")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CarryExpiryMonths")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("HoursPerDay")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("LeaveTypeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("ProrateFirstYear")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<int>("WaitingMonths")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "LeaveTypeId")
+                        .IsUnique();
+
+                    b.ToTable("LeavePolicy");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.LeaveRequest", b =>
                 {
                     b.Property<int>("Id")

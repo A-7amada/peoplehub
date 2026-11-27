@@ -33,3 +33,4 @@ Before any phase starts: gap-analyse each requirement against `docs/TRACEABILITY
 The per-story evidence is in [GAP-ANALYSIS.md](roadmap-drafts/GAP-ANALYSIS.md) and the per-requirement register in [TRACEABILITY.md](TRACEABILITY.md). Items that need an owner decision or spend are listed there and are not started.
 
 Update 2026-11-27: two owner decisions recorded as ADR-0022 (leave policy defaults, built configurable) and ADR-0023 (staged full tenant isolation build). Both are decided and not yet built. Everything else on the held list stays deferred.
+Leave policy unit 1 (editable policy, tiers, preview) is built; it does not drive balances yet.

@@ -56,7 +56,7 @@ public class ExportPrivacyAuditTests
  /// <summary>Every source file that touches a private Employee field must be on this audited list. A new file fails the test until someone reviews its guard and adds it here.</summary>
  static readonly string[] Audited=
  [
-  "src/PeopleHub.Application/Modules/Employees/EmployeeImportValidation.cs","src/PeopleHub.Application/Modules/Employees/EmployeeImportBatches.cs","src/PeopleHub.Application/Modules/Payroll/SalaryStructures.cs","src/PeopleHub.Application/Modules/Reporting/ReportService.cs","src/PeopleHub.Application/Modules/Payroll/PayrollService.cs","src/PeopleHub.Application/Modules/Employees/EmployeeService.cs","src/PeopleHub.Application/Modules/Reporting/ReportBuilderService.cs","src/PeopleHub.Application/Modules/Employees/EmploymentTimeline.cs","src/PeopleHub.Application/Modules/Employees/LetterService.cs",
+  "src/PeopleHub.Application/Modules/Employees/EmployeeImportValidation.cs","src/PeopleHub.Application/Modules/Employees/EmployeeImportBatches.cs","src/PeopleHub.Application/Modules/Payroll/SalaryStructures.cs","src/PeopleHub.Application/Modules/Reporting/ReportService.cs","src/PeopleHub.Application/Modules/Payroll/PayrollService.cs","src/PeopleHub.Application/Modules/Employees/EmployeeService.cs","src/PeopleHub.Application/Modules/Reporting/ReportBuilderService.cs","src/PeopleHub.Application/Modules/Employees/EmploymentTimeline.cs","src/PeopleHub.Application/Modules/Employees/LetterService.cs","src/PeopleHub.Application/Modules/Leave/LeavePolicyService.cs",
   "src/PeopleHub.Web/Controllers/Hr.cs","src/PeopleHub.Web/Controllers/Platform.cs"
  ];
  [Fact]public void OnlyAuditedFilesReferencePrivateEmployeeFields()

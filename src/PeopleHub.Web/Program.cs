@@ -72,6 +72,7 @@ builder.Services.AddScoped<SessionService>();
 builder.Services.AddScoped<AttendanceExceptions>();
 builder.Services.AddScoped<RehireService>();
 builder.Services.AddScoped<LetterService>();
+builder.Services.AddScoped<PeopleHub.Application.Modules.Leave.LeavePolicyService>();
 builder.Services.AddScoped<EmployeeDocuments>();
 builder.Services.AddScoped<ShiftSchedule>();
 builder.Services.AddScoped<EmploymentTimeline>();
