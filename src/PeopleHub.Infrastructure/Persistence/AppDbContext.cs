@@ -153,7 +153,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<PayrollCalculationSnapshot>().HasIndex(x => new { x.RunId, x.Version }).IsUnique();
         b.Entity<LeaveTransaction>();
         b.Entity<EmployeeAssignment>();
-        b.Entity<AppUser>().HasIndex(x => x.Email).IsUnique();
+        b.Entity<AppUser>().HasIndex(x => x.Email);
         b.Entity<Employee>(e =>
         {
             
@@ -215,6 +215,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<HrFieldDefinition>().HasIndex("TenantId", nameof(HrFieldDefinition.Label)).IsUnique();
         b.Entity<DevicePunch>().HasIndex("TenantId", nameof(DevicePunch.IdempotencyKey)).IsUnique();
         b.Entity<AppSetting>().HasIndex("TenantId", nameof(AppSetting.Key)).IsUnique();
+        b.Entity<AppUser>().HasIndex("TenantId", nameof(AppUser.Email)).IsUnique();
         b.Entity<LeavePolicy>().HasIndex("TenantId", nameof(LeavePolicy.LeaveTypeId)).IsUnique();
         b.Entity<LeaveEntitlementTier>().HasIndex("TenantId", nameof(LeaveEntitlementTier.LeaveTypeId));
         b.Entity<Role>().HasIndex("TenantId", nameof(Role.Code)).IsUnique();

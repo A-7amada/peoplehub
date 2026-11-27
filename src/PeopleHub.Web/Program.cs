@@ -40,7 +40,8 @@ builder.Services.AddSingleton<AppClock>();
 builder.Services.AddSingleton<RequestMetrics>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, WebCurrentUser>();
-builder.Services.AddScoped<PeopleHub.Application.Common.Tenancy.ITenantContext, HttpTenantContext>();
+builder.Services.AddScoped<HttpTenantContext>();
+builder.Services.AddScoped<PeopleHub.Application.Common.Tenancy.ITenantContext>(sp => sp.GetRequiredService<HttpTenantContext>());
 builder.Services.AddScoped<PeopleHub.Application.Common.Events.IDomainEventDispatcher, PeopleHub.Infrastructure.Events.DomainEventDispatcher>();
 builder.Services.AddScoped<PeopleHub.Application.Common.Events.IDomainEventHandler<PeopleHub.Application.Common.Events.EmployeeStatusChanged>, PeopleHub.Infrastructure.Events.EmployeeStatusChangedLogger>();
 builder.Services.AddMemoryCache();
@@ -107,6 +108,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(o => { o.LoginPath = "/Account/Login"; o.AccessDeniedPath = "/Account/Denied"; o.Cookie.HttpOnly = true; o.Cookie.SameSite = SameSiteMode.Lax; o.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
         o.Events.OnValidatePrincipal = async c => {
             var id = c.Principal?.FindFirst("uid")?.Value;
+            if (int.TryParse(c.Principal?.FindFirst("tenant_id")?.Value, out var tid)) c.HttpContext.RequestServices.GetRequiredService<HttpTenantContext>().Override = tid;
             var db = c.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
             var u = int.TryParse(id, out var uid) ? await db.Set<AppUser>().AsNoTracking().FirstOrDefaultAsync(u => u.Id == uid && u.IsActive) : null;
             var sessions=c.HttpContext.RequestServices.GetRequiredService<SessionService>();

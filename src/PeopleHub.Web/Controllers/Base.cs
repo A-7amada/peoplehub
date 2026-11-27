@@ -46,14 +46,14 @@ public abstract class BaseController(Loc loc) : Controller
     protected IActionResult Forbidden() { TempData["err"] = loc["err.forbidden"]; return Redirect("/"); }
 }
 
-public class AccountController(Loc loc, AuthService auth, AccountService accounts, Microsoft.AspNetCore.DataProtection.IDataProtectionProvider dp, AppClock clock, IConfiguration config,SessionService sessions) : Controller
+public class AccountController(Loc loc, AuthService auth, AccountService accounts, Microsoft.AspNetCore.DataProtection.IDataProtectionProvider dp, AppClock clock, IConfiguration config,SessionService sessions, PeopleHub.Web.Services.HttpTenantContext tenant, PeopleHub.Domain.Interfaces.IRepository repo) : Controller
 {
     private Microsoft.AspNetCore.DataProtection.IDataProtector Prot => dp.CreateProtector("peoplehub.2fa");
 
     private async Task SignIn(AppUser u)
     {
         var sid=await sessions.StartAsync(u.Id,Request.Headers.UserAgent.ToString(),HttpContext.Connection.RemoteIpAddress?.ToString()??"");
-        var claims = new List<Claim> { new(ClaimTypes.Name, u.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp),new("sid",sid) };
+        var claims = new List<Claim> { new(ClaimTypes.Name, u.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp),new("sid",sid),new("tenant_id",tenant.TenantId.ToString()) };
         if (u.EmployeeId != null) claims.Add(new("emp", u.EmployeeId.ToString()!));
         claims.AddRange(u.RoleArray.Select(r => new Claim(ClaimTypes.Role, r)));
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, "cookie")));
@@ -66,7 +66,8 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
         try
         {
             var parts = Prot.Unprotect(pending ?? "").Split('|');
-            if (parts.Length != 2 || new DateTime(long.Parse(parts[1]), DateTimeKind.Utc) < clock.UtcNow) throw new Exception();
+            if (parts.Length != 3 || new DateTime(long.Parse(parts[1]), DateTimeKind.Utc) < clock.UtcNow) throw new Exception();
+            tenant.Override = int.Parse(parts[2]);
             var u = await accounts.ByIdAsync(int.Parse(parts[0]));
             if (u != null && await auth.VerifySecondFactorAsync(u, code)) { await SignIn(u); return Redirect("/"); }
         }
@@ -111,15 +112,23 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
     [Authorize, HttpPost] public async Task<IActionResult> DisableTotp(string password) { try { await accounts.DisableTotpAsync(password); TempData["ok"] = loc["msg.saved"]; } catch (DomainException ex) { TempData["err"] = loc[ex.Message]; } return RedirectToAction(nameof(Security)); }
 
     [AllowAnonymous, HttpGet]
-    public IActionResult Login() => User.Identity?.IsAuthenticated == true ? Redirect("/") : View();
+    public async Task<IActionResult> Login() => User.Identity?.IsAuthenticated == true ? Redirect("/") : await LoginView();
+
+    /// <summary>The company field shows only when more than one active tenant exists, so the single-tenant demo looks unchanged.</summary>
+    private async Task<IActionResult> LoginView() { ViewBag.ShowCompany = await repo.CountAsync(repo.Query<Tenant>().Where(x => x.Status == "Active")) > 1; return View("Login"); }
 
     [AllowAnonymous, HttpPost]
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
-    public async Task<IActionResult> Login(string email, string password)
+    public async Task<IActionResult> Login(string email, string password, string? company)
     {
+        // Tenant first (ADR-0023 stage 2): a blank company means the demo tenant. Unknown or inactive companies fail like a wrong password.
+        var slug = (company ?? "").Trim().ToLowerInvariant(); if (slug.Length == 0) slug = "demo";
+        var t = await repo.FirstOrDefaultAsync(repo.Query<Tenant>().Where(x => x.Slug == slug && x.Status == "Active"));
+        if (t == null) { ViewBag.Error = loc["login.invalid"]; return await LoginView(); }
+        tenant.Override = t.Id;
         var u = await auth.LoginAsync(email, password);
-        if (u == null) { ViewBag.Error = loc["login.invalid"]; return View(); }
-        if (u.TotpEnabled) { ViewBag.Pending = Prot.Protect($"{u.Id}|{clock.UtcNow.AddMinutes(5).Ticks}"); return View(); }
+        if (u == null) { ViewBag.Error = loc["login.invalid"]; return await LoginView(); }
+        if (u.TotpEnabled) { ViewBag.Pending = Prot.Protect($"{u.Id}|{clock.UtcNow.AddMinutes(5).Ticks}|{tenant.TenantId}"); return await LoginView(); }
         await SignIn(u);
         return Redirect("/");
     }

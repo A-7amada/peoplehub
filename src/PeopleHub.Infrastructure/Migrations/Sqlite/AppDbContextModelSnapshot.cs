@@ -193,10 +193,12 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Email")
-                        .IsUnique();
+                    b.HasIndex("Email");
 
                     b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Email")
+                        .IsUnique();
 
                     b.ToTable("AppUser");
                 });

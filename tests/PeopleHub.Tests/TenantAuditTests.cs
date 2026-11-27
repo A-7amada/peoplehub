@@ -24,9 +24,8 @@ public class TenantAuditTests
         var bad = a.Model.GetEntityTypes().Where(t => t.BaseType == null && !NotOwned.Contains(t.ClrType.Name) && t.GetQueryFilter() == null).Select(t => t.ClrType.Name).ToList();
         Assert.Empty(bad);
     }
-    /// <summary>Unique indexes without TenantId that were reviewed. Parent-scoped ones are made of ids of tenant-owned rows (ids are database-wide unique, so they cannot collide across tenants); token ones are random secrets. AppUser(Email) is the open item for stage 2 (tenant-bound login).</summary>
+    /// <summary>Unique indexes without TenantId that were reviewed. Parent-scoped ones are made of ids of tenant-owned rows (ids are database-wide unique, so they cannot collide across tenants); token ones are random secrets.</summary>
     static readonly string[] Reviewed = [
-        "AppUser(Email)",
         "ApprovalReminder(", "ApprovalVote(", "Attachment(Token)", "AttendancePeriodLock(", "AttendanceRecord(", "BenefitCancellation(", "CompetencyApplication(",
         "EmployeeCaseFile(Token)", "EmployeeDocument(AttachmentToken)", "EmployeeFieldValue(", "EmployeeGrievanceAppeal(", "EmployeeGrievanceAppealDecision(",
         "EmployeeProbation(", "EmployeeShiftDay(", "EmploymentChange(", "Feedback360(", "LoginSession(TokenHash)", "PasswordReset(Token)", "PayrollAdjustmentEvent(",
@@ -63,5 +62,22 @@ public class TenantAuditTests
         await using (var b = Ctx(c, 2)) { b.RemoveRange(await b.Set<Branch>().ToListAsync()); await b.SaveChangesAsync(); }
         await using var a2 = Ctx(c, 1);
         Assert.Equal(["A"], await a2.Set<Branch>().Select(x => x.Name).ToListAsync());
+    }
+    [Fact] public async Task TheSameLoginEmailSignsIntoItsOwnTenantOnly()
+    {
+        await using var c = await Shared();
+        await using (var d = Ctx(c, 1)) { d.Add(new Tenant { Id = 2, Name = "Second", Slug = "second" }); await d.SaveChangesAsync(); }
+        await using (var a = Ctx(c, 1)) { a.Add(new AppUser { Email = "same@peoplehub.local", PasswordHash = PeopleHub.Domain.Security.PasswordHasher.Hash("One-pass1!"), IsActive = true }); await a.SaveChangesAsync(); }
+        await using (var b = Ctx(c, 2)) { b.Add(new AppUser { Email = "same@peoplehub.local", PasswordHash = PeopleHub.Domain.Security.PasswordHasher.Hash("Two-pass2!"), IsActive = true }); await b.SaveChangesAsync(); }
+        var clock = new PeopleHub.Application.Common.AppClock(TimeProvider.System);
+        await using var a2 = Ctx(c, 1); await using var b2 = Ctx(c, 2);
+        var s1 = new PeopleHub.Application.Modules.Identity.AuthService(a2, clock);
+        var s2 = new PeopleHub.Application.Modules.Identity.AuthService(b2, clock);
+        Assert.NotNull(await s1.LoginAsync("same@peoplehub.local", "One-pass1!"));
+        Assert.Null(await s1.LoginAsync("same@peoplehub.local", "Two-pass2!"));
+        Assert.NotNull(await s2.LoginAsync("same@peoplehub.local", "Two-pass2!"));
+        Assert.Null(await s2.LoginAsync("same@peoplehub.local", "One-pass1!"));
+        await using var a3 = Ctx(c, 1);
+        Assert.Equal(1, await a3.Set<AppUser>().CountAsync(u => u.Email == "same@peoplehub.local"));
     }
 }
