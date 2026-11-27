@@ -86,6 +86,8 @@ tests/
 
 ## Design
 
+Design phase D1 (proposal only, the app UI is unchanged): audit in `docs/design/AUDIT.md` and a style guide page at `/design/styleguide.html` with three palettes (B Nile teal recommended), dark mode and English/Arabic switches, using open fonts (Inter, IBM Plex Sans Arabic, SIL OFL).
+
 The UI uses patterns common in modern SaaS products such as Linear, Stripe Dashboard and Gusto: a dark sidebar with grouped navigation, KPI cards, status chips, avatar initials, inline SVG charts, tabbed profiles and a step tracker for approval paths. Icons are inline SVG. This is inspiration for layout and interaction only; no assets were copied.
 
 ## Run locally

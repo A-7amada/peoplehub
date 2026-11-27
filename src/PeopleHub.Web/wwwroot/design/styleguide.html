@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-palette="B" data-theme="light">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PeopleHub style guide (D1 proposal)</title><link rel="stylesheet" href="/design/guide.css">
+<link rel="icon" href="/favicon.ico"></head>
+<body>
+<div class="bar"><div class="wrap">
+  <div class="brand"><svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="var(--primary)"/><circle cx="12" cy="13" r="3.4" fill="#fff"/><path d="M5.5 25c0-3.6 2.9-6.2 6.5-6.2s6.5 2.6 6.5 6.2" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/><circle cx="21.5" cy="12" r="2.6" fill="var(--accent)"/><path d="M20 18.8c3.2 0 5.6 2 5.6 5" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" opacity=".85"/></svg> PeopleHub <span class="label" data-en="Style guide · D1 proposal" data-ar="دليل التصميم · مقترح D1"></span></div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+    <div class="seg" role="group" aria-label="Palette" id="pal"><button data-v="A" aria-pressed="false" data-en="A Indigo" data-ar="أ نيلي"></button><button data-v="B" aria-pressed="true" data-en="B Nile (recommended)" data-ar="ب النيل (موصى به)"></button><button data-v="C" aria-pressed="false" data-en="C Terracotta" data-ar="ج تيراكوتا"></button></div>
+    <div class="seg" role="group" aria-label="Theme" id="thm"><button data-v="light" aria-pressed="true" data-en="Light" data-ar="فاتح"></button><button data-v="dark" aria-pressed="false" data-en="Dark" data-ar="داكن"></button></div>
+    <div class="seg" role="group" aria-label="Language" id="lng"><button data-v="en" aria-pressed="true">EN</button><button data-v="ar" aria-pressed="false">عربي</button></div>
+  </div></div></div>
+<div class="wrap">
+<div class="alert a-warn" style="margin-block-start:var(--s4)"><b data-en="Portfolio demo." data-ar="عرض تجريبي."></b><span data-en="Fictional data only. This page proposes a look; the app itself has not changed yet." data-ar="بيانات وهمية فقط. هذه الصفحة تقترح شكلا، ولم يتغير التطبيق بعد."></span></div>
+
+<header class="hero"><div>
+  <span class="label" data-en="Design direction" data-ar="اتجاه التصميم"></span>
+  <h1 data-en="One calm place for people, time, leave and pay." data-ar="مكان واحد هادئ للأفراد والوقت والإجازات والرواتب."></h1>
+  <p data-en="Warm neutrals, one confident colour, generous space and numbers that line up. Built for Arabic and English from the first line, light and dark." data-ar="ألوان محايدة دافئة ولون رئيسي واضح ومساحات مريحة وأرقام متراصة. مصمم للعربية والإنجليزية من البداية، فاتح وداكن."></p>
+  <div style="display:flex;gap:12px;margin-block-start:var(--s5);flex-wrap:wrap"><button class="btn p" data-en="Request leave" data-ar="طلب إجازة"></button><button class="btn" data-en="View payslip" data-ar="عرض قسيمة الراتب"></button></div>
+</div>
+<div class="card kpi-hero"><span class="label" data-en="This month" data-ar="هذا الشهر"></span>
+  <div class="grid g2" style="margin-block-start:var(--s3)">
+   <div class="kpi"><b class="mono">96.4%</b><small data-en="Attendance" data-ar="الحضور"></small><div class="delta"><span class="ltr">+1.2%</span></div></div>
+   <div class="kpi"><b class="mono">12</b><small data-en="Open approvals" data-ar="موافقات مفتوحة"></small></div></div>
+  <div class="chart" style="margin-block-start:var(--s4)" aria-hidden="true"><i style="height:48%"></i><i style="height:62%"></i><i style="height:55%"></i><i style="height:78%"></i><i style="height:70%"></i><i style="height:90%"></i><i style="height:84%"></i></div>
+</div></header>
+
+<section class="blk"><h2 data-en="Colour" data-ar="الألوان"></h2><p class="lead" data-en="Three palettes to choose from. B (Nile teal with warm sand) is recommended: it is distinct from the generic HR-software blue and purple, and it reads well in both languages. A keeps today's indigo, refined. Every text and button pair passes WCAG AA contrast in light and dark." data-ar="ثلاث لوحات للاختيار. الموصى بها ب (أخضر مزرق نيلي مع رمال دافئة): مميزة عن الأزرق والبنفسجي المعتادين في برامج الموارد البشرية وتقرأ جيدا بالعربية والإنجليزية. اللوحة أ تحافظ على النيلي الحالي بشكل مصقول. كل أزواج النص والأزرار تجتاز تباين WCAG AA في الفاتح والداكن."></p>
+<div class="grid g4" id="sws"></div></section>
+
+<section class="blk"><h2 data-en="Type" data-ar="الخط"></h2><p class="lead" data-en="Inter for Latin and IBM Plex Sans Arabic for Arabic, both open fonts (SIL OFL) served from this site. Tabular numbers for money and time." data-ar="Inter للاتينية وIBM Plex Sans Arabic للعربية، وكلاهما خط مفتوح (SIL OFL) يُقدم من الموقع نفسه. أرقام متراصة للمبالغ والوقت."></p>
+<div class="card type">
+ <div><h1 style="font-size:2.2rem" data-en="Page title" data-ar="عنوان الصفحة"></h1><small>32 / 700</small></div>
+ <div><h2 style="font-size:1.5rem" data-en="Section heading" data-ar="عنوان القسم"></h2><small>24 / 650</small></div>
+ <div><h3 style="font-size:1.1rem" data-en="Card heading" data-ar="عنوان البطاقة"></h3><small>17 / 600</small></div>
+ <div><span data-en="Body text for forms, tables and descriptions stays at a comfortable size." data-ar="نص المحتوى للنماذج والجداول والوصف بحجم مريح للقراءة."></span><small>15 / 400</small></div>
+ <div><span class="mono">EGP 18,450.75 · 08:30 → 17:05 · 2026-11-27</span><small data-en="Tabular numbers" data-ar="أرقام متراصة"></small></div>
+</div></section>
+
+<section class="blk"><h2 data-en="Controls" data-ar="عناصر التحكم"></h2><p class="lead" data-en="Clear focus rings, a visible error state with a message, and disabled states that say so." data-ar="حلقة تركيز واضحة وحالة خطأ مع رسالة، وحالات تعطيل واضحة."></p>
+<div class="grid g2"><div class="card"><div style="display:flex;gap:10px;flex-wrap:wrap">
+ <button class="btn p" data-en="Primary" data-ar="أساسي"></button><button class="btn" data-en="Secondary" data-ar="ثانوي"></button><button class="btn q" data-en="Quiet" data-ar="هادئ"></button><button class="btn d" data-en="Reject" data-ar="رفض"></button><button class="btn" disabled data-en="Disabled" data-ar="معطل"></button><button class="btn p sm" data-en="Small" data-ar="صغير"></button></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-block-start:var(--s4)"><span class="badge b-ok" data-en="Approved" data-ar="موافق عليه"></span><span class="badge b-warn" data-en="Pending" data-ar="قيد الانتظار"></span><span class="badge b-bad" data-en="Rejected" data-ar="مرفوض"></span><span class="badge b-info" data-en="In review" data-ar="قيد المراجعة"></span><span class="badge b-mute" data-en="Draft" data-ar="مسودة"></span></div></div>
+ <div class="card grid" style="gap:var(--s4)"><div class="field"><label data-en="Full name" data-ar="الاسم الكامل"></label><input class="in" value="Mona Fawzy" data-v-ar="منى فوزي"></div>
+ <div class="field"><label data-en="Start date" data-ar="تاريخ البدء"></label><input class="in err" value="2026-13-40" dir="ltr"><span class="hint err" data-en="Enter a valid date, for example 2026-12-01." data-ar="أدخل تاريخا صحيحا، مثل 2026-12-01."></span></div></div></div></section>
+
+<section class="blk"><h2 data-en="Data" data-ar="البيانات"></h2><p class="lead" data-en="Tables keep numbers aligned, a sticky header, a hover row and a status badge. Empty and loading states are designed, not blank." data-ar="الجداول تحافظ على محاذاة الأرقام ورأس ثابت وتمييز الصف عند المرور وشارة حالة. حالات الفراغ والتحميل مصممة وليست فارغة."></p>
+<div class="tw"><table class="t"><thead><tr><th data-en="Employee" data-ar="الموظف"></th><th data-en="Department" data-ar="القسم"></th><th data-en="Status" data-ar="الحالة"></th><th class="num" data-en="Net pay (EGP)" data-ar="صافي الراتب (ج.م)"></th></tr></thead><tbody>
+<tr><td><div class="who"><div class="ring" style="--p:92"><span>MF</span></div><div><b data-en="Mona Fawzy" data-ar="منى فوزي"></b><div class="hint" data-en="HR specialist" data-ar="أخصائي موارد بشرية"></div></div></div></td><td data-en="People" data-ar="الأفراد"></td><td><span class="badge b-ok" data-en="Active" data-ar="نشط"></span></td><td class="num"><span class="ltr">18,450.75</span></td></tr>
+<tr><td><div class="who"><div class="ring" style="--p:64"><span>KS</span></div><div><b data-en="Karim Saad" data-ar="كريم سعد"></b><div class="hint" data-en="Accountant" data-ar="محاسب"></div></div></div></td><td data-en="Finance" data-ar="المالية"></td><td><span class="badge b-warn" data-en="On leave" data-ar="في إجازة"></span></td><td class="num"><span class="ltr">14,200.00</span></td></tr></tbody></table></div>
+<div class="grid g2" style="margin-block-start:var(--s4)"><div class="card empty"><h3 data-en="No requests yet" data-ar="لا توجد طلبات بعد"></h3><p data-en="When someone asks for leave it will show up here." data-ar="عندما يطلب أحد إجازة سيظهر طلبه هنا."></p><button class="btn p sm" data-en="Request leave" data-ar="طلب إجازة"></button></div>
+<div class="card grid" style="gap:12px"><div class="sk" style="inline-size:40%"></div><div class="sk"></div><div class="sk" style="inline-size:80%"></div><div class="sk" style="inline-size:60%"></div></div></div></section>
+
+<section class="blk"><h2 data-en="Patterns" data-ar="الأنماط"></h2><p class="lead" data-en="A list and detail split for approvals, and the four alert kinds." data-ar="عرض قائمة وتفاصيل للموافقات، وأربعة أنواع من التنبيهات."></p>
+<div class="split"><div class="list"><div class="it" aria-current="true"><b data-en="Annual leave · 3 days" data-ar="إجازة سنوية · 3 أيام"></b><div class="hint" data-en="Mona Fawzy · 2 Dec" data-ar="منى فوزي · 2 ديسمبر"></div></div><div class="it"><b data-en="Advance · EGP 2,000" data-ar="سلفة · 2,000 ج.م"></b><div class="hint" data-en="Karim Saad · 28 Nov" data-ar="كريم سعد · 28 نوفمبر"></div></div></div>
+<div class="detail"><h3 data-en="Annual leave · 3 days" data-ar="إجازة سنوية · 3 أيام"></h3><p class="hint" data-en="2 to 4 December. Balance after approval: 11 days." data-ar="من 2 إلى 4 ديسمبر. الرصيد بعد الموافقة: 11 يوما."></p><div style="display:flex;gap:10px;margin-block-start:var(--s4)"><button class="btn p" data-en="Approve" data-ar="موافقة"></button><button class="btn d" data-en="Reject" data-ar="رفض"></button></div></div></div>
+<div class="grid g2" style="margin-block-start:var(--s4)"><div class="alert a-ok" data-en="Saved." data-ar="تم الحفظ."></div><div class="alert a-info" data-en="Payroll closes on the 25th." data-ar="يُغلق الرواتب يوم 25."></div><div class="alert a-warn" data-en="Two requests are waiting longer than 3 days." data-ar="طلبان ينتظران أكثر من 3 أيام."></div><div class="alert a-bad" data-en="Could not save. Check the highlighted fields." data-ar="تعذر الحفظ. راجع الحقول المحددة."></div></div></section>
+
+<section class="blk"><h2 data-en="App shell" data-ar="هيكل التطبيق"></h2><p class="lead" data-en="The sidebar takes the palette's deep tone; the content area stays light, or dark in dark mode." data-ar="القائمة الجانبية تأخذ اللون العميق للوحة، ومنطقة المحتوى تبقى فاتحة أو داكنة في الوضع الداكن."></p>
+<div class="shell"><aside><b style="color:#fff;padding:8px 12px">PeopleHub</b><a aria-current="page" data-en="Dashboard" data-ar="لوحة التحكم" href="#"></a><a href="#" data-en="Employees" data-ar="الموظفون"></a><a href="#" data-en="Attendance" data-ar="الحضور"></a><a href="#" data-en="Leave" data-ar="الإجازات"></a><a href="#" data-en="Payroll" data-ar="الرواتب"></a></aside>
+<main><h3 data-en="Good morning, Mona" data-ar="صباح الخير يا منى"></h3><div class="grid g3"><div class="card kpi"><b class="mono">148</b><small data-en="Employees" data-ar="الموظفون"></small></div><div class="card kpi"><b class="mono">7</b><small data-en="On leave today" data-ar="في إجازة اليوم"></small></div><div class="card kpi"><b class="mono">3</b><small data-en="Needs approval" data-ar="بانتظار الموافقة"></small></div></div></main></div></section>
+<footer data-en="D1 proposal. Fictional data. Fonts: Inter and IBM Plex Sans Arabic (SIL Open Font License). Licences in /fonts." data-ar="مقترح D1. بيانات وهمية. الخطوط: Inter وIBM Plex Sans Arabic (رخصة SIL المفتوحة). الرخص في /fonts."></footer>
+</div>
+<script>
+const R=document.documentElement,P=[["Primary","الأساسي","--primary"],["Primary soft","الأساسي الفاتح","--primary-soft"],["Accent","المميز","--accent"],["Sidebar","القائمة","--side"],["Background","الخلفية","--bg"],["Surface","السطح","--surface"],["Text","النص","--ink"],["Muted text","النص الثانوي","--ink2"]];
+function sw(){const ar=R.lang==="ar",s=getComputedStyle(R);document.getElementById("sws").innerHTML=P.map(p=>{const v=s.getPropertyValue(p[2]).trim();return `<div class="sw"><i style="background:${v}"></i><div><b>${ar?p[1]:p[0]}</b><span dir="ltr" class="ltr">${v}</span></div></div>`}).join("")}
+function tx(){const ar=R.lang==="ar";document.querySelectorAll("[data-en]").forEach(e=>e.textContent=ar?e.dataset.ar:e.dataset.en);document.querySelectorAll("[data-v-ar]").forEach(e=>{e.dataset.en??=e.value;e.value=ar?e.dataset.vAr:e.dataset.en});sw()}
+function seg(id,fn){const g=document.getElementById(id);g.onclick=e=>{const b=e.target.closest("button");if(!b)return;g.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));fn(b.dataset.v)}}
+seg("pal",v=>{R.dataset.palette=v;sw()});seg("thm",v=>{R.dataset.theme=v;setTimeout(sw,230)});seg("lng",v=>{R.lang=v;R.dir=v==="ar"?"rtl":"ltr";tx()});
+tx();
+</script></body></html>
