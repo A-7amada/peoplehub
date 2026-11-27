@@ -8,7 +8,7 @@ Reason codes: FREE = free and decision-free (or already approved), can be built 
 
 | Story | Name | Status | Evidence | Remaining and reason |
 |---|---|---|---|---|
-| US-PH1-001 | Tenant lifecycle | Partial | TenantProvisioner/TenantAdminService, /Platform UI, migration PlatformUsers; TenantProvisioningTests, PlatformAuthTests | FREE: audit entry with actor, time and reason for create/suspend/reactivate/archive (next unit). OWNER: retention and legal-hold policy for deletion (SEC-007); nothing is deleted today. |
+| US-PH1-001 | Tenant lifecycle | Partial | TenantProvisioner/TenantAdminService, /Platform UI, migration PlatformUsers; TenantProvisioningTests, PlatformAuthTests | Lifecycle audit DONE (unit 1, 2026-11-28): PlatformAuditLog records actor, UTC time, company and a required reason (3 to 500 chars) for create, suspend, reactivate and archive; shown in an audit trail on /Platform; platform-staff only; tests in TenantProvisioningTests. REMAINING: OWNER-type default: retention and legal-hold policy for deletion (SEC-007); nothing is deleted today. |
 | US-PH1-002 | Tenant data isolation | Partial | AppDbContext query filters + stamping; TenantAuditTests, TenantIsolationTests, MaintenanceIsolationTests; per-tenant unique indexes | FREE (approved, ADR-0023): stage 4 per-tenant settings cache, reset links per tenant, files and scheduler audit; stage 5 Postgres RLS. Postgres isolation not exercised yet. |
 | US-PH1-003 | Tenant-aware identity and authorization | Partial | tenant_id claim, per-tenant AppUser email, platform vs customer sign-in split; TenantIsolationTests, PlatformAuthTests | FREE: platform staff 2FA, reset flow per tenant. DEFERRED/OWNER: SSO (OIDC provider). |
 | US-PH1-004 | Tenant-specific configuration | Partial | Settings, workflows, leave types are tenant rows (TenantAuditTests same-key test); new tenants get their own roles, workflows, leave types | FREE (stage 4): SettingsService static cache is not tenant-keyed, holidays/shifts defaults per new tenant. |
@@ -70,7 +70,7 @@ Reason codes: FREE = free and decision-free (or already approved), can be built 
 | US-SUB-010 | Billing isolation | Not done | None | FREE with stage 6; tenant isolation tests exist for existing data. |
 
 ## Finish order for the free items (small pushed units)
-1. US-PH1-001 lifecycle audit with reason (next).
+1. US-PH1-001 lifecycle audit with reason: built 2026-11-28 (story stays Partial until the retention default is recorded). Next: ADR-0023 stages 4 and 5.
 2. ADR-0023 stage 4: per-tenant settings cache and tenant reset links; stage 5 Postgres RLS.
 3. ADR-0022 units 3+: decimal leave balances, then half-day/hourly, monthly accrual with proration, carry-forward and expiry at rollover (US-PH2-001, 002, 003).
 4. US-PH2-010 salary allowance bands and publication; US-PH3-008 draft/publish and version comparison; US-PH3-009 simulation; US-PH3-007 SLA escalation (target confirmation).

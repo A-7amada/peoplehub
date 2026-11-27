@@ -36,25 +36,27 @@ public class PlatformController(Loc loc, PlatformAuthService auth, TenantAdminSe
     public async Task<IActionResult> Index()
     {
         if (!IsStaff) return Forbid();
+        ViewBag.Audit = await tenants.AuditAsync();
         return View(await tenants.ListAsync());
     }
 
     [Authorize, HttpPost]
-    public async Task<IActionResult> Create(string name, string slug, string adminEmail, string adminPassword)
+    public async Task<IActionResult> Create(string name, string slug, string adminEmail, string adminPassword, string reason)
     {
         if (!IsStaff) return Forbid();
-        try { await tenants.CreateAsync(name, slug, adminEmail, adminPassword); TempData["ok"] = loc["msg.saved"]; }
+        try { await tenants.CreateAsync(name, slug, adminEmail, adminPassword, User.Identity?.Name ?? "", reason); TempData["ok"] = loc["msg.saved"]; }
         catch (DomainException e) { TempData["err"] = loc[e.Message]; }
         return RedirectToAction(nameof(Index));
     }
 
     [Authorize, HttpPost]
-    public async Task<IActionResult> SetStatus(int id, string to)
+    public async Task<IActionResult> SetStatus(int id, string to, string reason)
     {
         if (!IsStaff) return Forbid();
+        var who = User.Identity?.Name ?? "";
         try
         {
-            if (to == "Suspended") await tenants.SuspendAsync(id); else if (to == "Archived") await tenants.ArchiveAsync(id); else await tenants.ReactivateAsync(id);
+            if (to == "Suspended") await tenants.SuspendAsync(id, who, reason); else if (to == "Archived") await tenants.ArchiveAsync(id, who, reason); else await tenants.ReactivateAsync(id, who, reason);
             TempData["ok"] = loc["msg.saved"];
         }
         catch (DomainException e) { TempData["err"] = loc[e.Message]; }

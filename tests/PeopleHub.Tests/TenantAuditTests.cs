@@ -9,7 +9,7 @@ namespace PeopleHub.Tests;
 /// <summary>ADR-0023 stage 1: the isolation audit. Model-wide checks over every tenant-owned table, so a new table that forgets tenancy fails here.</summary>
 public class TenantAuditTests
 {
-    static readonly string[] NotOwned = [nameof(Tenant), nameof(ScheduledJobState), nameof(PlatformUser)];
+    static readonly string[] NotOwned = [nameof(Tenant), nameof(ScheduledJobState), nameof(PlatformUser), nameof(PlatformAuditLog)];
     static AppDbContext Ctx(SqliteConnection c, int tenant) =>
         new(new DbContextOptionsBuilder<AppDbContext>().UseSqlite(c).Options, new FixedTenantContext(tenant));
     static async Task<SqliteConnection> Shared()
