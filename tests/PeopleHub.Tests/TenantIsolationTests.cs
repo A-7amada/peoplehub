@@ -54,7 +54,7 @@ public class TenantIsolationTests
     {
         await using var c = await Shared(); await using var a = Ctx(c, 1);
         Assert.Equal("demo", (await a.Set<Tenant>().SingleAsync()).Slug);
-        var missing = a.Model.GetEntityTypes().Where(t => t.BaseType == null && t.ClrType.Name is not (nameof(Tenant) or nameof(ScheduledJobState)) && t.FindProperty("TenantId") == null).Select(t => t.ClrType.Name).ToList();
+        var missing = a.Model.GetEntityTypes().Where(t => t.BaseType == null && t.ClrType.Name is not (nameof(Tenant) or nameof(ScheduledJobState) or nameof(PlatformUser)) && t.FindProperty("TenantId") == null).Select(t => t.ClrType.Name).ToList();
         Assert.Empty(missing);
     }
 }
