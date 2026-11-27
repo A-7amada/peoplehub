@@ -1,0 +1,9 @@
+@{ Layout = "_PlatformLayout"; var ar = T.IsAr; ViewData["Title"] = ar ? "دخول إدارة المنصة" : "Platform sign-in"; }
+<div class="card" style="max-width:420px;margin:40px auto;padding:24px"><h1 style="font-size:1.5rem">@ViewData["Title"]</h1>
+  <p class="muted">@(ar ? "لموظفي المنصة فقط. لا يعرض هذا القسم بيانات أي شركة." : "For platform staff only. This area never shows any company's data.")</p>
+  @if (ViewBag.Error is string e) { <div class="flash err">@e</div> }
+  <form method="post" action="/Platform/Login" asp-antiforgery="true">
+    <div class="field"><label>@T["login.email"]</label><input type="email" name="email" required autofocus dir="ltr"></div>
+    <div class="field"><label>@T["login.password"]</label><input type="password" name="password" required dir="ltr"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">@T["login.submit"]</button>
+  </form></div>

@@ -14,7 +14,7 @@ public class AppDbContext : DbContext, IRepository
     public AppDbContext(DbContextOptions options, ITenantContext? tenant = null, IDomainEventDispatcher? events = null) : base(options) { this.tenant = tenant; this.events = events; }
     /// <summary>Read by the global query filter on every query (Ambient Context, ADR-0003). No context means the default tenant.</summary>
     protected int CurrentTenantId => tenant?.TenantId ?? TenantIds.Default;
-    static readonly string[] NotTenantOwned = [nameof(Tenant), nameof(ScheduledJobState)];
+    static readonly string[] NotTenantOwned = [nameof(Tenant), nameof(ScheduledJobState), nameof(PlatformUser)];
     void ApplyTenantFilter<T>(ModelBuilder b) where T : class =>
         b.Entity<T>().HasQueryFilter(e => EF.Property<int>(e, "TenantId") == CurrentTenantId);
 
@@ -192,6 +192,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<CompanyAsset>(); b.Entity<Employee>(); b.Entity<PayrollRun>(); b.Entity<EmployeeImportBatch>(); b.Entity<Role>(); b.Entity<RehireRequest>(); b.Entity<TotpRecoveryCode>(); b.Entity<EmployeeLetter>(); b.Entity<LeavePolicy>(); b.Entity<LeaveEntitlementTier>(); // registered before tenant columns are added
         b.Entity<Tenant>().HasData(new Tenant { Id = TenantIds.Default, Name = "Demo company", Slug = "demo" });
         b.Entity<Tenant>().HasIndex(x => x.Slug).IsUnique();
+        b.Entity<PlatformUser>().HasIndex(x => x.Email).IsUnique();
         // Shared database, TenantId on every customer table with a global query filter (ADR-0001, ADR-0002).
         foreach (var entity in b.Model.GetEntityTypes().Where(t => t.BaseType == null && !t.IsOwned() && !NotTenantOwned.Contains(t.ClrType.Name)).ToList())
         {

@@ -1,0 +1,23 @@
+@model List<Tenant>
+@{ Layout = "_PlatformLayout"; var ar = T.IsAr; ViewData["Title"] = ar ? "الشركات" : "Companies"; }
+<h1 style="font-size:1.5rem">@ViewData["Title"]</h1>
+<div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th>@(ar ? "الشركة" : "Company")</th><th>@(ar ? "الاسم المختصر" : "Short name")</th><th>@(ar ? "الحالة" : "Status")</th><th>@(ar ? "أنشئت" : "Created")</th><th></th></tr></thead><tbody>
+@foreach (var t in Model) {
+  <tr><td>@t.Id</td><td>@t.Name</td><td dir="ltr"><code>@t.Slug</code></td><td>@(ar ? (t.Status == "Active" ? "نشطة" : t.Status == "Suspended" ? "موقوفة" : "مؤرشفة") : t.Status)</td><td dir="ltr">@t.CreatedAt.ToString("yyyy-MM-dd")</td>
+  <td>@if (t.Id != 1) {
+    <div style="display:flex;gap:6px;justify-content:flex-end">
+    @if (t.Status != "Active") { <form method="post" action="/Platform/SetStatus" asp-antiforgery="true"><input type="hidden" name="id" value="@t.Id"><input type="hidden" name="to" value="Active"><button class="btn btn-sm">@(ar ? "إعادة التفعيل" : "Reactivate")</button></form> }
+    @if (t.Status == "Active") { <form method="post" action="/Platform/SetStatus" asp-antiforgery="true"><input type="hidden" name="id" value="@t.Id"><input type="hidden" name="to" value="Suspended"><button class="btn btn-sm">@(ar ? "إيقاف" : "Suspend")</button></form> }
+    @if (t.Status != "Archived") { <form method="post" action="/Platform/SetStatus" asp-antiforgery="true"><input type="hidden" name="id" value="@t.Id"><input type="hidden" name="to" value="Archived"><button class="btn btn-sm">@(ar ? "أرشفة" : "Archive")</button></form> }
+    </div> }</td></tr> }
+</tbody></table></div>
+<p class="faint small">@(ar ? "الشركة الافتراضية لا يمكن إيقافها. الشركة الموقوفة أو المؤرشفة لا يمكنها تسجيل الدخول وتنتهي جلساتها الحالية. لا يُحذف أي شيء." : "The default company cannot be suspended. A suspended or archived company cannot sign in and its current sessions end. Nothing is deleted.")</p>
+<div class="card" style="margin-top:22px;padding:20px"><h2 style="font-size:1.15rem">@(ar ? "شركة جديدة" : "New company")</h2>
+<form method="post" action="/Platform/Create" asp-antiforgery="true" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:end">
+  <div class="field"><label>@(ar ? "اسم الشركة" : "Company name")</label><input name="name" required maxlength="120"></div>
+  <div class="field"><label>@(ar ? "الاسم المختصر (للدخول)" : "Short name (used at sign-in)")</label><input name="slug" required dir="ltr" maxlength="31" placeholder="acme"></div>
+  <div class="field"><label>@(ar ? "بريد المسؤول" : "Administrator email")</label><input type="email" name="adminEmail" required dir="ltr"></div>
+  <div class="field"><label>@(ar ? "كلمة مرور مؤقتة" : "Temporary password")</label><input type="password" name="adminPassword" required dir="ltr" autocomplete="new-password"></div>
+  <button class="btn btn-primary">@(ar ? "إنشاء" : "Create")</button>
+</form>
+<p class="faint small">@(ar ? "تُنشأ الشركة بأدوارها وصلاحياتها ومسارات الموافقة وأنواع الإجازات الأساسية ومسؤول واحد، بدون أي موظفين أو بيانات تجريبية." : "The company starts with roles, permissions, approval workflows, the four basic leave types and one administrator. No employees and no demo data.")</p></div>

@@ -56,6 +56,7 @@ builder.Services.AddScoped<OperationsProjection>();
 builder.Services.AddScoped<PeopleHub.Application.Common.Tenancy.ITenantOverride>(sp => sp.GetRequiredService<HttpTenantContext>());
 builder.Services.AddScoped<PeopleHub.Application.Common.Tenancy.ITenantProvisioner, PeopleHub.Infrastructure.Persistence.TenantProvisioner>();
 builder.Services.AddScoped<PeopleHub.Infrastructure.Persistence.TenantAdminService>();
+builder.Services.AddScoped<PeopleHub.Infrastructure.Persistence.PlatformAuthService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<OrgService>();
 builder.Services.AddScoped<GrievanceIntake>();
@@ -110,6 +111,16 @@ builder.Services.AddControllersWithViews(o => { o.SuppressImplicitRequiredAttrib
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(o => { o.LoginPath = "/Account/Login"; o.AccessDeniedPath = "/Account/Denied"; o.Cookie.HttpOnly = true; o.Cookie.SameSite = SameSiteMode.Lax; o.Cookie.SecurePolicy = builder.Environment.IsDevelopment() ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
         o.Events.OnValidatePrincipal = async c => {
+            if (c.Principal?.FindFirst("platform")?.Value == "1")
+            {
+                // Platform staff: valid only for /Platform pages and sign-out, and only while the account is active with the same stamp.
+                var p = c.HttpContext.Request.Path;
+                var pdb = c.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var pu = int.TryParse(c.Principal.FindFirst("uid")?.Value, out var pid) ? await pdb.Set<PlatformUser>().AsNoTracking().FirstOrDefaultAsync(x => x.Id == pid && x.IsActive) : null;
+                var allowed = p.StartsWithSegments("/Platform") || p.StartsWithSegments("/Account/Logout") || p.StartsWithSegments("/Account/Lang") || p.StartsWithSegments("/css") || p.StartsWithSegments("/fonts") || p.StartsWithSegments("/favicon.ico");
+                if (pu == null || pu.SecurityStamp != c.Principal.FindFirst("stamp")?.Value || !allowed) c.RejectPrincipal();
+                return;
+            }
             var id = c.Principal?.FindFirst("uid")?.Value;
             if (int.TryParse(c.Principal?.FindFirst("tenant_id")?.Value, out var tid)) c.HttpContext.RequestServices.GetRequiredService<HttpTenantContext>().Override = tid;
             var db = c.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
@@ -155,6 +166,7 @@ using (var scope = app.Services.CreateScope())
     }
     var hrPass = app.Environment.IsDevelopment() ? "Admin123!" : app.Configuration["HR_SEED_PASSWORD"];
     await SeedData.InitializeAsync(db, hrPass, "Demo123!", scope.ServiceProvider.GetRequiredService<AppClock>().Today);
+    await PeopleHub.Infrastructure.Persistence.PlatformAuthService.SeedFirstAsync(db, app.Configuration["PLATFORM_ADMIN_EMAIL"], app.Configuration["PLATFORM_ADMIN_PASSWORD"]);
     await scope.ServiceProvider.GetRequiredService<SettingsService>().LoadAsync();
     await AdminService.ReloadCacheAsync(db);
     await scope.ServiceProvider.GetRequiredService<PerfService>().MigrateLegacyAsync();
