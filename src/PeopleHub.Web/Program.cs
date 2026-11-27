@@ -53,6 +53,9 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<IntegrationOutbox>();
 builder.Services.AddScoped<ScheduledJobs>();
 builder.Services.AddScoped<OperationsProjection>();
+builder.Services.AddScoped<PeopleHub.Application.Common.Tenancy.ITenantOverride>(sp => sp.GetRequiredService<HttpTenantContext>());
+builder.Services.AddScoped<PeopleHub.Application.Common.Tenancy.ITenantProvisioner, PeopleHub.Infrastructure.Persistence.TenantProvisioner>();
+builder.Services.AddScoped<PeopleHub.Infrastructure.Persistence.TenantAdminService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<OrgService>();
 builder.Services.AddScoped<GrievanceIntake>();
@@ -112,7 +115,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
             var db = c.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
             var u = int.TryParse(id, out var uid) ? await db.Set<AppUser>().AsNoTracking().FirstOrDefaultAsync(u => u.Id == uid && u.IsActive) : null;
             var sessions=c.HttpContext.RequestServices.GetRequiredService<SessionService>();
-            if (u == null || c.Principal?.FindFirst("stamp")?.Value != u.SecurityStamp || !await sessions.ValidAsync(u.Id,c.Principal?.FindFirst("sid")?.Value)) c.RejectPrincipal();
+            var tenantActive = await db.Set<Tenant>().AsNoTracking().AnyAsync(t => t.Id == (tid > 0 ? tid : 1) && t.Status == "Active");
+            if (u == null || !tenantActive || c.Principal?.FindFirst("stamp")?.Value != u.SecurityStamp || !await sessions.ValidAsync(u.Id,c.Principal?.FindFirst("sid")?.Value)) c.RejectPrincipal();
         }; o.ExpireTimeSpan = TimeSpan.FromHours(8); });
 builder.Services.Configure<RequestLocalizationOptions>(o =>
 {

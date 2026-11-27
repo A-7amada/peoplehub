@@ -121,19 +121,7 @@ public static class SeedData
         await db.SaveChangesAsync();
 
         // roles, permissions and approval cycles (all editable in the admin area)
-        string[] roleAr = ["مدير النظام", "مدير الموارد البشرية", "أخصائي موارد بشرية", "مسؤول الحضور", "مسؤول المرتبات", "مدير مالي", "مدير إدارة", "الإدارة العليا", "موظف"];
-        var roleEn = new[] { "System admin", "HR manager", "HR specialist", "Attendance officer", "Payroll officer", "Finance manager", "Department manager", "Top management", "Employee" };
-        for (var ri = 0; ri < Roles.All.Length; ri++) db.Add(new Role { Code = Roles.All[ri], Name = roleEn[ri], NameAr = roleAr[ri], IsSystem = true });
-        foreach (var (role, perms) in Perm.Defaults) foreach (var p in perms) db.Add(new RolePermission { RoleCode = role, Permission = p });
-        WorkflowDefinition Wf(string kind, string desc, params WorkflowStep[] steps) { var w = new WorkflowDefinition { Kind = kind, Description = desc }; db.Add(w); w.Steps = steps.ToList(); return w; }
-        var mgr = () => new WorkflowStep { Approver = ApproverType.DirectManager };
-        var hr = (decimal? t) => new WorkflowStep { Approver = ApproverType.Role, RoleCode = ApprovalStage.HR, Threshold = t };
-        var wfs = new[] { Wf("Leave", "Manager, then HR for leave longer than 2 days (unpaid leave always goes to HR)", mgr(), hr(2)),
-            Wf("Overtime", "Direct manager only", mgr()), Wf("Correction", "Manager, then HR", mgr(), hr(null)),
-            Wf("Advance", "HR, then finance", hr(null), new WorkflowStep { Approver = ApproverType.Role, RoleCode = Roles.FinanceManager }) };
-        await db.SaveChangesAsync();
-        foreach (var w in wfs) { var o = 1; foreach (var s in w.Steps) { s.WorkflowId = w.Id; s.Order = o++; db.Add(s); } }
-        await db.SaveChangesAsync();
+        await SeedAccessAndWorkflowsAsync(db);
 
         // users
         db.Add(new AppUser { Email = HrEmail, RoleList = $"{Roles.SystemAdmin},{Roles.HRManager}", EmployeeId = emps["PH-008"].Id,
@@ -323,5 +311,23 @@ public static class SeedData
         await seedTransaction.CommitAsync();
 
         DateTime NextWorkBack(DateTime d) { while (AttendanceCalculator.IsWeekend(d) || holidays.Contains(d.Date)) d = d.AddDays(-1); return d.Date; }
+    }
+
+    /// <summary>Roles, role permissions and the default approval cycles. Shared by the demo seed and by new-tenant provisioning (ADR-0023 stage 3). Writes to the tenant of the given context.</summary>
+    public static async Task SeedAccessAndWorkflowsAsync(AppDbContext db)
+    {
+        string[] roleAr = ["مدير النظام", "مدير الموارد البشرية", "أخصائي موارد بشرية", "مسؤول الحضور", "مسؤول المرتبات", "مدير مالي", "مدير إدارة", "الإدارة العليا", "موظف"];
+        var roleEn = new[] { "System admin", "HR manager", "HR specialist", "Attendance officer", "Payroll officer", "Finance manager", "Department manager", "Top management", "Employee" };
+        for (var ri = 0; ri < Roles.All.Length; ri++) db.Add(new Role { Code = Roles.All[ri], Name = roleEn[ri], NameAr = roleAr[ri], IsSystem = true });
+        foreach (var (role, perms) in Perm.Defaults) foreach (var p in perms) db.Add(new RolePermission { RoleCode = role, Permission = p });
+        WorkflowDefinition Wf(string kind, string desc, params WorkflowStep[] steps) { var w = new WorkflowDefinition { Kind = kind, Description = desc }; db.Add(w); w.Steps = steps.ToList(); return w; }
+        var mgr = () => new WorkflowStep { Approver = ApproverType.DirectManager };
+        var hr = (decimal? t) => new WorkflowStep { Approver = ApproverType.Role, RoleCode = ApprovalStage.HR, Threshold = t };
+        var wfs = new[] { Wf("Leave", "Manager, then HR for leave longer than 2 days (unpaid leave always goes to HR)", mgr(), hr(2)),
+            Wf("Overtime", "Direct manager only", mgr()), Wf("Correction", "Manager, then HR", mgr(), hr(null)),
+            Wf("Advance", "HR, then finance", hr(null), new WorkflowStep { Approver = ApproverType.Role, RoleCode = Roles.FinanceManager }) };
+        await db.SaveChangesAsync();
+        foreach (var w in wfs) { var o = 1; foreach (var s in w.Steps) { s.WorkflowId = w.Id; s.Order = o++; db.Add(s); } }
+        await db.SaveChangesAsync();
     }
 }

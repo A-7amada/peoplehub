@@ -3,7 +3,7 @@ namespace PeopleHub.Web.Services;
 
 /// <summary>Ambient Context for web requests (ADR-0003): reads the tenant from the signed-in user's claim.
 /// Until tenant claims are issued every session resolves to the default tenant.</summary>
-public sealed class HttpTenantContext(IHttpContextAccessor http) : ITenantContext
+public sealed class HttpTenantContext(IHttpContextAccessor http) : ITenantContext, ITenantOverride
 {
     /// <summary>Set before a user is signed in (login form company, second-factor ticket) and while a cookie is validated. Wins over the claim, which is not yet on HttpContext.User at those points.</summary>
     public int? Override { get; set; }
