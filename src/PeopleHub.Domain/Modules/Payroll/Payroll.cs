@@ -12,6 +12,9 @@ public class SalaryComponent
     public ComponentType Type { get; set; }
     /// <summary>Fixed components have a standing amount per employee; variable ones come from attendance, requests or manual entry.</summary>
     public bool IsFixed { get; set; } = true;
+    /// <summary>Optional allowance band (US-PH2-010): a structure amount for this component must lie inside [BandMin, BandMax]. Null means no limit on that side. Illustrative demo configuration.</summary>
+    public decimal? BandMin { get; set; }
+    public decimal? BandMax { get; set; }
 }
 
 public class EmployeeSalaryComponent

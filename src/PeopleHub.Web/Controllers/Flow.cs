@@ -175,8 +175,10 @@ public class BankReconciliationController(Loc loc,BankReconciliation svc,Payroll
 
 public class SalaryStructuresController(Loc loc,SalaryStructures svc,EmployeeService employees):BaseController(loc)
 {
- public async Task<IActionResult> Index(){try{ViewBag.Components=await employees.ComponentsAsync();ViewBag.History=await svc.HistoryAsync();return View(await svc.ListAsync());}catch(DomainException){return Forbidden();}}
+ public async Task<IActionResult> Index(){try{ViewBag.Components=await employees.ComponentsAsync();ViewBag.History=await svc.HistoryAsync();ViewBag.Published=await svc.PublicationsAsync();return View(await svc.ListAsync());}catch(DomainException){return Forbidden();}}
  [HttpPost,RequireStepUp]public Task<IActionResult> Create(string name,int grade,decimal basic,string componentAmounts,string reason,EmploymentType? category=null)=>Do(()=>svc.CreateAsync(name,grade,basic,componentAmounts,reason,category),"msg.saved",()=>RedirectToAction(nameof(Index)));
+ [HttpPost,RequireStepUp]public Task<IActionResult> Publish(int structureId)=>Do(()=>svc.PublishAsync(structureId),"msg.saved",()=>RedirectToAction(nameof(Index)));
+ [HttpPost,RequireStepUp]public Task<IActionResult> Band(int componentId,decimal? min,decimal? max,string reason)=>Do(()=>svc.SetBandAsync(componentId,min,max,reason),"msg.saved",()=>RedirectToAction(nameof(Index)));
  [HttpPost,RequireStepUp]public Task<IActionResult> Apply(int employeeId,int structureId,string reason)=>Do(()=>svc.ApplyAsync(employeeId,structureId,reason),"msg.saved",()=>RedirectToAction(nameof(Index)));
 }
 

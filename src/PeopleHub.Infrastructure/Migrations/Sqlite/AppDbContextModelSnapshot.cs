@@ -4852,6 +4852,12 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<double?>("BandMax")
+                        .HasColumnType("REAL");
+
+                    b.Property<double?>("BandMin")
+                        .HasColumnType("REAL");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -4993,6 +4999,47 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.HasIndex("TenantId");
 
                     b.ToTable("SalaryStructureApplication");
+                });
+
+            modelBuilder.Entity("PeopleHub.Domain.Entities.SalaryStructurePublication", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("StructureId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "StructureId")
+                        .IsUnique();
+
+                    b.ToTable("SalaryStructurePublication");
                 });
 
             modelBuilder.Entity("PeopleHub.Domain.Entities.ScheduledJobState", b =>

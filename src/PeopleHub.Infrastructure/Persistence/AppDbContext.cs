@@ -58,7 +58,7 @@ public class AppDbContext : DbContext, IRepository
 
     Task<int> SaveGuardedAsync(CancellationToken ct)
     {
-        if (ChangeTracker.Entries().Any(e => (e.Entity is EmployeeGrievanceAppeal or EmployeeGrievanceAppealDecision or EmployeeGrievanceResponse or EmployeeCaseFile or EmployeeCaseAccess or ApprovalVote or PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse or WorkflowRevision or PipProgress or ApprovalAssignment or ApprovalAction or TrainingCertificate or TrainingOutcome or RecruitmentEvent or CandidateOffer or CandidateOfferEvent or TrainingCertificateAlert or CompetencyApplication or BenefitPlan or BenefitEnrollment or BenefitCancellation or EmployeeCaseEvent or PayrollBankResult or ApprovalReminder or SalaryStructure or SalaryStructureApplication or PayrollAdjustment or PayrollAdjustmentEvent) && e.State is EntityState.Modified or EntityState.Deleted))
+        if (ChangeTracker.Entries().Any(e => (e.Entity is EmployeeGrievanceAppeal or EmployeeGrievanceAppealDecision or EmployeeGrievanceResponse or EmployeeCaseFile or EmployeeCaseAccess or ApprovalVote or PayrollCalculationSnapshot or LeaveTransaction or AuditLog or DevicePunch or AttendanceEvidence or AttendancePeriodLock or AssetMovement or PerformanceResponse or WorkflowRevision or PipProgress or ApprovalAssignment or ApprovalAction or TrainingCertificate or TrainingOutcome or RecruitmentEvent or CandidateOffer or CandidateOfferEvent or TrainingCertificateAlert or CompetencyApplication or BenefitPlan or BenefitEnrollment or BenefitCancellation or EmployeeCaseEvent or PayrollBankResult or ApprovalReminder or SalaryStructure or SalaryStructureApplication or SalaryStructurePublication or PayrollAdjustment or PayrollAdjustmentEvent) && e.State is EntityState.Modified or EntityState.Deleted))
             throw new InvalidOperationException("Append-only business evidence cannot be edited or deleted.");
         if(ChangeTracker.Entries<EmployeeCase>().Any(e=>e.State==EntityState.Deleted||e.State==EntityState.Modified&&e.Properties.Any(p=>p.IsModified&&p.Metadata.Name is not("ChangeStamp" or "Revision"))))throw new InvalidOperationException("Case source records cannot be edited or deleted.");
         if(ChangeTracker.Entries<EmployeeGrievance>().Any(e=>e.State==EntityState.Deleted||e.State==EntityState.Modified&&e.Properties.Any(p=>p.IsModified&&p.Metadata.Name is not("ChangeStamp" or "Revision"))))throw new InvalidOperationException("Grievance source records cannot be edited or deleted.");
@@ -119,7 +119,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<ApprovalVote>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.ParticipantEmployeeId}).IsUnique();
         b.Entity<ApprovalVote>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.ActorEmployeeId}).IsUnique();
         b.Entity<PayrollAdjustment>().HasIndex(x=>x.TargetRunId);b.Entity<PayrollAdjustmentEvent>().HasIndex(x=>new{x.AdjustmentId,x.Sequence}).IsUnique();
-        b.Entity<SalaryStructure>();b.Entity<SalaryStructureApplication>().HasIndex(x=>x.EmployeeId);
+        b.Entity<SalaryStructure>();b.Entity<SalaryStructurePublication>();b.Entity<SalaryStructureApplication>().HasIndex(x=>x.EmployeeId);
         b.Entity<ApprovalReminder>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.UserId,x.OnDate}).IsUnique();
         b.Entity<PayrollBankResult>().HasIndex(x=>new{x.LineId,x.Version}).IsUnique();
         b.Entity<EmployeeCaseFile>().HasIndex(x=>x.Token).IsUnique();
@@ -207,6 +207,7 @@ public class AppDbContext : DbContext, IRepository
         }
         // Natural keys are unique per tenant, not globally (ADR-0002). Logins stay globally unique by email.
         b.Entity<CompanyAsset>().HasIndex("TenantId", nameof(CompanyAsset.Tag)).IsUnique();
+        b.Entity<SalaryStructurePublication>().HasIndex("TenantId", nameof(SalaryStructurePublication.StructureId)).IsUnique();
         b.Entity<Employee>().HasIndex("TenantId", nameof(Employee.Code)).IsUnique();
         b.Entity<Employee>().HasIndex("TenantId", nameof(Employee.Email)).IsUnique();
         b.Entity<PayrollRun>().HasIndex("TenantId", nameof(PayrollRun.Year), nameof(PayrollRun.Month)).IsUnique();

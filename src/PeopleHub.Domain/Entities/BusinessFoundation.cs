@@ -323,6 +323,11 @@ public class SalaryStructure
 {
  public int Id {get;set;}public string Name {get;set;}="";public int JobGrade {get;set;}public EmploymentType? EmploymentCategory {get;set;}public decimal Basic {get;set;}public string ComponentsJson {get;set;}="{}";public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
 }
+/// <summary>Append-only publication record (US-PH2-010). A structure is Published once a row exists; structures older than this table were back-filled by the migration. Keeps SalaryStructure itself immutable.</summary>
+public class SalaryStructurePublication
+{
+ public int Id {get;set;}public int StructureId {get;set;}public string Sha256 {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
+}
 public class SalaryStructureApplication
 {
  public int Id {get;set;}public int EmployeeId {get;set;}public int StructureId {get;set;}public string BeforeJson {get;set;}="";public string AfterJson {get;set;}="";public string Sha256 {get;set;}="";public string Reason {get;set;}="";public string Actor {get;set;}="";public DateTime At {get;set;}
