@@ -24,6 +24,8 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         await repo.AtomicAsync(async()=>result=await BalancesCoreAsync(employeeId,year));
         return result;
     }
+    /// <summary>Date accrual is measured at: today inside the balance year, year end for past years, 1 January for future years.</summary>
+    private DateTime AccrualDate(int year) => year < clock.Today.Year ? new DateTime(year, 12, 31) : year > clock.Today.Year ? new DateTime(year, 1, 1) : clock.Today;
     private async Task<List<LeaveBalance>> BalancesCoreAsync(int employeeId, int year)
     {
         if (!await scope.CanSeeAsync(employeeId)) throw new DomainException("err.forbidden");
@@ -43,6 +45,8 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
             var nb = p != null ? LeaveBalance.Rollover(p, t) : new LeaveBalance { EmployeeId = employeeId, LeaveTypeId = t.Id, Year = year, Entitled = t.DefaultDays };
             var policyDays = LeavePolicyRules.OpeningDays(policies.FirstOrDefault(x => x.LeaveTypeId == t.Id), allTiers.Where(x => x.LeaveTypeId == t.Id).ToList(), t.DefaultDays, employee.HireDate, employee.BirthDate, year);
             if (policyDays != null) nb.Entitled = policyDays.Value;
+            var accruedOpen = LeavePolicyRules.MonthlyAccrued(policies.FirstOrDefault(x => x.LeaveTypeId == t.Id), allTiers.Where(x => x.LeaveTypeId == t.Id).ToList(), t.DefaultDays, employee.HireDate, employee.BirthDate, AccrualDate(year));
+            if (accruedOpen != null) nb.Entitled = accruedOpen.Value;
             nb.LeaveType = t;
             repo.Add(nb); existing.Add(nb); created = true; addedTypes.Add(t.Id);
             Entry(employeeId,t.Id,year,nb.Remaining,"Opening","Annual entitlement and carry-forward");
@@ -50,6 +54,17 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         foreach (var b in existing)
             if (!await repo.AnyAsync(repo.Query<LeaveTransaction>().Where(x=>x.EmployeeId==employeeId && x.LeaveTypeId==b.LeaveTypeId && x.Year==year)) && !addedTypes.Contains(b.LeaveTypeId))
             {Entry(employeeId,b.LeaveTypeId,year,b.Remaining,"Baseline","Pre-upgrade balance; earlier transactions unknown");created=true;}
+        // ADR-0022 unit 3c: monthly accrual only ever adds; carry-forward expiry removes the unused carried part once. Both are idempotent and ledgered.
+        foreach (var b in existing)
+        {
+            var pol = policies.FirstOrDefault(x => x.LeaveTypeId == b.LeaveTypeId);
+            var tiers = allTiers.Where(x => x.LeaveTypeId == b.LeaveTypeId).ToList();
+            var defDays = types.First(x => x.Id == b.LeaveTypeId).DefaultDays;
+            var acc = LeavePolicyRules.MonthlyAccrued(pol, tiers, defDays, employee.HireDate, employee.BirthDate, AccrualDate(year));
+            if (acc != null && acc.Value > b.Entitled) { var d = acc.Value - b.Entitled; b.Entitled = acc.Value; Entry(employeeId, b.LeaveTypeId, year, d, "Accrual", "Monthly accrual (illustrative policy, not legally validated)"); created = true; }
+            var lapse = LeavePolicyRules.ExpiredCarry(pol, b.CarriedOver, b.Used, year, clock.Today);
+            if (lapse > 0) { b.CarriedOver -= lapse; Entry(employeeId, b.LeaveTypeId, year, -lapse, "Expiry", "Unused carried-over days lapsed (illustrative policy, not legally validated)"); created = true; }
+        }
         if (created) {employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");await repo.SaveAsync();}
         return existing.OrderBy(b => b.LeaveTypeId).ToList();
     }

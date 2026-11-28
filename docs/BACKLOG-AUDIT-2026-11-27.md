@@ -83,3 +83,4 @@ Subscriptions and billing (US-SUB-001 to 010) wait for pricing and plan decision
 - 2026-11-28 unit 1: US-PH1-001 lifecycle audit built (story stays Partial until the retention default is recorded).
 - 2026-11-28 unit 2: ADR-0023 stage 4 built (per-company settings cache, company-scoped reset links). Stage 5 RLS script written but unapplied and unverified (see ADR-0023).
 - 2026-11-28 unit 3: ADR-0022 units 3a (decimal balances) and 3b (half-day and hourly requests) built. US-PH2-001/002/003 stay Partial: monthly accrual in balances, carry-forward expiry and payroll proration remain.
+- 2026-11-28 unit 3c: monthly accrual into balances and carry-forward expiry built (ledgered, idempotent, tests LeaveAccrualExpiryTests and LeaveAccrualServiceTests). Payroll proration for part days still open (AbsentDays is an integer). US-PH2-001/002/003 stay Partial.

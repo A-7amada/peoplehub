@@ -60,6 +60,23 @@ public static class LeavePolicyRules
         return r.Eligible ? (int)Math.Floor(r.GrantThisYear) : 0;
     }
 
+    /// <summary>ADR-0022 unit 3c. Entitlement accrued by asOf under a Monthly policy (entitlement / 12 per full month, rounded down to a half day, capped at the year grant). Null when the policy is off, Annual, or the employee is not yet eligible. Illustrative default, not legally validated.</summary>
+    public static decimal? MonthlyAccrued(LeavePolicy? policy, IReadOnlyList<LeaveEntitlementTier> tiers, int defaultDays, DateTime hire, DateTime? birth, DateTime asOf)
+    {
+        if (policy is not { Enabled: true } || policy.Accrual != "Monthly") return null;
+        if (hire.Year > asOf.Year) return 0;
+        var r = Calculate(policy, tiers, defaultDays, hire, birth, asOf);
+        return r.Eligible ? r.AccruedToDate : 0;
+    }
+
+    /// <summary>Carried days lapse CarryExpiryMonths after the balance year starts (0 = never). Used days consume carried days first, so the lapsing amount is the carried part not yet used. Returns the days to remove from CarriedOver, 0 when nothing lapses.</summary>
+    public static decimal ExpiredCarry(LeavePolicy? policy, decimal carriedOver, decimal used, int year, DateTime asOf)
+    {
+        if (policy is not { Enabled: true } || policy.CarryExpiryMonths <= 0 || carriedOver <= 0) return 0;
+        if (asOf.Date < new DateTime(year, 1, 1).AddMonths(policy.CarryExpiryMonths)) return 0;
+        return Math.Max(0, carriedOver - Math.Max(0, used));
+    }
+
     /// <summary>Parses tier lines "serviceYears,age,days" (age may be empty). Throws a DomainException on a bad line.</summary>
     public static List<(int Years, int? Age, int Days)> ParseTiers(string? text)
     {
