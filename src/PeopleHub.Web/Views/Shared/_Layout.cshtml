@@ -59,6 +59,7 @@ else {
       @if (Can(Perm.AdmFlows)) { <a class="@On("Admin", "Workflows")" href="/Admin/Workflows">@Ui.Icon("inbox") @T["nav.workflows"]</a> }
     }
     @if(Can(Perm.AdmSettings)){<a href="/Diagnostics">@Ui.Icon("chart") @(T.IsAr?"تشخيص الخدمة":"Service diagnostics")</a>}
+    @if(Can(Perm.AdmSettings)){<a href="/Integrations">@Ui.Icon("shield") @(T.IsAr?"التكاملات":"Integrations")</a>}
   </nav>
   <div class="side-foot"><span class="demo-pill">@Ui.Icon("info", 14) @T["demo.pill"]</span><div style="margin-top:8px">@T["demo.fictional"]</div></div>
 </aside>

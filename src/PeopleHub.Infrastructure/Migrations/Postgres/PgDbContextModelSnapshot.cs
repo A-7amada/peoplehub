@@ -3162,6 +3162,73 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("HrFieldDefinition");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.IntegrationEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("AuthMethod")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CredentialRef")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CredentialRotatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("OwnerName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SupportedVersion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("IntegrationEntry");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.IntegrationEvent", b =>
                 {
                     b.Property<int>("Id")

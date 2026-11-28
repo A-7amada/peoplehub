@@ -66,7 +66,7 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 
 | Story | Class | Evidence | Blocker type |
 |---|---|---|---|
-| US-PH3-001 Integration catalog and administration | Gap | No integration registry. Only email outbox `[ARC-007]` Partial. | Hosting, contracts |
+| US-PH3-001 Integration catalog and administration | Partial | Registry page /Integrations (AdmSettings): owner, purpose, version, auth method, status, credential reference label, rotation record, enable/disable, tenant-scoped, audited. No secret stored. Missing: a real approved secrets store, platform-level entries, rotation of real credentials. | Secrets store (spend), contracts |
 | US-PH3-002 Integration execution and reconciliation | Partial | Email outbox with retry; bank-result reconciliation is manual evidence `[PAY-010]`. No generic outbox, idempotent adapters or reconciliation runs. | Contracts, credentials |
 | US-PH3-003 Enterprise identity integration | Gap | `[ENT-004]` Open. No OIDC or SAML. | Owner decision: provider |
 | US-PH3-004 Finance and accounting integration | Partial | Cost-centre journal planning projection and CSV `[PAY-011]`; no account mappings or posting. | Owner decision: chart of accounts, system |

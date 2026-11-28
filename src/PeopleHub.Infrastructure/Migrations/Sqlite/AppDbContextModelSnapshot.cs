@@ -3033,6 +3033,71 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("HrFieldDefinition");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.IntegrationEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Actor")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AuthMethod")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CredentialRef")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CredentialRotatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OwnerName")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Purpose")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SupportedVersion")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.HasIndex("TenantId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("IntegrationEntry");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.IntegrationEvent", b =>
                 {
                     b.Property<int>("Id")
