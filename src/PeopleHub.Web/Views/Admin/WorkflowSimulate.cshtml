@@ -1,0 +1,20 @@
+@using PeopleHub.Application.Modules.Requests
+@model WorkflowService.Simulation?
+@{ ViewData["Title"] = T.IsAr ? "محاكاة مسار الاعتماد" : "Workflow simulation"; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub">@(T.IsAr ? "معاينة المسار الذي سيسلكه طلب افتراضي. لا ينشئ طلبا ولا إشعارا." : "Preview the route a hypothetical request would take. Creates no request or notification.")</div></div><a class="btn" href="/Admin/Workflows">@T["nav.workflows"]</a></div>
+<div class="card"><div class="card-b">
+<form method="get" action="/Admin/WorkflowSimulate" class="form-grid">
+ <div class="field"><label>@T["common.type"]</label><select name="kind">@foreach (var k in WorkflowService.Kinds) { <option value="@k" selected="@(k == (string)ViewBag.Kind)">@T["req.kind." + k]</option> }</select></div>
+ <div class="field"><label>@(T.IsAr ? "رمز الموظف" : "Employee code")</label><input name="code" maxlength="40" value="@ViewBag.Code" required></div>
+ <div class="field"><label>@(T.IsAr ? "الحجم (أيام، ساعات أو مبلغ)" : "Size (days, hours or amount)")</label><input type="number" name="size" min="0" step="0.01" value="@ViewBag.Size"></div>
+ <div class="field"><label class="check"><input type="checkbox" name="escalate" value="true" checked="@((bool)ViewBag.Escalate)"> @(T.IsAr ? "تصعيد دائم (مثل الإجازة بدون راتب)" : "Always escalate (for example unpaid leave)")</label></div>
+ <div><button class="btn btn-primary">@(T.IsAr ? "محاكاة" : "Simulate")</button></div>
+</form>
+@if (ViewBag.Error != null) { <p class="flash">@ViewBag.Error</p> }
+@if (Model != null) {
+ <h3 style="margin-top:18px">@(T.IsAr ? "المسار المتوقع" : "Expected route")</h3>
+ <ol>@foreach (var r in Model.Route) { <li dir="ltr">@r</li> }</ol>
+ @if (Model.AutoApproved.Count > 0) { <p class="faint small">@(T.IsAr ? "خطوات يعتمدها النظام تلقائيا لغياب المعتمد: " : "Steps the system would auto-approve (no eligible approver): ") <bdi dir="ltr">@string.Join(", ", Model.AutoApproved)</bdi></p> }
+ @if (Model.Blocked.Count > 0) { <p class="flash">@(T.IsAr ? "سيرفض التقديم لأن قائمة المعتمدين لا تكفي في: " : "Submission would be blocked: not enough approvers for ") <bdi dir="ltr">@string.Join(", ", Model.Blocked)</bdi></p> }
+}
+</div></div>

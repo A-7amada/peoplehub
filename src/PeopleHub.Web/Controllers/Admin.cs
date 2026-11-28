@@ -105,6 +105,18 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
         ViewBag.RequiredComments=await flows.RequiredApprovalCommentsAsync();ViewBag.ReminderHours=await flows.ReminderHoursAsync();
         ViewBag.Revisions=await flows.RevisionsAsync();return View(await flows.ListAsync());
     }
+    [RequirePerm(Perm.AdmFlows)]
+    public async Task<IActionResult> WorkflowCompare(string left,string right)
+    {
+        try{var r=await flows.CompareAsync(left??"",right??"");ViewBag.Left=r.Left;ViewBag.Right=r.Right;return View(r.Changes);}catch(DomainException){return Forbidden();}
+    }
+    [RequirePerm(Perm.AdmFlows)]
+    public async Task<IActionResult> WorkflowSimulate(string? kind,string? code,decimal size=0,bool escalate=false)
+    {
+        WorkflowService.Simulation? sim=null;string? error=null;
+        if(!string.IsNullOrWhiteSpace(code)){try{sim=await flows.SimulateAsync(kind??"Leave",code,size,escalate);}catch(DomainException ex){error=loc[ex.Message];}}
+        ViewBag.Error=error;ViewBag.Kind=kind??"Leave";ViewBag.Code=code;ViewBag.Size=size;ViewBag.Escalate=escalate;return View(sim);
+    }
 
     [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> ReminderPolicy(string kind,int hours)=>Do(()=>flows.SetReminderHoursAsync(kind,hours),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
     [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]

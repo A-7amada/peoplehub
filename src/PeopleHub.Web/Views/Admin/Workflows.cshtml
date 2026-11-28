@@ -1,6 +1,6 @@
 @model List<WorkflowDefinition>
 @{ ViewData["Title"] = T["nav.workflows"]; var roles = (List<Role>)ViewBag.Roles; }
-<div class="page-head"><div><h1>@T["nav.workflows"]</h1><div class="sub">@T["wf.sub"]</div></div></div>
+<div class="page-head"><div><h1>@T["nav.workflows"]</h1><div class="sub">@T["wf.sub"]</div></div><a class="btn" href="/Admin/WorkflowSimulate">@(T.IsAr?"محاكاة مسار":"Simulate a route")</a></div>
 <div class="grid g2">
 @foreach (var w in Model) {
 <div class="card"><div class="card-h"><h2>@T["req.kind." + w.Kind]</h2><span class="faint small">@T["wf.desc." + w.Kind]</span></div><div class="card-b">
@@ -25,3 +25,8 @@
 <div class="card" style="margin-top:18px"><div class="card-b faint small">@T["wf.note"]</div></div>
 
 <div class="card" style="margin-top:18px"><div class="card-h"><h2>@(T.IsAr?"إصدارات المسارات المستخدمة":"Observed workflow revisions")</h2></div><div class="card-b"><p class="muted">@(T.IsAr?"يحفظ كل طلب جديد بصمة تعريف المسار كما لوحظ عند إنشائه، إضافة إلى مساره الفعلي. التعديلات اللاحقة لا تعيد كتابة الطلبات القائمة. لا تختلق إصدارات للطلبات القديمة، وهذه ليست آلية مسودة ونشر منفصلة.":"New requests retain a hash of the definition observed at creation plus their resolved route. Later edits do not rewrite existing requests. Older requests have no invented revision. This is not a separate draft/publish workflow.")</p><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@T["common.type"]</th><th>@(T.IsAr?"لوحظ (UTC)":"Observed (UTC)")</th><th>SHA-256</th><th>@(T.IsAr?"التعريف المحفوظ":"Retained definition")</th></tr></thead><tbody>@foreach(var r in (List<WorkflowRevision>)ViewBag.Revisions){<tr><td>@r.Kind</td><td dir="ltr">@r.ObservedAt.ToString("yyyy-MM-dd HH:mm")</td><td><code title="@r.Hash">@r.Hash[..12]</code></td><td><details><summary>@(T.IsAr?"عرض":"View")</summary><pre dir="ltr" style="max-width:500px;white-space:pre-wrap;overflow-wrap:anywhere">@r.DefinitionJson</pre></details></td></tr>}</tbody></table></div></div></div>
+<div class="card" style="margin-top:18px"><div class="card-h"><h2>@(T.IsAr?"مقارنة إصدارين":"Compare two versions")</h2></div><div class="card-b"><form method="get" action="/Admin/WorkflowCompare" class="form-grid">
+ @{ var revs=(List<WorkflowRevision>)ViewBag.Revisions; }
+ <div class="field"><label>@(T.IsAr?"من":"From")</label><select name="left">@foreach(var r in revs){<option value="@r.Hash">@r.Kind @r.Hash[..12] · @r.ObservedAt.ToString("yyyy-MM-dd")</option>}@foreach(var w in Model){<option value="live:@w.Kind">@(T.IsAr?"الحالي: ":"Current: ")@w.Kind</option>}</select></div>
+ <div class="field"><label>@(T.IsAr?"إلى":"To")</label><select name="right">@foreach(var w in Model){<option value="live:@w.Kind">@(T.IsAr?"الحالي: ":"Current: ")@w.Kind</option>}@foreach(var r in revs){<option value="@r.Hash">@r.Kind @r.Hash[..12] · @r.ObservedAt.ToString("yyyy-MM-dd")</option>}</select></div>
+ <div><button class="btn">@(T.IsAr?"قارن":"Compare")</button></div></form></div></div>

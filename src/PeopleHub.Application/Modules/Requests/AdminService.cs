@@ -67,6 +67,80 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
         foreach(var token in request.AutoApproved)repo.Add(new ApprovalAction{Kind=kind,RequestId=request.Id,Actor="system",Action="AutoApproved:"+token,At=DateTime.UtcNow});
         request.AutoApproved.Clear();
     }
+    public record StepView(int Order,string Approver,string? Role,decimal? Threshold,string Rule,int? RequiredCount);
+    public record Change(string Kind,string Text);
+    /// <summary>Pure comparison of two retained workflow definitions (US-PH3-008 version comparison). Steps are matched by position in order.</summary>
+    public static List<Change> Compare(string jsonA,string jsonB)
+    {
+        static List<StepView> Parse(string json)
+        {
+            using var d=JsonDocument.Parse(json);var list=new List<StepView>();
+            if(!d.RootElement.TryGetProperty("Steps",out var steps))return list;
+            foreach(var x in steps.EnumerateArray())
+            {
+                string Str(string n)=>x.TryGetProperty(n,out var v)&&v.ValueKind!=JsonValueKind.Null?(v.ValueKind==JsonValueKind.Number?v.GetRawText():v.GetString()??""):"";
+                decimal? th=x.TryGetProperty("Threshold",out var t)&&t.ValueKind==JsonValueKind.Number?t.GetDecimal():null;
+                int? rc=x.TryGetProperty("RequiredCount",out var r)&&r.ValueKind==JsonValueKind.Number?r.GetInt32():null;
+                list.Add(new(x.TryGetProperty("Order",out var o)?o.GetInt32():0,Str("Approver"),x.TryGetProperty("RoleCode",out var rl)&&rl.ValueKind==JsonValueKind.String?rl.GetString():null,th,Str("Rule"),rc));
+            }
+            return list.OrderBy(x=>x.Order).ToList();
+        }
+        var a=Parse(jsonA);var b=Parse(jsonB);var changes=new List<Change>();
+        string Label(StepView v)=>$"{v.Approver}{(v.Role!=null?"["+v.Role+"]":"")}{(v.Threshold!=null?" >"+v.Threshold.Value.ToString("0.##",System.Globalization.CultureInfo.InvariantCulture):"")} rule={v.Rule}{(v.RequiredCount!=null?" x"+v.RequiredCount:"")}";
+        for(var i=0;i<Math.Max(a.Count,b.Count);i++)
+        {
+            if(i>=a.Count)changes.Add(new("Added",$"Step {i+1}: {Label(b[i])}"));
+            else if(i>=b.Count)changes.Add(new("Removed",$"Step {i+1}: {Label(a[i])}"));
+            else if(Label(a[i])!=Label(b[i]))changes.Add(new("Changed",$"Step {i+1}: {Label(a[i])}  ->  {Label(b[i])}"));
+        }
+        return changes;
+    }
+    public async Task<(string Left,string Right,List<Change> Changes)> CompareAsync(string leftHash,string rightHash)
+    {
+        Require();
+        async Task<(string Name,string Json)> Load(string h)
+        {
+            if(h.StartsWith("live:"))
+            {
+                var kind=h[5..];if(!Kinds.Contains(kind))throw new DomainException("err.required");
+                var steps=(await ListAsync()).FirstOrDefault(x=>x.Kind==kind)?.Steps??[];
+                return ("Current "+kind,JsonSerializer.Serialize(new{Kind=kind,Steps=steps.OrderBy(x=>x.Order).Select(x=>new{x.Order,x.Approver,x.RoleCode,x.Threshold,x.Rule,x.RequiredCount})}));
+            }
+            var r=await repo.FirstOrDefaultAsync(repo.Query<WorkflowRevision>().Where(x=>x.Hash==h))??throw new DomainException("err.notFound");
+            return (r.Kind+" "+h[..Math.Min(12,h.Length)],r.DefinitionJson);
+        }
+        var l=await Load(leftHash);var rr=await Load(rightHash);
+        return (l.Name,rr.Name,Compare(l.Json,rr.Json));
+    }
+    public record Simulation(string Kind,string EmployeeCode,decimal Size,bool Escalated,List<string> Route,List<string> AutoApproved,List<string> Blocked);
+    /// <summary>What-if route preview (US-PH3-009). Read-only: creates no request, vote, notification or revision.</summary>
+    public async Task<Simulation> SimulateAsync(string kind,string employeeCode,decimal size,bool alwaysEscalate)
+    {
+        Require();if(!Kinds.Contains(kind)||size<0||size>100000000||string.IsNullOrWhiteSpace(employeeCode)||employeeCode.Length>40)throw new DomainException("err.required");
+        var e=await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x=>x.Code==employeeCode.Trim()))??throw new DomainException("err.notFound");
+        var steps=(await ListAsync()).FirstOrDefault(x=>x.Kind==kind)?.Steps??[];
+        var all=await repo.ToListAsync(repo.Query<Employee>());
+        var active=(await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive&&u.EmployeeId!=null).Select(u=>u.EmployeeId!.Value))).ToHashSet();
+        var working=all.Where(x=>x.IsWorking).Select(x=>x.Id).ToHashSet();
+        var auto=new List<string>();
+        var route=RoutePlanner.Build(steps,e,size,alwaysEscalate,all.ToDictionary(x=>x.Id,x=>x.ManagerId),id=>working.Contains(id)&&active.Contains(id),auto);
+        var users=await repo.ToListAsync(repo.Query<AppUser>().Where(u=>u.IsActive));var blocked=new List<string>();var labels=new List<string>();
+        foreach(var token in route.Split(','))
+        {
+            var step=steps.FirstOrDefault(x=>x.Token==token);
+            if(step!=null&&step.Rule!=ApprovalRule.AnyRole)
+            {
+                var roles=(step.RoleCode??"").Split('|');
+                var roster=users.Where(u=>u.EmployeeId!=null&&u.EmployeeId!=e.Id&&u.RoleArray.Intersect(roles).Any()).Select(u=>u.EmployeeId!.Value).Distinct().Where(id=>working.Contains(id)).Count();
+                var need=step.Rule==ApprovalRule.All?roster:step.Rule==ApprovalRule.CapturedAny?1:step.RequiredCount??0;
+                labels.Add($"{token} ({step.Rule}: {need} of {roster})");
+                if(roster==0||need<1||need>roster)blocked.Add(token);
+            }
+            else labels.Add(token);
+        }
+        audit.Log("Simulate","Workflow",kind,"What-if route preview; no request created");
+        return new(kind,e.Code,size,alwaysEscalate,labels,auto,blocked);
+    }
     public Task<List<WorkflowRevision>> RevisionsAsync(){Require();return repo.ToListAsync(repo.Query<WorkflowRevision>().OrderByDescending(x=>x.ObservedAt).Take(100));}
 
     public async Task<HashSet<string>> RequiredApprovalCommentsAsync() => (await repo.ToListAsync(repo.Query<AppSetting>().Where(x=>x.Key.StartsWith("Workflow.ApprovalComment.") && x.Value=="true"))).Select(x=>x.Key["Workflow.ApprovalComment.".Length..]).Where(Kinds.Contains).ToHashSet();

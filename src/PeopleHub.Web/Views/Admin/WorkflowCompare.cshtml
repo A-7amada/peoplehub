@@ -1,0 +1,11 @@
+@using PeopleHub.Application.Modules.Requests
+@model List<WorkflowService.Change>
+@{ ViewData["Title"] = T.IsAr ? "مقارنة إصدارات المسار" : "Compare workflow versions"; }
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><div class="sub"><bdi dir="ltr">@ViewBag.Left</bdi> &rarr; <bdi dir="ltr">@ViewBag.Right</bdi></div></div><a class="btn" href="/Admin/Workflows">@T["nav.workflows"]</a></div>
+<div class="card"><div class="card-b">
+@if (Model.Count == 0) { <p class="muted">@(T.IsAr ? "لا فروق في الخطوات بين الإصدارين." : "No step differences between the two versions.")</p> }
+else { <table class="tbl"><thead><tr><th>@(T.IsAr ? "التغيير" : "Change")</th><th>@(T.IsAr ? "التفاصيل" : "Detail")</th></tr></thead><tbody>
+@foreach (var c in Model) { <tr><td><span class="badge">@(T.IsAr ? (c.Kind == "Added" ? "أضيفت" : c.Kind == "Removed" ? "حذفت" : "تغيرت") : c.Kind)</span></td><td dir="ltr">@c.Text</td></tr> }
+</tbody></table> }
+<p class="faint small">@(T.IsAr ? "المقارنة للقراءة فقط. تقارن خطوات المسار حسب ترتيبها." : "Read-only comparison. Steps are matched by position in the order.")</p>
+</div></div>
