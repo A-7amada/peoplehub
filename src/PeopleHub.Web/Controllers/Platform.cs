@@ -30,13 +30,13 @@ public class DeviceApiController(DeviceService device, SettingsService settings)
     }
 }
 
-public class TalentController(Loc loc, TalentService svc, OrgService org, EmployeeService emps, ICurrentUser me, AppClock clock, AccessScope scope,TrainingEvidence evidence,RecruitmentInterviews interviews,RecruitmentOffers offers) : BaseController(loc)
+public class TalentController(Loc loc, TalentService svc, OrgService org, EmployeeService emps, ICurrentUser me, AppClock clock, AccessScope scope,TrainingEvidence evidence,RecruitmentInterviews interviews,RecruitmentOffers offers,RecruitmentFiles cvFiles) : BaseController(loc)
 {
     public async Task<IActionResult> Recruitment()
     {
         if (!me.Can(Perm.TalentManage)) return Forbidden();
         ViewBag.Offers=await offers.GetAsync();
-        ViewBag.Interviews=await interviews.GetAsync();ViewBag.Interviewers=await emps.ManagerCandidatesAsync();
+        ViewBag.CandFiles=await cvFiles.ListAsync();ViewBag.Interviews=await interviews.GetAsync();ViewBag.Interviewers=await emps.ManagerCandidatesAsync();
         ViewBag.Jobs = await svc.JobsAsync(); ViewBag.Depts = await org.DepartmentsAsync();
         return View(await svc.CandidatesAsync());
     }
@@ -49,6 +49,9 @@ public class TalentController(Loc loc, TalentService svc, OrgService org, Employ
     [HttpPost] public Task<IActionResult> ToggleJob(int id) => Do(() => svc.CloseJobAsync(id), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> AddCandidate(int jobId, string name, string? email, string? note) => Do(() => svc.AddCandidateAsync(jobId, name, email, note), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
     [HttpPost] public Task<IActionResult> Move(int id, bool reject) => Do(() => svc.MoveCandidateAsync(id, reject), "msg.saved", () => RedirectToAction(nameof(Recruitment)));
+    [HttpPost] public async Task<IActionResult> UploadCandidateFile(int candidateId,string kind,IFormFile? file){var data=await FileBytes(file);return await Do(()=>cvFiles.UploadAsync(candidateId,kind,file?.FileName??"",data??[]),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));}
+    [HttpPost] public Task<IActionResult> DeleteCandidateFile(int id)=>Do(()=>cvFiles.DeleteAsync(id),"msg.saved",()=>RedirectToAction(nameof(Recruitment)));
+    public async Task<IActionResult> CandidateFile(string id){try{var f=await cvFiles.DownloadAsync(id);Response.Headers["X-Content-Type-Options"]="nosniff";Response.Headers.CacheControl="no-store, private";return File(f.Data,f.ContentType,f.FileName);}catch(DomainException){return NotFound();}}
 
     public IActionResult Performance() => Redirect("/Perf");
     [HttpPost] public Task<IActionResult> AddReview(int employeeId, string period, string? goals, string? comment, int score) => Do(() => svc.AddReviewAsync(employeeId, period, goals, comment, score), "msg.saved", () => RedirectToAction(nameof(Performance)));

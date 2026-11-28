@@ -71,6 +71,7 @@ builder.Services.AddScoped<ApprovalReminders>();
 builder.Services.AddScoped<BenefitService>();
 builder.Services.AddScoped<EmployeeRelations>();
 builder.Services.AddScoped<RecruitmentInterviews>();
+builder.Services.AddScoped<RecruitmentFiles>();
 builder.Services.AddScoped<RecruitmentOffers>();
 builder.Services.AddScoped<HolidayService>();
 builder.Services.AddScoped<SessionService>();
