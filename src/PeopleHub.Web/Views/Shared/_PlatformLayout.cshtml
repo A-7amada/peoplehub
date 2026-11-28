@@ -10,6 +10,7 @@
     <div class="brand" style="color:inherit"><span class="brand-mark">@Ui.Icon("users", 20)</span> PeopleHub <span class="faint">· @(ar ? "إدارة المنصة" : "Platform admin")</span></div>
     <div style="display:flex;gap:8px;align-items:center">
       <a href="/Account/Lang?to=@(ar ? "en" : "ar")&returnUrl=@ret" class="btn btn-sm">@Ui.Icon("globe", 14) @T["nav.lang"]</a>
+      @if (staff) { <a href="/Platform/Security" class="btn btn-sm">@(ar ? "الأمان" : "Security")</a> }
       @if (staff) { <form method="post" action="/Platform/Logout" asp-antiforgery="true"><button class="btn btn-sm">@(ar ? "تسجيل الخروج" : "Sign out")</button></form> }
     </div>
   </div>

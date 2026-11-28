@@ -4884,10 +4884,17 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
+                    b.Property<long>("LastTotpStep")
+                        .HasColumnType("INTEGER");
+
                     b.Property<DateTime?>("LockedUntil")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RecoveryHashes")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
@@ -4899,6 +4906,12 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
 
                     b.Property<string>("SecurityStamp")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("TotpEnabled")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("TotpSecret")
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");

@@ -5,5 +5,6 @@
   <form method="post" action="/Platform/Login" asp-antiforgery="true">
     <div class="field"><label>@T["login.email"]</label><input type="email" name="email" required autofocus dir="ltr"></div>
     <div class="field"><label>@T["login.password"]</label><input type="password" name="password" required dir="ltr"></div>
+    <div class="field"><label>@(ar ? "رمز التحقق (إن كان مفعلاً)" : "Authentication code (if turned on)")</label><input name="code" autocomplete="one-time-code" inputmode="numeric" maxlength="12" dir="ltr"></div>
     <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px">@T["login.submit"]</button>
   </form></div>

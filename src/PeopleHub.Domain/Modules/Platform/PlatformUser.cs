@@ -9,6 +9,11 @@ public class PlatformUser
     public string SecurityStamp { get; set; } = Guid.NewGuid().ToString("N");
     public int FailedLoginCount { get; set; }
     public DateTime? LockedUntil { get; set; }
+    /// <summary>US-PH1-006 platform staff 2FA. Optional per account (owner can require it later). Recovery codes are stored only as hashes, newline separated.</summary>
+    public string? TotpSecret { get; set; }
+    public bool TotpEnabled { get; set; }
+    public long LastTotpStep { get; set; }
+    public string RecoveryHashes { get; set; } = "";
     public DateTime CreatedAt { get; set; } = new DateTime(2026, 11, 27, 0, 0, 0, DateTimeKind.Utc);
 }
 

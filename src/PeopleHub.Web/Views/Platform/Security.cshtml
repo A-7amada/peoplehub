@@ -1,0 +1,19 @@
+@{ Layout = "_PlatformLayout"; var ar = T.IsAr; ViewData["Title"] = ar ? "أمان حساب المنصة" : "Platform account security"; var me = (PlatformUser?)ViewBag.Me; var codes = ViewBag.Codes as string; }
+<h1 style="font-size:1.5rem">@ViewData["Title"]</h1>
+<div class="card" style="max-width:640px;padding:20px">
+ <h2 style="font-size:1.1rem">@(ar ? "التحقق بخطوتين (تطبيق المصادقة)" : "Two-step verification (authenticator app)")</h2>
+ <p class="muted small">@(ar ? "اختياري لكل حساب. عند التفعيل يطلب تسجيل الدخول رمزاً من التطبيق أو رمز استرداد يُستخدم مرة واحدة. تفعيل الميزة أو إيقافها يُنهي الجلسات القديمة. يمكن للمالك اشتراطها لاحقاً. توضيحي وليس مراجعاً قانونياً." : "Optional per account. When on, sign-in asks for an app code or a one-time recovery code. Turning it on or off ends older sessions. The owner can require it later. Illustrative, not independently reviewed.")</p>
+ @if (!string.IsNullOrEmpty(codes)) {
+  <div class="flash ok"><b>@(ar ? "رموز الاسترداد (تظهر مرة واحدة فقط، احفظها الآن):" : "Recovery codes (shown once only, save them now):")</b><div dir="ltr" style="margin-top:8px;word-spacing:6px">@codes</div></div> }
+ @if (me != null && me.TotpEnabled) {
+  <p>@Ui.Chip(ar ? "مفعل" : "On", "green")</p>
+  <form method="post" action="/Platform/DisableTotp" asp-antiforgery="true" class="form-grid"><div class="field"><label>@T["login.password"]</label><input type="password" name="password" required dir="ltr"></div><div class="field"><label>&nbsp;</label><button class="btn btn-sm">@(ar ? "إيقاف التحقق بخطوتين" : "Turn off")</button></div></form>
+ } else if (me != null && me.TotpSecret != null) {
+  <p>@(ar ? "أضف هذا المفتاح إلى تطبيق المصادقة ثم أدخل الرمز المكون من 6 أرقام." : "Add this key to your authenticator app, then enter the 6-digit code.")</p>
+  <div dir="ltr" style="word-break:break-all;margin:6px 0 12px"><code>otpauth://totp/PeopleHub-Platform:@me.Email?secret=@me.TotpSecret&amp;issuer=PeopleHub-Platform</code></div>
+  <form method="post" action="/Platform/EnableTotp" asp-antiforgery="true" class="form-grid"><div class="field"><label>@(ar ? "الرمز" : "Code")</label><input name="code" inputmode="numeric" maxlength="12" required dir="ltr" autocomplete="one-time-code"></div><div class="field"><label>&nbsp;</label><button class="btn btn-primary">@(ar ? "تأكيد وتفعيل" : "Confirm and turn on")</button></div></form>
+ } else {
+  <p>@Ui.Chip(ar ? "غير مفعل" : "Off", "gray")</p>
+  <form method="post" action="/Platform/BeginTotp" asp-antiforgery="true"><button class="btn btn-primary">@(ar ? "بدء الإعداد" : "Set up")</button></form>
+ }
+</div>

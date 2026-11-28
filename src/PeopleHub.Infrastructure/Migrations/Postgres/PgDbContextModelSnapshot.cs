@@ -5103,10 +5103,17 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<long>("LastTotpStep")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime?>("LockedUntil")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RecoveryHashes")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -5118,6 +5125,12 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     b.Property<string>("SecurityStamp")
                         .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<bool>("TotpEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("TotpSecret")
                         .HasColumnType("text");
 
                     b.HasKey("Id");

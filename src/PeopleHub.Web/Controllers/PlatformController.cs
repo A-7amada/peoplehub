@@ -21,13 +21,65 @@ public class PlatformController(Loc loc, PlatformAuthService auth, TenantAdminSe
 
     [AllowAnonymous, HttpPost]
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
-    public async Task<IActionResult> Login(string email, string password)
+    public async Task<IActionResult> Login(string email, string password, string? code)
     {
-        var u = await auth.LoginAsync(email, password, clock.UtcNow);
+        var u = await auth.LoginAsync(email, password, clock.UtcNow, code);
         if (u == null) { ViewBag.Error = loc["login.invalid"]; return View(); }
         var claims = new List<Claim> { new(ClaimTypes.Name, u.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp), new("platform", "1") };
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, "cookie")));
         return RedirectToAction(nameof(Index));
+    }
+
+
+    int? Uid => int.TryParse(User.FindFirst("uid")?.Value, out var i) ? i : null;
+
+    [Authorize, HttpGet]
+    public async Task<IActionResult> Security()
+    {
+        if (!IsStaff || Uid is not { } id) return Forbid();
+        Response.Headers.CacheControl = "no-store, private";
+        ViewBag.Me = await auth.FindAsync(id); ViewBag.Codes = TempData["codes"] as string;
+        return View();
+    }
+
+    [Authorize, HttpPost]
+    public async Task<IActionResult> BeginTotp()
+    {
+        if (!IsStaff || Uid is not { } id) return Forbid();
+        try { await auth.BeginTotpAsync(id); } catch (DomainException e) { TempData["err"] = loc[e.Message]; }
+        return RedirectToAction(nameof(Security));
+    }
+
+    [Authorize, HttpPost]
+    public async Task<IActionResult> EnableTotp(string code)
+    {
+        if (!IsStaff || Uid is not { } id) return Forbid();
+        try
+        {
+            var codes = await auth.EnableTotpAsync(id, code, clock.UtcNow);
+            var u = await auth.FindAsync(id);
+            var claims = new List<Claim> { new(ClaimTypes.Name, u!.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp), new("platform", "1") };
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, "cookie")));
+            TempData["codes"] = string.Join("  ", codes);
+        }
+        catch (DomainException e) { TempData["err"] = loc[e.Message]; }
+        return RedirectToAction(nameof(Security));
+    }
+
+    [Authorize, HttpPost]
+    public async Task<IActionResult> DisableTotp(string password)
+    {
+        if (!IsStaff || Uid is not { } id) return Forbid();
+        try
+        {
+            await auth.DisableTotpAsync(id, password);
+            var u = await auth.FindAsync(id);
+            var claims = new List<Claim> { new(ClaimTypes.Name, u!.Email), new(ClaimTypes.Email, u.Email), new("uid", u.Id.ToString()), new("stamp", u.SecurityStamp), new("platform", "1") };
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(new ClaimsIdentity(claims, "cookie")));
+            TempData["ok"] = loc["msg.saved"];
+        }
+        catch (DomainException e) { TempData["err"] = loc[e.Message]; }
+        return RedirectToAction(nameof(Security));
     }
 
     [HttpPost] public async Task<IActionResult> Logout() { await HttpContext.SignOutAsync(); return RedirectToAction(nameof(Login)); }
