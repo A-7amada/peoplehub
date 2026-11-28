@@ -38,6 +38,7 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
         if (!me.Can(Perm.AttTeam)) return Forbidden();
         var d = (date ?? clock.Today).Date;
         ViewBag.Date = d; ViewBag.Dept = dept; ViewBag.Depts = await org.DepartmentsAsync();
+        if (me.Can(Perm.AttManage)) { var rules = new Dictionary<EmploymentType, OvertimeRules>(); foreach (var ty in Enum.GetValues<EmploymentType>()) rules[ty] = await svc.OvertimeRulesAsync(ty); ViewBag.OtRules = rules; }
         return View(await svc.DailyAsync(d, dept));
     }
 
@@ -54,6 +55,10 @@ public class AttendanceController(Loc loc, AttendanceService svc, OrgService org
     [HttpPost]
     public Task<IActionResult> Excuse(int employeeId, DateTime date, string? note) =>
         Do(() => svc.ExcuseAbsenceAsync(employeeId, date, note), "msg.saved", () => Back("/Attendance/Daily"));
+
+    [HttpPost]
+    public Task<IActionResult> OvertimeRules(EmploymentType type, decimal? maxDaily, decimal? maxMonthly, decimal? weekdayRate, decimal? restDayRate) =>
+        Do(() => svc.SetOvertimeRulesAsync(type, maxDaily, maxMonthly, weekdayRate, restDayRate), "msg.saved", () => Redirect("/Attendance/Daily"));
 
     [HttpPost]
     public Task<IActionResult> Overtime(DateTime date, decimal hours, string? reason) =>

@@ -14,3 +14,19 @@
    <form method="post" action="/Attendance/Manual" asp-antiforgery="true" class="inline-form" style="margin-top:8px"><input type="hidden" name="employeeId" value="@r.Employee.Id"><input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")"><input type="time" name="checkIn" value="@rec?.CheckIn?.ToString("HH:mm")"><input type="time" name="checkOut" value="@rec?.CheckOut?.ToString("HH:mm")"><input type="hidden" name="source" value="0"><input name="reason" placeholder="@T["common.reason"]" required><button class="btn btn-sm">@T["common.save"]</button></form>
    <form method="post" action="/Attendance/Excuse" asp-antiforgery="true" class="inline-form" style="margin-top:6px"><input type="hidden" name="employeeId" value="@r.Employee.Id"><input type="hidden" name="date" value="@date.ToString("yyyy-MM-dd")"><input type="text" name="note" placeholder="@T["common.reason"]" style="width:120px"><button class="btn btn-sm">@T["att.excuse"]</button></form></details></td> }</tr> }
 </tbody></table></div></div>
+@if (officer && ViewBag.OtRules is Dictionary<EmploymentType, OvertimeRules> otRules)
+{
+<div class="card" style="margin-top:18px"><div class="card-h"><h2>@(T.IsAr ? "قواعد الوقت الإضافي حسب نوع التوظيف" : "Overtime rules by employment type")</h2></div><div class="card-b">
+<p class="muted">@(T.IsAr ? "تسري على الطلبات الجديدة فقط. اترك الحقل فارغا لاستخدام الافتراضي (8 ساعات يوميا، بلا حد شهري، 1.5 و2). قيم توضيحية غير معتمدة قانونيا ويمكن تغييرها." : "Applies to new requests only. Leave a field blank to use the default (8 h per day, no monthly cap, 1.5x and 2x). Illustrative values, not legally validated, and you can change them.")</p>
+@foreach (var kv in otRules)
+{
+<form method="post" action="/Attendance/OvertimeRules" asp-antiforgery="true" class="form-grid" style="margin-bottom:8px"><input type="hidden" name="type" value="@kv.Key">
+<div class="field"><label>@(T.IsAr ? "النوع" : "Type")</label><div style="padding:9px 0;font-weight:600">@kv.Key</div></div>
+<div class="field"><label>@(T.IsAr ? "الحد اليومي (ساعات)" : "Daily cap (h)")</label><input class="input" type="number" step="0.5" min="0.5" max="24" name="maxDaily" value="@(kv.Value.MaxDailyHours == 8m ? "" : kv.Value.MaxDailyHours.ToString("0.##"))"></div>
+<div class="field"><label>@(T.IsAr ? "الحد الشهري (ساعات)" : "Monthly cap (h)")</label><input class="input" type="number" step="0.5" min="0.5" max="744" name="maxMonthly" value="@(kv.Value.MaxMonthlyHours?.ToString("0.##") ?? "")"></div>
+<div class="field"><label>@(T.IsAr ? "معامل أيام العمل" : "Weekday rate")</label><input class="input" type="number" step="0.05" min="1" max="5" name="weekdayRate" value="@(kv.Value.WeekdayRate == 1.5m ? "" : kv.Value.WeekdayRate.ToString("0.##"))"></div>
+<div class="field"><label>@(T.IsAr ? "معامل أيام الراحة" : "Rest-day rate")</label><input class="input" type="number" step="0.05" min="1" max="5" name="restDayRate" value="@(kv.Value.RestDayRate == 2m ? "" : kv.Value.RestDayRate.ToString("0.##"))"></div>
+<div class="field"><label>&nbsp;</label><button class="btn">@(T.IsAr ? "حفظ" : "Save")</button></div></form>
+}
+</div></div>
+}

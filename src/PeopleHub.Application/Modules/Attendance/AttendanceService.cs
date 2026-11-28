@@ -225,11 +225,42 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         return result;
     }
 
+    // US-PH2-008 overtime rules per employment type, stored as AppSetting "Overtime.<Field>.<EmploymentType>". Unset = built-in defaults.
+    private static readonly string[] OvertimeFields = ["MaxDaily", "MaxMonthly", "WeekdayRate", "RestDayRate"];
+    public async Task<OvertimeRules> OvertimeRulesAsync(EmploymentType t)
+    {
+        var rows = await repo.ToListAsync(repo.Query<AppSetting>().Where(x => x.Key.StartsWith("Overtime.")));
+        decimal? V(string f) => decimal.TryParse(rows.FirstOrDefault(x => x.Key == $"Overtime.{f}.{t}")?.Value, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : null;
+        var d = new OvertimeRules();
+        return new OvertimeRules(V("MaxDaily") is { } md && md > 0 && md <= 24 ? md : d.MaxDailyHours, V("MaxMonthly") is { } mm && mm > 0 && mm <= 744 ? mm : null, V("WeekdayRate") is { } wr && wr >= 1 && wr <= 5 ? wr : d.WeekdayRate, V("RestDayRate") is { } rr && rr >= 1 && rr <= 5 ? rr : d.RestDayRate);
+    }
+    public async Task SetOvertimeRulesAsync(EmploymentType t, decimal? maxDaily, decimal? maxMonthly, decimal? weekdayRate, decimal? restDayRate)
+    {
+        if (!me.Can(Perm.AttManage)) throw new DomainException("err.forbidden");
+        if (maxDaily is <= 0 or > 24 || maxMonthly is <= 0 or > 744 || weekdayRate is < 1 or > 5 || restDayRate is < 1 or > 5) throw new DomainException("err.required");
+        var values = new[] { maxDaily, maxMonthly, weekdayRate, restDayRate };
+        for (var i = 0; i < OvertimeFields.Length; i++)
+        {
+            var key = $"Overtime.{OvertimeFields[i]}.{t}";
+            var row = await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x => x.Key == key));
+            if (row == null) { row = new() { Key = key }; repo.Add(row); }
+            row.Value = values[i]?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
+        }
+        audit.Log("OvertimeRules", "EmploymentType", t.ToString(), $"daily {maxDaily?.ToString() ?? "default 8"}, monthly {maxMonthly?.ToString() ?? "none"}, weekday {weekdayRate?.ToString() ?? "default 1.5"}, rest day {restDayRate?.ToString() ?? "default 2"}; applies to new requests only; illustrative defaults, not legally validated, owner can change");
+        await repo.SaveAsync();
+    }
     public Task RequestOvertimeAsync(DateTime date,decimal hours,string? reason)=>repo.AtomicAsync(()=>RequestOvertimeCoreAsync(date,hours,reason));
     private async Task RequestOvertimeCoreAsync(DateTime date, decimal hours, string? reason)
     {
         var e = await MeAsync();
-        var o = OvertimeRequest.Create(e, date, hours, reason, clock.Today);
+        var rules = await OvertimeRulesAsync(e.EmploymentType);
+        var o = OvertimeRequest.Create(e, date, hours, reason, clock.Today, rules);
+        if (rules.MaxMonthlyHours is { } cap)
+        {
+            var first = new DateTime(date.Year, date.Month, 1); var next = first.AddMonths(1);
+            var used = (await repo.ToListAsync(repo.Query<OvertimeRequest>().Where(x => x.EmployeeId == e.Id && x.Date >= first && x.Date < next && (x.Status == RequestStatus.Pending || x.Status == RequestStatus.Approved)))).Sum(x => x.Hours);
+            if (used + hours > cap) throw new DomainException("err.overtimeMonthly");
+        }
         await flows.RouteRequestAsync("Overtime",o,e,hours);
         if (await repo.AnyAsync(repo.Query<OvertimeRequest>().Where(x => x.EmployeeId == e.Id && x.Date == date.Date && (x.Status == RequestStatus.Pending || x.Status == RequestStatus.Approved))))
             throw new DomainException("err.overtimeExists");

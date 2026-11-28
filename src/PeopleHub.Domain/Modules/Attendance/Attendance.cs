@@ -87,6 +87,9 @@ public class AttendanceRecord
     }
 }
 
+/// <summary>US-PH2-008 configurable overtime rules per employment type. Defaults equal the previous hard-coded values (8 h/day, 1.5x, 2x, no monthly cap). Illustrative, not legally validated.</summary>
+public record OvertimeRules(decimal MaxDailyHours = 8m, decimal? MaxMonthlyHours = null, decimal WeekdayRate = 1.5m, decimal RestDayRate = 2m);
+
 public class OvertimeRequest : Approvable
 {
     public DateTime Date { get; set; }
@@ -94,13 +97,14 @@ public class OvertimeRequest : Approvable
     public string Reason { get; set; } = "";
     public decimal Multiplier { get; set; } = 1.5m;
 
-    public static OvertimeRequest Create(Employee e, DateTime date, decimal hours, string? reason, DateTime today)
+    public static OvertimeRequest Create(Employee e, DateTime date, decimal hours, string? reason, DateTime today, OvertimeRules? rules = null)
     {
-        if (hours <= 0 || hours > 8) throw new DomainException("err.overtimeHours");
+        rules ??= new OvertimeRules();
+        if (hours <= 0 || hours > rules.MaxDailyHours) throw new DomainException("err.overtimeHours");
         if (string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");
         if (date.Date > today.Date) throw new DomainException("err.future");
         // Weekend and holiday overtime pays double.
-        var mult = AttendanceCalculator.IsWeekend(date) ? 2m : 1.5m;
+        var mult = AttendanceCalculator.IsWeekend(date) ? rules.RestDayRate : rules.WeekdayRate;
         return new OvertimeRequest { EmployeeId = e.Id, Date = date.Date, Hours = hours, Reason = reason.Trim(), Multiplier = mult, Route = BuildRoute(e) };
     }
 }
