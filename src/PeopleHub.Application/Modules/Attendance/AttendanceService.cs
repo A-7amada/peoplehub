@@ -75,7 +75,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var existing = await repo.FirstOrDefaultAsync(repo.Query<AttendanceRecord>().Where(r => r.EmployeeId == e.Id && r.Date == today));
         var rec = existing ?? new AttendanceRecord { EmployeeId = e.Id, Date = today };
         rec.CheckIn = clock.Now; rec.Source = AttendanceSource.MobileApp;
-        rec.Recompute(await ShiftOfAsync(e,rec.Date));
+        rec.Recompute(await ShiftOfAsync(e,rec.Date),await ShiftCalendar.GraceAsync(repo,e.EmploymentType));
         if (existing == null) repo.Add(rec);
         repo.Add(AttendanceEvidence.Capture(rec,"CheckIn",me.Email,clock.UtcNow));
         await repo.SaveAsync();
@@ -93,7 +93,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
         rec.CheckOut = clock.Now;
         if (rec.CheckOut <= rec.CheckIn) rec.CheckOut = rec.CheckIn.Value.AddMinutes(1);
-        rec.Recompute(await ShiftOfAsync(e,rec.Date));
+        rec.Recompute(await ShiftOfAsync(e,rec.Date),await ShiftCalendar.GraceAsync(repo,e.EmploymentType));
         repo.Add(AttendanceEvidence.Capture(rec,"CheckOut",me.Email,clock.UtcNow,"",beforeIn,beforeOut));
         await repo.SaveAsync();
     }
@@ -114,7 +114,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
         var manualShift=await ShiftOfAsync(e,date);
         checkOut=ShiftCalendar.OvernightOut(date,checkIn,checkOut,manualShift);
         rec.CheckIn = checkIn; rec.CheckOut = checkOut; rec.Source = AttendanceSource.Manual; rec.IsExcused = false; rec.ExcuseNote = null;
-        rec.Recompute(await ShiftOfAsync(e,rec.Date));
+        rec.Recompute(await ShiftOfAsync(e,rec.Date),await ShiftCalendar.GraceAsync(repo,e.EmploymentType));
         if (isNew) repo.Add(rec);
         repo.Add(AttendanceEvidence.Capture(rec,"ManualEntry",me.Email,clock.UtcNow,reason.Trim()));
         audit.Log("Create", "Attendance", $"{e.Code}/{date:yyyy-MM-dd}", $"{source} in={checkIn:HH:mm} out={checkOut:HH:mm}");

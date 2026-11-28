@@ -37,7 +37,7 @@ public static class AttendanceCalculator
         return n;
     }
 
-    public static AttendanceResult Calculate(Shift shift, DateTime date, DateTime? checkIn, DateTime? checkOut)
+    public static AttendanceResult Calculate(Shift shift, DateTime date, DateTime? checkIn, DateTime? checkOut, int? graceOverride = null)
     {
         if (checkIn is null) return new(0, 0, 0, 0, AttendanceStatus.Absent);
         var start = date.Date + shift.Start;
@@ -46,7 +46,7 @@ public static class AttendanceCalculator
 
         if(shift.Flexible){if(shift.LatestStart==null||shift.RequiredMinutes is not >0||shift.LatestStart<shift.Start||shift.LatestStart.Value.TotalMinutes+shift.RequiredMinutes>1440||shift.IsNight)throw new DomainException("err.required");var latest=date.Date+shift.LatestStart.Value;end=(checkIn.Value<start?start:checkIn.Value).AddMinutes(shift.RequiredMinutes.Value);start=latest;}
         var late = (int)Math.Max(0, Math.Floor((checkIn.Value - start).TotalMinutes));
-        if (late <= shift.GraceMinutes) late = 0;
+        if (late <= (graceOverride ?? shift.GraceMinutes)) late = 0;
         if (late > shift.MaxLateMinutes) return new(late, 0, 0, 0, AttendanceStatus.Absent);
 
         var early = 0; var worked = 0; var overtime = 0;
@@ -79,9 +79,9 @@ public class AttendanceRecord
     public bool IsExcused { get; set; }
     public string? ExcuseNote { get; set; }
 
-    public void Recompute(Shift shift)
+    public void Recompute(Shift shift, int? graceOverride = null)
     {
-        var r = AttendanceCalculator.Calculate(shift, Date, CheckIn, CheckOut);
+        var r = AttendanceCalculator.Calculate(shift, Date, CheckIn, CheckOut, graceOverride);
         LateMinutes = r.LateMinutes; EarlyLeaveMinutes = r.EarlyLeaveMinutes; WorkedMinutes = r.WorkedMinutes;
         OvertimeMinutes = r.OvertimeMinutes; Status = r.Status;
     }

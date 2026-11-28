@@ -4,6 +4,20 @@ using PeopleHub.Application.Common;
 namespace PeopleHub.Application.Modules.Attendance;
 public static class ShiftCalendar
 {
+ // US-PH2-005 category grace: optional per employment type override of the shift grace minutes (blank = use the shift value).
+ // Stored as AppSetting "Attendance.Grace.<EmploymentType>". Default: no override. Illustrative, not legally validated.
+ public static async Task<Dictionary<EmploymentType,int>> GracesAsync(IRepository repo)
+ {
+  var rows=await repo.ToListAsync(repo.Query<AppSetting>().Where(x=>x.Key.StartsWith("Attendance.Grace.")));var map=new Dictionary<EmploymentType,int>();
+  foreach(var t in Enum.GetValues<EmploymentType>())if(int.TryParse(rows.FirstOrDefault(x=>x.Key=="Attendance.Grace."+t)?.Value,out var g)&&g>=0&&g<=240)map[t]=g;return map;
+ }
+ public static async Task<int?> GraceAsync(IRepository repo,EmploymentType t){var m=await GracesAsync(repo);return m.TryGetValue(t,out var g)?g:null;}
+ public static async Task SetGraceAsync(IRepository repo,ICurrentUser me,AuditService audit,EmploymentType t,int? minutes)
+ {
+  if(!me.Can(Perm.OrgManage))throw new DomainException("err.forbidden");if(minutes is<0 or>240)throw new DomainException("err.required");
+  var key="Attendance.Grace."+t;var v=await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x=>x.Key==key));if(v==null){v=new(){Key=key};repo.Add(v);}
+  v.Value=minutes?.ToString(System.Globalization.CultureInfo.InvariantCulture)??"";audit.Log("AttendanceGrace","EmploymentType",t.ToString(),minutes==null?"Cleared; the shift grace applies":$"{minutes} minutes grace overrides the shift value for this employment type (default none; illustrative, owner can change)");await repo.SaveAsync();
+ }
  public static int? ShiftId(Employee e,DateTime day,IEnumerable<EmployeeAssignment> history,IEnumerable<EmployeeShiftDay> overrides)
  {
   var one=overrides.FirstOrDefault(x=>x.EmployeeId==e.Id&&x.Date.Date==day.Date);if(one!=null)return one.ShiftId;
@@ -34,6 +48,8 @@ public class ShiftSchedule(IRepository repo,ICurrentUser me,AppClock clock,Audit
   for(var day=from;day<=to;day=day.AddDays(1))repo.Add(new EmployeeShiftDay{EmployeeId=employeeId,Date=day,ShiftId=sequence[(day-from).Days%sequence.Count],Reason=reason.Trim(),Actor=me.Email,At=clock.UtcNow});
   employee.LeaveRequestStamp=Guid.NewGuid().ToString("N");audit.Log("RotateShifts","Employee",employeeId,$"{from:yyyy-MM-dd} to {to:yyyy-MM-dd}, calendar-day pattern {string.Join(',',sequence)}: {reason.Trim()}");await repo.SaveAsync();
  });
+ public Task<Dictionary<EmploymentType,int>> GracesAsync()=>ShiftCalendar.GracesAsync(repo);
+ public Task SetGraceAsync(EmploymentType type,int? minutes)=>ShiftCalendar.SetGraceAsync(repo,me,audit,type,minutes);
  public Task AddShiftAsync(string name,string? nameAr,TimeSpan start,TimeSpan end,int grace,int maxLate,bool flexible=false,TimeSpan? latestStart=null,int? requiredMinutes=null)=>repo.AtomicAsync(async()=>
  {
   if(!me.Can(Perm.OrgManage))throw new DomainException("err.forbidden");if(string.IsNullOrWhiteSpace(name)||name.Length>100||start<TimeSpan.Zero||start>=TimeSpan.FromDays(1)||end<TimeSpan.Zero||end>=TimeSpan.FromDays(1)||start==end||grace<0||maxLate<grace||maxLate>1440)throw new DomainException("err.required");if(flexible&&(latestStart==null||requiredMinutes is not >0||requiredMinutes>1440||latestStart<start||latestStart>=TimeSpan.FromDays(1)||latestStart.Value.TotalMinutes+requiredMinutes>1440||end.TotalMinutes!=latestStart.Value.TotalMinutes+requiredMinutes||end<=start))throw new DomainException("err.required");repo.Add(new Shift{Flexible=flexible,LatestStart=flexible?latestStart:null,RequiredMinutes=flexible?requiredMinutes:null,Name=name.Trim(),NameAr=nameAr?.Trim()??"",Start=start,End=end,GraceMinutes=grace,MaxLateMinutes=maxLate});audit.Log("Create","Shift",name.Trim(),$"{start}-{end}, grace {grace}");await repo.SaveAsync();

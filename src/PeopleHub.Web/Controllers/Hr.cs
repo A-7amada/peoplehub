@@ -36,7 +36,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
             ViewBag.Rehires=me.Can(Perm.EmpManage)?await HttpContext.RequestServices.GetRequiredService<RehireService>().ListAsync(eid,access):new List<RehireRequest>();
             if(tab=="letters"&&(me.Can(Perm.EmpManage)||me.EmployeeId==eid))ViewBag.Letters=await HttpContext.RequestServices.GetRequiredService<LetterService>().ListAsync(eid,access);
             if(tab=="assets"){ViewBag.Assets=await assets.GetAsync(eid);if(me.Can(Perm.EmpManage))ViewBag.Inventory=await assets.InventoryAsync();}
-            if(tab=="shifts")ViewBag.ShiftDays=await shifts.ListAsync(eid,access);
+            if(tab=="shifts"){ViewBag.ShiftDays=await shifts.ListAsync(eid,access);ViewBag.Graces=await shifts.GracesAsync();}
             if(tab=="documents") ViewBag.Documents=await documents.ListAsync(eid);
             if(tab=="lifecycle") ViewBag.Lifecycle=await lifecycle.GetAsync(eid);
             await Lists();
@@ -72,6 +72,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
     [HttpPost]public Task<IActionResult> MoveAsset(int employeeId,int assetId,string movement,DateTime? dueOn,string condition,string evidence)=>Do(()=>assets.MoveAsync(assetId,movement,employeeId,dueOn,condition,evidence),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="assets"}));
     [HttpPost]public Task<IActionResult> SetShift(int employeeId,DateTime date,int shiftId,string reason)=>Do(()=>shifts.SetAsync(employeeId,date,shiftId,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="shifts"}));
     [HttpPost]public Task<IActionResult> RotateShifts(int employeeId,DateTime from,DateTime to,string pattern,string reason)=>Do(()=>shifts.RotateAsync(employeeId,from,to,pattern,reason),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="shifts"}));
+    [HttpPost]public Task<IActionResult> SetGrace(int employeeId,EmploymentType type,int? minutes)=>Do(()=>shifts.SetGraceAsync(type,minutes),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="shifts"}));
     [HttpPost]public Task<IActionResult> AddShift(int employeeId,string name,string? nameAr,TimeSpan start,TimeSpan end,int grace,int maxLate,bool flexible,TimeSpan? latestStart,int? requiredMinutes)=>Do(()=>shifts.AddShiftAsync(name,nameAr,start,end,grace,maxLate,flexible,latestStart,requiredMinutes),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="shifts"}));
     [HttpPost]public async Task<IActionResult> AddDocument(int employeeId,string title,DateTime? expiresOn,IFormFile? file)
     {var data=await FileBytes(file);return await Do(()=>documents.AddAsync(employeeId,title,expiresOn,file?.FileName??"",data??[]),"msg.saved",()=>RedirectToAction(nameof(Profile),new{id=employeeId,tab="documents"}));}

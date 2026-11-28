@@ -166,7 +166,7 @@ public partial class ApprovalService(IRepository repo, AccessScope scope, ICurre
                 var before = $"{rec.CheckIn:HH:mm}-{rec.CheckOut:HH:mm}";
                 var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
                 rec.CheckIn = c.NewCheckIn; rec.CheckOut = c.NewCheckOut; rec.Source = AttendanceSource.Manual; rec.IsExcused = false; rec.ExcuseNote = null;
-                rec.Recompute(shift);
+                rec.Recompute(shift,await PeopleHub.Application.Modules.Attendance.ShiftCalendar.GraceAsync(repo,(await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x=>x.Id==c.EmployeeId)))?.EmploymentType??EmploymentType.FullTime));
                 if (isNew) repo.Add(rec);
                 repo.Add(AttendanceEvidence.Capture(rec,"ApprovedCorrection",me.Email,clock.UtcNow,c.Reason,beforeIn,beforeOut,c.Id));
                 audit.Log("Correct", "Attendance", $"{c.Employee!.Code}/{c.Date:yyyy-MM-dd}", $"{before} -> {c.NewCheckIn:HH:mm}-{c.NewCheckOut:HH:mm}; {c.Reason}");

@@ -140,6 +140,7 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
         var assignments=await repo.ToListAsync(repo.Query<EmployeeAssignment>());
         var overrides=await repo.ToListAsync(repo.Query<EmployeeShiftDay>());
         var shifts = await repo.ToListAsync(repo.Query<Shift>().OrderBy(s => s.Id));
+        var graces=await ShiftCalendar.GracesAsync(repo);
         Shift For(Employee e,DateTime d)=>shifts.FirstOrDefault(s=>s.Id==ShiftCalendar.ShiftId(e,d,assignments,overrides))??shifts.FirstOrDefault()??new Shift{Start=new(9,0,0),End=new(17,0,0)};
         DateTime Day(DevicePunch p){var e=emps.First(e=>e.Id==p.EmployeeId);var previous=For(e,p.Time.Date.AddDays(-1));return ShiftCalendar.WorkDate(p.Time,previous);}
         var punches=raw.Where(p=>p.EmployeeId!=null && emps.Any(e=>e.Id==p.EmployeeId)).GroupBy(p=>(p.EmployeeId!.Value,Day(p)));
@@ -155,7 +156,7 @@ public class DeviceService(IRepository repo, AppClock clock, AuditService audit,
             var isNew = rec == null; rec ??= new AttendanceRecord { EmployeeId = eid, Date = day };
             var beforeIn=rec.CheckIn;var beforeOut=rec.CheckOut;
             rec.CheckIn = times[0]; rec.CheckOut = times.Count > 1 && times[^1] > times[0].AddMinutes(1) ? times[^1] : null; rec.Source = AttendanceSource.Fingerprint;
-            rec.Recompute(For(emp,day));
+            rec.Recompute(For(emp,day),graces.GetValueOrDefault(emp.EmploymentType));
             if (isNew) { repo.Add(rec); recs.Add(rec); }
             if(isNew || beforeIn!=rec.CheckIn || beforeOut!=rec.CheckOut) repo.Add(AttendanceEvidence.Capture(rec,"DeviceProjection",me.Email,clock.UtcNow,"Derived from retained device punches",beforeIn,beforeOut));
         }
