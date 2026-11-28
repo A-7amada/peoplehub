@@ -50,10 +50,10 @@ public class LeaveBalance
     public int LeaveTypeId { get; set; }
     public LeaveType? LeaveType { get; set; }
     public int Year { get; set; }
-    public int Entitled { get; set; }
-    public int CarriedOver { get; set; }
-    public int Used { get; set; }
-    public int Remaining => Entitled + CarriedOver - Used;
+    public decimal Entitled { get; set; }
+    public decimal CarriedOver { get; set; }
+    public decimal Used { get; set; }
+    public decimal Remaining => Entitled + CarriedOver - Used;
 
     /// <summary>Opening balance of a new year: unused days carry over up to the type's maximum.</summary>
     public static LeaveBalance Rollover(LeaveBalance old, LeaveType type) => new()
@@ -69,7 +69,7 @@ public class LeaveRequest : Approvable
     public LeaveType? LeaveType { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
-    public int Days { get; set; }
+    public decimal Days { get; set; }
     public string? Reason { get; set; }
     public string? DocumentName { get; set; }
 

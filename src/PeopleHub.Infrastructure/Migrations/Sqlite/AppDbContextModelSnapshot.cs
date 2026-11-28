@@ -3098,14 +3098,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("CarriedOver")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("CarriedOver")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Entitled")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("Entitled")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("INTEGER");
@@ -3121,8 +3121,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
 
-                    b.Property<int>("Used")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("Used")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("Year")
                         .HasColumnType("INTEGER");
@@ -3251,8 +3251,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Days")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("Days")
+                        .HasColumnType("REAL");
 
                     b.Property<DateTime?>("DecidedAt")
                         .HasColumnType("TEXT");
@@ -3323,8 +3323,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("At")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("Delta")
-                        .HasColumnType("INTEGER");
+                    b.Property<double>("Delta")
+                        .HasColumnType("REAL");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("INTEGER");

@@ -258,7 +258,7 @@ public static class SeedData
                 var earn = e.BasicSalary > 50000 ? 1500 + 2500 : e.BasicSalary >= 40000 ? 800 + 2500 : 800;
                 var inst = e.Code == "PH-014" ? 2000m : 0m;
                 var line = new PayrollLine { RunId = run.Id, EmployeeId = e.Id };
-                PayrollCalculator.Apply(line, new PayrollInput(e.BasicSalary, earn, 0, 0, absent + unpaid, lateMin, ot, pm == prev1 ? inst : 0, 150));
+                PayrollCalculator.Apply(line, new PayrollInput(e.BasicSalary, earn, 0, 0, (int)Math.Ceiling(absent + unpaid), lateMin, ot, pm == prev1 ? inst : 0, 150));
                 allLines.Add(line);
             }
             db.AddRange(allLines.Where(l => l.Id == 0));

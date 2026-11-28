@@ -20,7 +20,7 @@ public class LeaveTransaction
  public int LeaveTypeId { get; set; }
  public int Year { get; set; }
  public int? RequestId { get; set; }
- public int Delta { get; set; }
+ public decimal Delta { get; set; }
  public string Kind { get; set; } = "";
  public string Reason { get; set; } = "";
  public string Actor { get; set; } = "";

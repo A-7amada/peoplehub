@@ -130,7 +130,7 @@ public class EmployeesController(Loc loc, EmployeeService svc, OrgService org, L
         Do(() => svc.UpdateMyContactAsync(phone, address), "msg.saved", () => RedirectToAction(nameof(Profile), new { tab = "overview" }));
 
     [RequirePerm(Perm.EmpManage), HttpPost, RequireStepUp]
-    public Task<IActionResult> AdjustBalance(int id, int typeId, int entitled, string? reason) =>
+    public Task<IActionResult> AdjustBalance(int id, int typeId, decimal entitled, string? reason) =>
         Do(() => leave.AdjustBalanceAsync(id, typeId, clock.Today.Year, entitled, reason), "msg.saved", () => RedirectToAction(nameof(Profile), new { id, tab = "leave" }));
 }
 

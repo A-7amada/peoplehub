@@ -14,7 +14,7 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         if(me.EmployeeId!=id&&!me.Can(Perm.LeaveEvidence))return [];
         return await repo.ToListAsync(repo.Query<LeaveTransaction>().Where(x=>x.EmployeeId==id && x.Year==year).OrderByDescending(x=>x.At));
     }
-    private void Entry(int employeeId,int typeId,int year,int delta,string kind,string reason,int? request=null) => repo.Add(new LeaveTransaction {EmployeeId=employeeId,LeaveTypeId=typeId,Year=year,Delta=delta,Kind=kind,Reason=reason,RequestId=request,Actor=me.Email,At=clock.UtcNow});
+    private void Entry(int employeeId,int typeId,int year,decimal delta,string kind,string reason,int? request=null) => repo.Add(new LeaveTransaction {EmployeeId=employeeId,LeaveTypeId=typeId,Year=year,Delta=delta,Kind=kind,Reason=reason,RequestId=request,Actor=me.Email,At=clock.UtcNow});
     public Task<List<LeaveType>> TypesAsync() => repo.ToListAsync(repo.Query<LeaveType>().OrderBy(t => t.Id));
 
     /// <summary>Returns balances for the year, creating missing rows from type defaults (with carry-over from the previous year).</summary>
@@ -94,8 +94,8 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         await repo.SaveAsync();
     }
 
-    public Task AdjustBalanceAsync(int employeeId, int typeId, int year, int entitled, string? reason) => repo.AtomicAsync(()=>AdjustBalanceCoreAsync(employeeId,typeId,year,entitled,reason));
-    private async Task AdjustBalanceCoreAsync(int employeeId, int typeId, int year, int entitled, string? reason)
+    public Task AdjustBalanceAsync(int employeeId, int typeId, int year, decimal entitled, string? reason) => repo.AtomicAsync(()=>AdjustBalanceCoreAsync(employeeId,typeId,year,entitled,reason));
+    private async Task AdjustBalanceCoreAsync(int employeeId, int typeId, int year, decimal entitled, string? reason)
     {
         if (!me.Can(Perm.LeaveAdmin)) throw new DomainException("err.forbidden");
         if (string.IsNullOrWhiteSpace(reason)) throw new DomainException("err.reasonRequired");

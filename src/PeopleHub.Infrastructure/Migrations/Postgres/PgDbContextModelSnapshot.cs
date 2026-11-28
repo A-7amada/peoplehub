@@ -3232,14 +3232,16 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("CarriedOver")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("CarriedOver")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
-                    b.Property<int>("Entitled")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Entitled")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("integer");
@@ -3255,8 +3257,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("integer")
                         .HasDefaultValue(1);
 
-                    b.Property<int>("Used")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Used")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("Year")
                         .HasColumnType("integer");
@@ -3391,8 +3394,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("Days")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Days")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<DateTime?>("DecidedAt")
                         .HasColumnType("timestamp without time zone");
@@ -3465,8 +3469,9 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("At")
                         .HasColumnType("timestamp without time zone");
 
-                    b.Property<int>("Delta")
-                        .HasColumnType("integer");
+                    b.Property<decimal>("Delta")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
