@@ -75,25 +75,35 @@ public class AccountController(Loc loc, AuthService auth, AccountService account
         ViewBag.Error = loc["err.badCode"]; ViewBag.Pending = pending; return View("Login");
     }
 
-    [AllowAnonymous, HttpGet] public IActionResult Forgot() => View();
+    /// <summary>Points the request at the named company (blank means the demo company). False for an unknown or inactive company.</summary>
+    private async Task<(bool Ok, string Slug)> UseCompanyAsync(string? company)
+    {
+        var slug = (company ?? "").Trim().ToLowerInvariant(); if (slug.Length == 0) slug = "demo";
+        var t = await repo.FirstOrDefaultAsync(repo.Query<Tenant>().Where(x => x.Slug == slug && x.Status == "Active"));
+        if (t == null) return (false, slug);
+        tenant.Override = t.Id; return (true, slug);
+    }
+    [AllowAnonymous, HttpGet] public async Task<IActionResult> Forgot() { ViewBag.ShowCompany = await repo.CountAsync(repo.Query<Tenant>().Where(x => x.Status == "Active")) > 1; return View(); }
     [AllowAnonymous, HttpPost]
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
-    public async Task<IActionResult> Forgot(string email)
+    public async Task<IActionResult> Forgot(string email, string? company)
     {
         var baseUrl = config["PUBLIC_BASE_URL"];
-        if (Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.Scheme == "https")
-            await accounts.RequestResetAsync(email, baseUrl!.TrimEnd('/'));
+        var (ok, slug) = await UseCompanyAsync(company);
+        if (ok && Uri.TryCreate(baseUrl, UriKind.Absolute, out var uri) && uri.Scheme == "https")
+            await accounts.RequestResetAsync(email, baseUrl!.TrimEnd('/'), slug == "demo" ? null : slug);
         ViewBag.Done = true;
         return View();
     }
-    [AllowAnonymous, HttpGet] public async Task<IActionResult> Reset(string token) { ViewBag.Token = token; ViewBag.Valid = await accounts.TokenValidAsync(token ?? ""); return View(); }
+    [AllowAnonymous, HttpGet] public async Task<IActionResult> Reset(string token, string? company) { ViewBag.Token = token; ViewBag.Company = company; var (ok, _) = await UseCompanyAsync(company); ViewBag.Valid = ok && await accounts.TokenValidAsync(token ?? ""); return View(); }
     [AllowAnonymous, HttpPost]
     [Microsoft.AspNetCore.RateLimiting.EnableRateLimiting("auth")]
-    public async Task<IActionResult> Reset(string token, string password)
+    public async Task<IActionResult> Reset(string token, string password, string? company)
     {
-        try { if (await accounts.ResetAsync(token ?? "", password)) { TempData["ok"] = loc["msg.saved"]; return RedirectToAction(nameof(Login)); } ViewBag.Error = loc["err.badToken"]; }
+        ViewBag.Company = company; var (found, _) = await UseCompanyAsync(company);
+        try { if (found && await accounts.ResetAsync(token ?? "", password)) { TempData["ok"] = loc["msg.saved"]; return RedirectToAction(nameof(Login)); } ViewBag.Error = loc["err.badToken"]; }
         catch (DomainException ex) { ViewBag.Error = loc[ex.Message]; }
-        ViewBag.Token = token; ViewBag.Valid = await accounts.TokenValidAsync(token ?? ""); return View();
+        ViewBag.Token = token; ViewBag.Valid = found && await accounts.TokenValidAsync(token ?? ""); return View();
     }
 
     [Authorize,HttpGet]public async Task<IActionResult> StepUp(string? returnUrl){ViewBag.ReturnUrl=Url.IsLocalUrl(returnUrl)?returnUrl:"/";ViewBag.Totp=(await accounts.CurrentAsync())?.TotpEnabled==true;return View();}

@@ -150,6 +150,18 @@ builder.Services.AddScoped<OperationsService>();
 builder.Logging.AddSimpleConsole(o => { o.IncludeScopes = true; o.SingleLine = true; });
 PeopleHub.Infrastructure.Security.FieldCipher.ConfigureDefault(builder.Configuration["FIELD_ENCRYPTION_KEY"], builder.Configuration["FIELD_ENCRYPTION_KEY_PREVIOUS"]);
 var app = builder.Build();
+// Settings are cached per company (ADR-0023 stage 4): the ambient company comes from the request, and a company's saved settings are read once on first use.
+{
+    var accessor = app.Services.GetRequiredService<IHttpContextAccessor>();
+    SettingsService.AmbientTenant = () => accessor.HttpContext?.RequestServices.GetService<HttpTenantContext>()?.TenantId ?? PeopleHub.Application.Common.Tenancy.TenantIds.Default;
+    SettingsService.Loader = tid =>
+    {
+        using var sc = app.Services.CreateScope();
+        sc.ServiceProvider.GetRequiredService<PeopleHub.Application.Common.Tenancy.ITenantOverride>().Override = tid;
+        var d = sc.ServiceProvider.GetRequiredService<PeopleHub.Infrastructure.Persistence.AppDbContext>();
+        try { return d.Set<AppSetting>().AsNoTracking().ToList().ToDictionary(x => x.Key, x => x.Value); } catch { return new Dictionary<string, string>(); }
+    };
+}
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();

@@ -4,6 +4,6 @@
  @if (ViewBag.Done == true) {
   <div class="flash ok">@X("If the account exists, a reset request has been accepted. Delivery requires configured email.", "لو الحساب موجود تم قبول طلب الاسترجاع. وصول الرابط يتطلب إعداد البريد.")</div>
  } else {
- <form method="post" action="/Account/Forgot" asp-antiforgery="true"><div class="field"><label>@T["login.email"]</label><input type="email" name="email" required dir="ltr"></div><button class="btn btn-primary" style="width:100%;justify-content:center">@X("Send reset link", "إرسال رابط الاسترجاع")</button></form> }
+ <form method="post" action="/Account/Forgot" asp-antiforgery="true">@if (ViewBag.ShowCompany == true) { <div class="field"><label>@X("Company", "الشركة")</label><input name="company" dir="ltr" placeholder="demo" autocomplete="organization"></div> }<div class="field"><label>@T["login.email"]</label><input type="email" name="email" required dir="ltr"></div><button class="btn btn-primary" style="width:100%;justify-content:center">@X("Send reset link", "إرسال رابط الاسترجاع")</button></form> }
  <p style="margin-top:16px"><a href="/Account/Login">@X("Back to sign in", "العودة لتسجيل الدخول")</a></p>
 </div></section></div>

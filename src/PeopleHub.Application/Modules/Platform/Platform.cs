@@ -9,9 +9,29 @@ using PeopleHub.Application.Modules.Attendance;
 namespace PeopleHub.Application.Modules.Platform;
 
 /// <summary>Key/value settings stored in the database, with a process-wide cache for synchronous reads.</summary>
-public class SettingsService(IRepository repo, ICurrentUser me, AuditService audit)
+public class SettingsService(IRepository repo, ICurrentUser me, AuditService audit, PeopleHub.Application.Common.Tenancy.ITenantContext? tenantCtx = null)
 {
-    public static readonly ConcurrentDictionary<string, string> Cache = new();
+    /// <summary>Per-company settings cache (ADR-0023 stage 4). Reads and writes go to the ambient company's own dictionary, so one company's values never reach another. A company's settings are read from the database once, on first use, then kept until that company saves.</summary>
+    public sealed class TenantSettingCache
+    {
+        readonly ConcurrentDictionary<int, ConcurrentDictionary<string, string>> byTenant = new();
+        ConcurrentDictionary<string, string> Mine() => byTenant.GetOrAdd(CurrentTenant(), t => new ConcurrentDictionary<string, string>(Loader?.Invoke(t) ?? new Dictionary<string, string>()));
+        public string this[string key] { get => Mine()[key]; set => Mine()[key] = value; }
+        public bool TryGetValue(string key, out string value) => Mine().TryGetValue(key, out value!);
+        public bool TryRemove(string key, out string value) => Mine().TryRemove(key, out value!);
+        public void Set(int tenant, string key, string value) => byTenant.GetOrAdd(tenant, t => new ConcurrentDictionary<string, string>(Loader?.Invoke(t) ?? new Dictionary<string, string>()))[key] = value;
+        public void Reset(int tenant) => byTenant.TryRemove(tenant, out _);
+        public IReadOnlyList<int> LoadedTenants => byTenant.Keys.ToList();
+    }
+    /// <summary>The company the current request or job belongs to. Wired once at startup; defaults to the first company.</summary>
+    static readonly AsyncLocal<int?> scoped = new();
+    /// <summary>Runs work as another company on this async flow only (tests and background jobs), without touching other flows.</summary>
+    public static void RunAs(int tenant, Action work) { var old = scoped.Value; scoped.Value = tenant; try { work(); } finally { scoped.Value = old; } }
+    public static int CurrentTenant() => scoped.Value ?? AmbientTenant();
+    public static Func<int> AmbientTenant { get; set; } = () => PeopleHub.Application.Common.Tenancy.TenantIds.Default;
+    /// <summary>Reads one company's saved settings synchronously (first use only). Wired at startup; tests leave it null.</summary>
+    public static Func<int, Dictionary<string, string>>? Loader { get; set; }
+    public static readonly TenantSettingCache Cache = new();
     public static readonly Dictionary<string, string> Defaults = new()
     {
         ["att.mode"] = "System", ["zk.ip"] = "192.168.1.201", ["zk.port"] = "4370", ["zk.simulate"] = "true", ["zk.apiKey"] = "demo-device-key",
@@ -32,7 +52,9 @@ public class SettingsService(IRepository repo, ICurrentUser me, AuditService aud
 
     public async Task LoadAsync()
     {
-        foreach (var s in await repo.ToListAsync(repo.Query<AppSetting>())) Cache[s.Key] = s.Value;
+        var t = tenantCtx?.TenantId ?? CurrentTenant();
+        Cache.Reset(t);
+        foreach (var s in await repo.ToListAsync(repo.Query<AppSetting>())) Cache.Set(t, s.Key, s.Value);
     }
 
     public async Task<Dictionary<string, string>> AllAsync()
@@ -58,7 +80,7 @@ public class SettingsService(IRepository repo, ICurrentUser me, AuditService aud
             if (!Defaults.ContainsKey(k)) continue;
             var row = rows.FirstOrDefault(r => r.Key == k);
             if (row == null) repo.Add(new AppSetting { Key = k, Value = v }); else row.Value = v;
-            Cache[k] = v;
+            Cache.Set(tenantCtx?.TenantId ?? CurrentTenant(), k, v);
         }
         audit.Log("Update", "Settings", "attendance/email/payroll", $"att.mode={mode}");
         await repo.SaveAsync();
@@ -247,14 +269,14 @@ public class AccountService(IRepository repo, ICurrentUser me, AppClock clock, E
     }
 
     /// <summary>Creates a one-hour token, stores only its hash, and queues delivery.</summary>
-    public async Task<string?> RequestResetAsync(string email, string baseUrl)
+    public async Task<string?> RequestResetAsync(string email, string baseUrl, string? company = null)
     {
         email = (email ?? "").Trim().ToLowerInvariant();
         var u = await repo.FirstOrDefaultAsync(repo.Query<AppUser>().Where(x => x.Email == email && x.IsActive)); if (u == null) return null;
         var token = Convert.ToHexString(System.Security.Cryptography.RandomNumberGenerator.GetBytes(24)).ToLowerInvariant();
         foreach (var old in await repo.ToListAsync(repo.Query<PasswordReset>().Where(r => r.UserId == u.Id && !r.Used))) old.Used = true;
         repo.Add(new PasswordReset { UserId = u.Id, Token = HashToken(token), Expires = clock.UtcNow.AddHours(1) });
-        mail.Queue(u.Email, "Reset your PeopleHub password", $"Use this link within one hour: {baseUrl}/Account/Reset?token={token}");
+        mail.Queue(u.Email, "Reset your PeopleHub password", $"Use this link within one hour: {baseUrl}/Account/Reset?token={token}{(string.IsNullOrEmpty(company) ? "" : "&company=" + Uri.EscapeDataString(company))}");
         await repo.SaveAsync(); return token;
     }
 
