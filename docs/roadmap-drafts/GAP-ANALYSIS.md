@@ -80,7 +80,7 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 | US-PH3-012 Skills and competency intelligence | Partial | Competency frameworks per grade `[PER-001]` exist; skills inventory (taxonomy, confirmed skills, restricted assessment data) and a team gap view are built at /Skills. Open: automatic sourcing from training records. | Engineering |
 | US-PH3-013 Succession and talent planning | Gap | `[ENT-006]` Open. | Engineering and policy |
 | US-PH3-014 AI-assisted HR knowledge and policy search | Gap | No AI component. | Owner decision: AI governance, provider, data handling |
-| US-PH3-015 Payroll and attendance anomaly detection | Gap | No detection logic. Source data exists (payroll snapshots, raw punches). | Owner decision: approved AI/statistical use |
+| US-PH3-015 Payroll and attendance anomaly detection | Partial | Rule-based review flags built (/PayrollAnomalies, configurable thresholds). Not built: scoring, case workflow. | Owner decision: approved AI/statistical use |
 | US-PH3-016 Workforce forecasting | Gap | None. | Same |
 | US-PH3-017 AI governance and human oversight | Gap | None. Audit log and separation-of-duties patterns could be reused. | Owner decision |
 | US-PH3-018 Country policy packages | Gap | Egyptian rules are embedded in payroll code and settings; no package interface. | Depends on Phase 0 architecture and legal sign-off |
