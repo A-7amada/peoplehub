@@ -120,7 +120,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<ApprovalVote>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.ParticipantEmployeeId}).IsUnique();
         b.Entity<ApprovalVote>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.ActorEmployeeId}).IsUnique();
         b.Entity<PayrollAdjustment>().HasIndex(x=>x.TargetRunId);b.Entity<PayrollAdjustmentEvent>().HasIndex(x=>new{x.AdjustmentId,x.Sequence}).IsUnique();
-        b.Entity<SalaryStructure>();b.Entity<SalaryStructurePublication>();b.Entity<IntegrationEntry>();b.Entity<LegalHold>();b.Entity<WorkflowDraft>();b.Entity<CandidateFile>();b.Entity<Skill>();b.Entity<EmployeeSkill>();b.Entity<SkillRequirement>();b.Entity<SalaryStructureApplication>().HasIndex(x=>x.EmployeeId);
+        b.Entity<SalaryStructure>();b.Entity<SalaryStructurePublication>();b.Entity<IntegrationEntry>();b.Entity<LegalHold>();b.Entity<LeaveEncashment>();b.Entity<WorkflowDraft>();b.Entity<CandidateFile>();b.Entity<Skill>();b.Entity<EmployeeSkill>();b.Entity<SkillRequirement>();b.Entity<SalaryStructureApplication>().HasIndex(x=>x.EmployeeId);
         b.Entity<ApprovalReminder>().HasIndex(x=>new{x.Kind,x.RequestId,x.StageIndex,x.UserId,x.OnDate}).IsUnique();
         b.Entity<PayrollBankResult>().HasIndex(x=>new{x.LineId,x.Version}).IsUnique();
         b.Entity<EmployeeCaseFile>().HasIndex(x=>x.Token).IsUnique();
@@ -214,6 +214,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<SkillRequirement>().HasIndex("TenantId", nameof(SkillRequirement.SkillId), nameof(SkillRequirement.DepartmentId)).IsUnique();
         b.Entity<IntegrationEntry>().HasIndex("TenantId", nameof(IntegrationEntry.Name)).IsUnique();
         b.Entity<LegalHold>().HasIndex(nameof(LegalHold.EmployeeId));
+        b.Entity<LeaveEncashment>().HasIndex(nameof(LeaveEncashment.EmployeeId)); b.Entity<LeaveEncashment>().Property(x => x.Days).HasPrecision(18, 4);
         b.Entity<WorkflowDraft>().HasIndex("TenantId", nameof(WorkflowDraft.Kind)).IsUnique();
         b.Entity<CandidateFile>().HasIndex("TenantId",nameof(CandidateFile.Token)).IsUnique();b.Entity<CandidateFile>().HasIndex(x=>x.CandidateId);
         b.Entity<Employee>().HasIndex("TenantId", nameof(Employee.Code)).IsUnique();
