@@ -1,0 +1,15 @@
+@model List<BenefitClaim>
+@{ViewData["Title"]=T.IsAr?"سجل مطالبات المزايا":"Benefit claims record";Func<string,string,string>X=(e,a)=>T.IsAr?a:e;bool hr=Me.Can(Perm.BenefitsManage);var enrollments=(List<BenefitEnrollment>)ViewBag.Enrollments;}
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><p class="sub">@X("Internal record of claims against recorded coverage","سجل داخلي للمطالبات على التغطية المسجلة")</p></div><a class="btn" href="/Benefits">@X("Back to benefits","العودة إلى المزايا")</a></div>
+<p class="muted small">@X("Record only. Nothing is sent to an insurer, paid, reimbursed or deducted from salary, and a recorded claim does not mean coverage is confirmed. Status moves from Recorded to Reviewed to Closed. Illustrative workflow, not legally validated.","سجل فقط. لا يُرسل شيء إلى شركة تأمين ولا يُدفع أو يُسترد أو يُخصم من الراتب، وتسجيل المطالبة لا يعني تأكيد التغطية. تنتقل الحالة من مسجلة إلى تمت مراجعتها ثم مغلقة. إجراء توضيحي غير معتمد قانونيا.")</p>
+<div class="card"><div class="card-b"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>#</th><th>@X("Enrolment","التسجيل")</th><th>@X("Service date","تاريخ الخدمة")</th><th>@X("Amount","المبلغ")</th><th>@X("Description","الوصف")</th><th>@X("Status","الحالة")</th><th>@X("Outcome","النتيجة")</th>@if(hr){<th></th>}</tr></thead><tbody>
+@foreach(var c in Model){<tr><td>@c.Id</td><td>#@c.EnrollmentId</td><td>@c.ServiceDate.ToString("yyyy-MM-dd")</td><td><bdi>@c.Amount.ToString("N2") @c.Currency</bdi></td><td>@c.Description</td><td>@c.Status</td><td>@c.Outcome</td>
+@if(hr){<td>@if(c.Status!="Closed"){<form method="post" action="/BenefitClaims/Advance" asp-antiforgery="true" class="inline-form"><input type="hidden" name="id" value="@c.Id"><input class="input" name="outcome" maxlength="2000" placeholder="@X("Outcome note (needed to close)","ملاحظة النتيجة (مطلوبة للإغلاق)")"><button class="btn">@(c.Status=="Recorded"?X("Mark reviewed","تمت المراجعة"):X("Close","إغلاق"))</button></form>}</td>}</tr>}
+@if(Model.Count==0){<tr><td colspan="8">@X("No claims recorded.","لا توجد مطالبات مسجلة.")</td></tr>}
+</tbody></table></div></div></div>
+@if(hr){<div class="card" style="margin-top:18px"><div class="card-h"><h2>@X("Record a claim","تسجيل مطالبة")</h2></div><div class="card-b"><form method="post" action="/BenefitClaims/Record" asp-antiforgery="true" class="form-grid">
+<div class="field"><label>@X("Enrolment","التسجيل")</label><select class="input" name="enrollmentId">@foreach(var e in enrollments){<option value="@e.Id">#@e.Id @e.CoveredName (@e.StartsOn.ToString("yyyy-MM-dd"))</option>}</select></div>
+<div class="field"><label>@X("Service date","تاريخ الخدمة")</label><input class="input" type="date" name="serviceDate" required></div>
+<div class="field"><label>@X("Amount","المبلغ")</label><input class="input" type="number" step="0.01" min="0.01" name="amount" required></div>
+<div class="field"><label>@X("Description","الوصف")</label><input class="input" name="description" maxlength="2000" required></div>
+<div class="field"><label>&nbsp;</label><button class="btn">@X("Record claim","تسجيل المطالبة")</button></div></form></div></div>}

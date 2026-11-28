@@ -130,7 +130,7 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<EmployeeGrievanceResponse>().HasIndex(x=>x.GrievanceId);
         b.Entity<EmployeeCaseAccess>().HasIndex(x=>new{x.CaseId,x.UserId});
         b.Entity<EmployeeCase>();b.Entity<EmployeeCaseEvent>().HasIndex(x=>x.CaseId);
-        b.Entity<BenefitCancellation>().HasIndex(x=>x.EnrollmentId).IsUnique();b.Entity<BenefitEnrollment>().HasIndex(x=>new{x.EmployeeId,x.PlanId});b.Entity<BenefitPlan>();
+        b.Entity<BenefitCancellation>().HasIndex(x=>x.EnrollmentId).IsUnique();b.Entity<BenefitEnrollment>().HasIndex(x=>new{x.EmployeeId,x.PlanId});b.Entity<BenefitPlan>();b.Entity<BenefitClaim>().HasIndex(x=>x.EnrollmentId);
         b.Entity<CompetencyApplication>().HasIndex(x=>x.AppraisalId).IsUnique();
         b.Entity<TrainingCourse>().Property(x=>x.ApprovalStatus).HasDefaultValue("Legacy");b.Entity<JobOpening>().Property(x=>x.ApprovalStatus).HasDefaultValue("Legacy");
         b.Entity<CandidateOffer>().HasIndex(x=>x.CandidateId);b.Entity<CandidateOfferEvent>().HasIndex(x=>x.OfferId);
