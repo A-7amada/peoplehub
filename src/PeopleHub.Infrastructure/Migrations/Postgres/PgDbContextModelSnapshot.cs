@@ -3831,6 +3831,57 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.ToTable("LeaveType");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.LegalHold", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("PlacedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("PlacedBy")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("ReleaseReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("ReleasedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ReleasedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("text")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("LegalHold");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.LifecycleTask", b =>
                 {
                     b.Property<int>("Id")

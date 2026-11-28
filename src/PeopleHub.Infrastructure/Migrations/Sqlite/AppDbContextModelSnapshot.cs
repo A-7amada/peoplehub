@@ -3678,6 +3678,55 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.ToTable("LeaveType");
                 });
 
+            modelBuilder.Entity("PeopleHub.Domain.Entities.LegalHold", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("EmployeeId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("PlacedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PlacedBy")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReleaseReason")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("ReleasedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ReleasedBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Revision")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("");
+
+                    b.Property<int>("TenantId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("LegalHold");
+                });
+
             modelBuilder.Entity("PeopleHub.Domain.Entities.LifecycleTask", b =>
                 {
                     b.Property<int>("Id")
