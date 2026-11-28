@@ -78,3 +78,7 @@ Reason codes: FREE = free and decision-free (or already approved), can be built 
 
 ## Held (not built without a decision or spend)
 Subscriptions and billing (US-SUB-001 to 010) wait for pricing and plan decisions and ADR-0023 stage 6. Payroll and leave-encashment legal rules wait for specialist review. AI, forecasting, succession, SSO, bank and accounting integrations, GPS and native mobile stay deferred. Render Starter, staging, a payment provider, SMS/push and a malware scanner are spend items.
+
+## Progress log
+- 2026-11-28 unit 1: US-PH1-001 lifecycle audit built (story stays Partial until the retention default is recorded).
+- 2026-11-28 unit 2: ADR-0023 stage 4 built (per-company settings cache, company-scoped reset links). Stage 5 RLS script written but unapplied and unverified (see ADR-0023).
