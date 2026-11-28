@@ -11,8 +11,8 @@ using PeopleHub.Infrastructure.Persistence;
 namespace PeopleHub.Infrastructure.Migrations.Sqlite
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20261128011311_LeaveDecimalBalances")]
-    partial class LeaveDecimalBalances
+    [Migration("20261128011849_LeaveDecimalAndPartDay")]
+    partial class LeaveDecimalAndPartDay
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3102,12 +3102,14 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("INTEGER");
 
                     b.Property<double>("CarriedOver")
+                        .HasPrecision(18, 4)
                         .HasColumnType("REAL");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("INTEGER");
 
                     b.Property<double>("Entitled")
+                        .HasPrecision(18, 4)
                         .HasColumnType("REAL");
 
                     b.Property<int>("LeaveTypeId")
@@ -3125,6 +3127,7 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasDefaultValue(1);
 
                     b.Property<double>("Used")
+                        .HasPrecision(18, 4)
                         .HasColumnType("REAL");
 
                     b.Property<int>("Year")
@@ -3255,6 +3258,7 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<double>("Days")
+                        .HasPrecision(18, 4)
                         .HasColumnType("REAL");
 
                     b.Property<DateTime?>("DecidedAt")
@@ -3269,8 +3273,15 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("TEXT");
 
+                    b.Property<double?>("Hours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("REAL");
+
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("PartOfDay")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Reason")
                         .HasColumnType("TEXT");
@@ -3327,6 +3338,7 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                         .HasColumnType("TEXT");
 
                     b.Property<double>("Delta")
+                        .HasPrecision(18, 4)
                         .HasColumnType("REAL");
 
                     b.Property<int>("EmployeeId")

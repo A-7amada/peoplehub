@@ -176,7 +176,7 @@ public class AttendanceService(IRepository repo, AccessScope scope, ICurrentUser
             var working = !AttendanceCalculator.IsWeekend(d) && h == null && emp != null && d >= emp.HireDate.Date;
             recs.TryGetValue(d, out var rec);
             var leave = leaves.FirstOrDefault(l => l.StartDate <= d && l.EndDate >= d);
-            var absent = working && leave == null && d < today && (rec == null || rec.Status == AttendanceStatus.Absent);
+            var absent = working && (leave == null || leave.Days < 1) && d < today && (rec == null || rec.Status == AttendanceStatus.Absent);
             // Attendance visibility does not grant access to private leave types or medical evidence.
             LeaveRequest? visibleLeave = leave == null ? null : new LeaveRequest
             {

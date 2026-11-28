@@ -194,6 +194,9 @@ public class AppDbContext : DbContext, IRepository
         b.Entity<Tenant>().HasIndex(x => x.Slug).IsUnique();
         b.Entity<PlatformUser>().HasIndex(x => x.Email).IsUnique();
         b.Entity<PlatformAuditLog>().HasIndex(x => x.At);
+        // Leave quantities keep four decimals so an hourly request (hours / hours-per-day) is stored exactly (ADR-0022 unit 3b).
+        b.Entity<LeaveBalance>().Property(x => x.Entitled).HasPrecision(18, 4); b.Entity<LeaveBalance>().Property(x => x.CarriedOver).HasPrecision(18, 4); b.Entity<LeaveBalance>().Property(x => x.Used).HasPrecision(18, 4);
+        b.Entity<LeaveRequest>().Property(x => x.Days).HasPrecision(18, 4); b.Entity<LeaveRequest>().Property(x => x.Hours).HasPrecision(18, 4); b.Entity<LeaveTransaction>().Property(x => x.Delta).HasPrecision(18, 4);
         // Shared database, TenantId on every customer table with a global query filter (ADR-0001, ADR-0002).
         foreach (var entity in b.Model.GetEntityTypes().Where(t => t.BaseType == null && !t.IsOwned() && !NotTenantOwned.Contains(t.ClrType.Name)).ToList())
         {

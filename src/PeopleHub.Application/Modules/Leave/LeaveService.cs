@@ -54,22 +54,24 @@ public class LeaveService(IRepository repo, AccessScope scope, ICurrentUser me, 
         return existing.OrderBy(b => b.LeaveTypeId).ToList();
     }
 
-    public Task RequestAsync(int typeId, DateTime start, DateTime end, string? reason, string? document, string? attToken = null) => repo.AtomicAsync(()=>RequestCoreAsync(typeId,start,end,reason,document,attToken));
-    private async Task RequestCoreAsync(int typeId, DateTime start, DateTime end, string? reason, string? document, string? attToken = null)
+    public Task RequestAsync(int typeId, DateTime start, DateTime end, string? reason, string? document, string? attToken = null, string? partOfDay = null, decimal? hours = null) => repo.AtomicAsync(()=>RequestCoreAsync(typeId,start,end,reason,document,attToken,partOfDay,hours));
+    private async Task RequestCoreAsync(int typeId, DateTime start, DateTime end, string? reason, string? document, string? attToken = null, string? partOfDay = null, decimal? hours = null)
     {
         var e = await repo.FirstOrDefaultAsync(repo.Query<Employee>().Where(x => x.Id == (me.EmployeeId ?? -1))) ?? throw new DomainException("err.forbidden");
         var type = await repo.FirstOrDefaultAsync(repo.Query<LeaveType>().Where(t => t.Id == typeId)) ?? throw new DomainException("err.notFound");
         var balance = (await BalancesAsync(e.Id, start.Year)).FirstOrDefault(b => b.LeaveTypeId == typeId);
         var assignments=await repo.ToListAsync(repo.Query<EmployeeAssignment>().Where(x=>x.EmployeeId==e.Id));
         var holidays = (await repo.ToListAsync(repo.Query<Holiday>())).Where(h=>HolidayCalendar.Applies(h,e,h.Date,assignments)).Select(h => h.Date);
-        var req = LeaveRequest.Create(e, type, balance, start, end, reason, document, clock.Today, holidays);
+        // Part-day units follow an enabled policy only (ADR-0022): without one the type stays whole days.
+        var pol = await repo.FirstOrDefaultAsync(repo.Query<LeavePolicy>().Where(x => x.LeaveTypeId == typeId && x.Enabled));
+        var req = LeaveRequest.Create(e, type, balance, start, end, reason, document, clock.Today, holidays, partOfDay, hours, pol?.AllowHalfDay == true, pol?.AllowHourly == true, pol?.HoursPerDay ?? 8);
         await flows.RouteRequestAsync("Leave",req,e,req.Days,!type.IsPaid);
         var mine = await repo.ToListAsync(repo.Query<LeaveRequest>().Where(l => l.EmployeeId == e.Id));
         if (mine.Any(req.Overlaps)) throw new DomainException("err.overlap");
         e.LeaveRequestStamp=Guid.NewGuid().ToString("N"); // concurrent requests for one employee contend on the employee revision
         req.Employee = e; req.AttachmentToken = attToken; req.AttachmentName = attToken == null ? null : document;
         repo.Add(req);
-        await notify.NotifyStageAsync(req, $"{e.FullName}: {type.Name} {start:yyyy-MM-dd} → {end:yyyy-MM-dd} ({req.Days})");
+        await notify.NotifyStageAsync(req, $"{e.FullName}: {type.Name} {start:yyyy-MM-dd} → {end:yyyy-MM-dd} ({req.Days}{(req.PartOfDay != null ? " " + req.PartOfDay : req.Hours != null ? " " + req.Hours + "h" : "")})");
         await repo.SaveAsync();
         flows.RecordAutoApprovals("Leave",req);
         await repo.SaveAsync();

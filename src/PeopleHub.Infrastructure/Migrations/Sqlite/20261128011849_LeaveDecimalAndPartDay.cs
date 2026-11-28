@@ -5,7 +5,7 @@
 namespace PeopleHub.Infrastructure.Migrations.Sqlite
 {
     /// <inheritdoc />
-    public partial class LeaveDecimalBalances : Migration
+    public partial class LeaveDecimalAndPartDay : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,6 +14,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 name: "Delta",
                 table: "LeaveTransaction",
                 type: "REAL",
+                precision: 18,
+                scale: 4,
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
@@ -22,14 +24,32 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 name: "Days",
                 table: "LeaveRequest",
                 type: "REAL",
+                precision: 18,
+                scale: 4,
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
+
+            migrationBuilder.AddColumn<double>(
+                name: "Hours",
+                table: "LeaveRequest",
+                type: "REAL",
+                precision: 18,
+                scale: 4,
+                nullable: true);
+
+            migrationBuilder.AddColumn<string>(
+                name: "PartOfDay",
+                table: "LeaveRequest",
+                type: "TEXT",
+                nullable: true);
 
             migrationBuilder.AlterColumn<double>(
                 name: "Used",
                 table: "LeaveBalance",
                 type: "REAL",
+                precision: 18,
+                scale: 4,
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
@@ -38,6 +58,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 name: "Entitled",
                 table: "LeaveBalance",
                 type: "REAL",
+                precision: 18,
+                scale: 4,
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
@@ -46,6 +68,8 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 name: "CarriedOver",
                 table: "LeaveBalance",
                 type: "REAL",
+                precision: 18,
+                scale: 4,
                 nullable: false,
                 oldClrType: typeof(int),
                 oldType: "INTEGER");
@@ -54,13 +78,23 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropColumn(
+                name: "Hours",
+                table: "LeaveRequest");
+
+            migrationBuilder.DropColumn(
+                name: "PartOfDay",
+                table: "LeaveRequest");
+
             migrationBuilder.AlterColumn<int>(
                 name: "Delta",
                 table: "LeaveTransaction",
                 type: "INTEGER",
                 nullable: false,
                 oldClrType: typeof(double),
-                oldType: "REAL");
+                oldType: "REAL",
+                oldPrecision: 18,
+                oldScale: 4);
 
             migrationBuilder.AlterColumn<int>(
                 name: "Days",
@@ -68,7 +102,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 type: "INTEGER",
                 nullable: false,
                 oldClrType: typeof(double),
-                oldType: "REAL");
+                oldType: "REAL",
+                oldPrecision: 18,
+                oldScale: 4);
 
             migrationBuilder.AlterColumn<int>(
                 name: "Used",
@@ -76,7 +112,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 type: "INTEGER",
                 nullable: false,
                 oldClrType: typeof(double),
-                oldType: "REAL");
+                oldType: "REAL",
+                oldPrecision: 18,
+                oldScale: 4);
 
             migrationBuilder.AlterColumn<int>(
                 name: "Entitled",
@@ -84,7 +122,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 type: "INTEGER",
                 nullable: false,
                 oldClrType: typeof(double),
-                oldType: "REAL");
+                oldType: "REAL",
+                oldPrecision: 18,
+                oldScale: 4);
 
             migrationBuilder.AlterColumn<int>(
                 name: "CarriedOver",
@@ -92,7 +132,9 @@ namespace PeopleHub.Infrastructure.Migrations.Sqlite
                 type: "INTEGER",
                 nullable: false,
                 oldClrType: typeof(double),
-                oldType: "REAL");
+                oldType: "REAL",
+                oldPrecision: 18,
+                oldScale: 4);
         }
     }
 }

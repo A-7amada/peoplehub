@@ -12,8 +12,8 @@ using PeopleHub.Infrastructure.Persistence;
 namespace PeopleHub.Infrastructure.Migrations.Postgres
 {
     [DbContext(typeof(PgDbContext))]
-    [Migration("20261128011346_LeaveDecimalBalances")]
-    partial class LeaveDecimalBalances
+    [Migration("20261128011923_LeaveDecimalAndPartDay")]
+    partial class LeaveDecimalAndPartDay
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -3236,15 +3236,15 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("CarriedOver")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");
 
                     b.Property<decimal>("Entitled")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("integer");
@@ -3261,8 +3261,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasDefaultValue(1);
 
                     b.Property<decimal>("Used")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<int>("Year")
                         .HasColumnType("integer");
@@ -3398,8 +3398,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("Days")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<DateTime?>("DecidedAt")
                         .HasColumnType("timestamp without time zone");
@@ -3413,8 +3413,15 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("timestamp without time zone");
 
+                    b.Property<decimal?>("Hours")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
                     b.Property<int>("LeaveTypeId")
                         .HasColumnType("integer");
+
+                    b.Property<string>("PartOfDay")
+                        .HasColumnType("text");
 
                     b.Property<string>("Reason")
                         .HasColumnType("text");
@@ -3473,8 +3480,8 @@ namespace PeopleHub.Infrastructure.Migrations.Postgres
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<decimal>("Delta")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
 
                     b.Property<int>("EmployeeId")
                         .HasColumnType("integer");

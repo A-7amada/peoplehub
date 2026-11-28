@@ -70,27 +70,57 @@ public class LeaveRequest : Approvable
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public decimal Days { get; set; }
+    /// <summary>"AM" or "PM" for a half-day request (ADR-0022 unit 3b); null for whole days and hourly requests.</summary>
+    public string? PartOfDay { get; set; }
+    /// <summary>Hours for an hourly request; null otherwise. Days holds hours divided by the policy hours per day.</summary>
+    public decimal? Hours { get; set; }
     public string? Reason { get; set; }
     public string? DocumentName { get; set; }
 
     public static LeaveRequest Create(Employee e, LeaveType type, LeaveBalance? balance, DateTime start, DateTime end,
-        string? reason, string? document, DateTime today, IEnumerable<DateTime>? holidays = null)
+        string? reason, string? document, DateTime today, IEnumerable<DateTime>? holidays = null,
+        string? partOfDay = null, decimal? hours = null, bool allowHalfDay = false, bool allowHourly = false, int hoursPerDay = 8)
     {
         if (!e.IsWorking) throw new DomainException("err.terminated");
         if (end.Date < start.Date) throw new DomainException("err.dates");
         if (start.Date < today.Date && !type.AllowBackdated) throw new DomainException("err.past");
         var days = AttendanceCalculator.CountWorkingDays(start, end, holidays);
         if (days == 0) throw new DomainException("err.noWorkingDays");
+        partOfDay = string.IsNullOrWhiteSpace(partOfDay) || partOfDay == "Full" ? null : partOfDay.Trim().ToUpperInvariant();
+        decimal size = days;
+        if (partOfDay != null || hours != null)
+        {
+            if (partOfDay != null && hours != null) throw new DomainException("err.partialInvalid");
+            if (start.Date != end.Date || days != 1) throw new DomainException("err.partialOneDay");
+            if (partOfDay != null)
+            {
+                if (partOfDay is not ("AM" or "PM")) throw new DomainException("err.partialInvalid");
+                if (!allowHalfDay) throw new DomainException("err.partialNotAllowed");
+                size = 0.5m;
+            }
+            else
+            {
+                if (!allowHourly) throw new DomainException("err.partialNotAllowed");
+                if (hoursPerDay is < 1 or > 24 || hours <= 0 || hours >= hoursPerDay || hours != decimal.Truncate(hours!.Value)) throw new DomainException("err.partialInvalid");
+                size = Math.Round(hours!.Value / hoursPerDay, 4, MidpointRounding.AwayFromZero);
+            }
+        }
         if (type.RequiresDocument && string.IsNullOrWhiteSpace(document)) throw new DomainException("err.docRequired");
-        if (type.DeductsBalance && (balance == null || days > balance.Remaining)) throw new DomainException("err.balance");
+        if (type.DeductsBalance && (balance == null || size > balance.Remaining)) throw new DomainException("err.balance");
         // Short paid leave stops at the manager. Longer or unpaid leave also needs HR.
-        var route = days > 2 || !type.IsPaid ? BuildRoute(e, ApprovalStage.HR) : BuildRoute(e);
+        var route = size > 2 || !type.IsPaid ? BuildRoute(e, ApprovalStage.HR) : BuildRoute(e);
         return new LeaveRequest { EmployeeId = e.Id, LeaveTypeId = type.Id, LeaveType = type, StartDate = start.Date, EndDate = end.Date,
-            Days = days, Reason = reason?.Trim(), DocumentName = document?.Trim(), Route = route };
+            Days = size, PartOfDay = partOfDay, Hours = hours, Reason = reason?.Trim(), DocumentName = document?.Trim(), Route = route };
     }
 
-    public bool Overlaps(LeaveRequest o) =>
-        o.Id != Id && o.Status is RequestStatus.Pending or RequestStatus.Approved && o.StartDate <= EndDate && StartDate <= o.EndDate;
+    public bool Overlaps(LeaveRequest o)
+    {
+        if (!(o.Id != Id && o.Status is RequestStatus.Pending or RequestStatus.Approved && o.StartDate <= EndDate && StartDate <= o.EndDate)) return false;
+        // Two part-day requests on the same date can coexist when together they stay within one day and are not the same half.
+        var bothPartial = Days < 1 && o.Days < 1 && StartDate.Date == EndDate.Date && o.StartDate.Date == o.EndDate.Date && StartDate.Date == o.StartDate.Date;
+        if (bothPartial && Days + o.Days <= 1 && !(PartOfDay != null && PartOfDay == o.PartOfDay)) return false;
+        return true;
+    }
 
     /// <summary>Called when the last approval stage is passed.</summary>
     public void ApplyToBalance(LeaveBalance? balance)

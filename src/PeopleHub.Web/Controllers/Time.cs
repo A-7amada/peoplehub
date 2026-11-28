@@ -81,10 +81,10 @@ public class LeaveController(Loc loc, LeaveService svc, ApprovalService approval
     }
 
     [HttpPost]
-    public async Task<IActionResult> Request(int typeId, DateTime start, DateTime end, string? reason, string? document, IFormFile? file)
+    public async Task<IActionResult> Request(int typeId, DateTime start, DateTime end, string? reason, string? document, IFormFile? file, string? part, decimal? hours)
     {
         var bytes = await FileBytes(file);
-        return await Do(() => { var (tok, nm) = files.Save(file?.FileName, bytes); return svc.RequestAsync(typeId, start, end, reason, nm ?? document, tok); }, "msg.requestSent", () => RedirectToAction(nameof(Index)));
+        return await Do(() => { var (tok, nm) = files.Save(file?.FileName, bytes); return svc.RequestAsync(typeId, start, end, reason, nm ?? document, tok, part, hours); }, "msg.requestSent", () => RedirectToAction(nameof(Index)));
     }
 
     [HttpPost]
