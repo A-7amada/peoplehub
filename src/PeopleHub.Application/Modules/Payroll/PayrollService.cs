@@ -71,6 +71,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         var monthEnd = new DateTime(run.Year, run.Month, 1).AddMonths(1).AddDays(-1);
         var emps = await repo.ToListAsync(repo.Query<Employee>().Where(e => (e.Status == EmployeeStatus.Active || e.Status == EmployeeStatus.OnLeave) && e.HireDate <= monthEnd));
         var summaries = await attendance.SummariesAsync(emps, run.Year, run.Month);
+        var prorateJoin = await ProrateJoiningAsync();
         var comps = await repo.ToListAsync(repo.Query<EmployeeSalaryComponent>());
         var advances = await repo.ToListAsync(repo.Query<AdvanceRequest>().Where(a => a.Status == RequestStatus.Approved));
         foreach (var e in emps)
@@ -80,9 +81,12 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
             var allowances = mine.Where(c => c.Component!.Type == ComponentType.Earning).Sum(c => c.Amount);
             var fixedDed = mine.Where(c => c.Component!.Type == ComponentType.Deduction).Sum(c => c.Amount);
             var inst = advances.Where(a => a.EmployeeId == e.Id && a.DueIn(run.Year, run.Month)).Sum(a => a.InstallmentFor());
+            var factor = JoiningFactor(prorateJoin, e.HireDate, run.Year, run.Month);
+            var basic = factor == 1m ? e.BasicSalary : PayrollCalculator.Round(e.BasicSalary * factor);
+            if (factor != 1m) allowances = PayrollCalculator.Round(allowances * factor);
             manual.TryGetValue(e.Id, out var m);
             var line = new PayrollLine { RunId = run.Id, EmployeeId = e.Id, Employee = e, OvertimeHours = s.OvertimeWeightedHours, AdjustmentNote = m.Note, EmployeeCodeSnapshot=e.Code,EmployeeNameSnapshot=e.FullName,EmployeeNameArSnapshot=e.FullNameAr,DepartmentSnapshot=e.Department?.Name ?? "",DepartmentArSnapshot=e.Department?.NameAr ?? "",CostCenterSnapshot=e.Department?.CostCenter ?? "",BankSnapshot=e.BankName,IbanSnapshot=e.Iban,FixedDeduction=fixedDed };
-            PayrollCalculator.Apply(line, new PayrollInput(e.BasicSalary, allowances, 0, m.Bonus, s.DeductibleDays, s.LateMinutes, s.OvertimeWeightedHours, inst, fixedDed + m.Other), PayrollCalculator.PackFor(run.Year, run.Month));
+            PayrollCalculator.Apply(line, new PayrollInput(basic, allowances, 0, m.Bonus, s.DeductibleDays, s.LateMinutes, s.OvertimeWeightedHours, inst, fixedDed + m.Other), PayrollCalculator.PackFor(run.Year, run.Month));
             repo.Add(line);
         }
     }
@@ -160,6 +164,25 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         await notify.NotifyPermAsync(Perm.PayFinance, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
         await repo.SaveAsync();
     }
+
+    public const string ProrateKey = "Payroll.ProrateJoiningMonth";
+    /// <summary>US-PH2-009 optional proration of basic and fixed allowances for an employee hired during the month: calendar days from the hire date to month end, over 30, never above 1. Default off (full amount, the previous behaviour). Leavers' final month is not built. Illustrative, not reviewed by a payroll specialist.</summary>
+    public async Task<bool> ProrateJoiningAsync() => (await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x => x.Key == ProrateKey)))?.Value == "true";
+    public static decimal JoiningFactor(bool on, DateTime hire, int year, int month)
+    {
+        if (!on || hire.Year != year || hire.Month != month || hire.Day == 1) return 1m;
+        var end = new DateTime(year, month, 1).AddMonths(1).AddDays(-1);
+        return Math.Min(1m, ((end - hire.Date).Days + 1) / PayrollCalculator.DaysPerMonth);
+    }
+    public Task SetProrateJoiningAsync(bool on) => repo.AtomicAsync(async () =>
+    {
+        if (!me.Can(Perm.AdmSettings)) throw new DomainException("err.forbidden");
+        var row = await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x => x.Key == ProrateKey));
+        if (row == null) { row = new() { Key = ProrateKey }; repo.Add(row); }
+        row.Value = on ? "true" : "false";
+        audit.Log("PayrollProrateJoining", "Setting", ProrateKey, on ? "On: basic and fixed allowances of a mid-month hire are paid for calendar days from the hire date, over 30; applies to runs built or recalculated after this change" : "Off: full amounts for a mid-month hire; applies to runs built or recalculated after this change");
+        await repo.SaveAsync();
+    });
 
     public const string DistinctKey = "Payroll.DistinctApprovers";
     /// <summary>US-PH1-009 optional strict separation: when on, the Finance approver must differ from the HR reviewer, and the finalizer from both. Default off (the preparer rules always apply). Illustrative, not independently reviewed.</summary>
