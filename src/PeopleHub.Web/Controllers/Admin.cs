@@ -7,7 +7,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class AdminController(Loc loc, AdminService admin, WorkflowService flows, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail, OperationsService ops, PeopleHub.Application.Modules.Leave.LeavePolicyService leavePolicies) : BaseController(loc)
+public class AdminController(Loc loc, AdminService admin, WorkflowService flows, ApprovalReminders reminders, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail, OperationsService ops, PeopleHub.Application.Modules.Leave.LeavePolicyService leavePolicies) : BaseController(loc)
 {
     // ---- system settings (attendance source, device, email, policies)
     [RequirePerm(Perm.AdmSettings)]
@@ -103,6 +103,7 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
     {
         ViewBag.Roles = await admin.RolesAsync();
         ViewBag.RequiredComments=await flows.RequiredApprovalCommentsAsync();ViewBag.ReminderHours=await flows.ReminderHoursAsync();
+        ViewBag.EscalationHours=await flows.EscalationHoursAsync();ViewBag.EscalationRole=await flows.EscalationRoleAsync();ViewBag.Overdue=await reminders.OverdueAsync();
         ViewBag.Revisions=await flows.RevisionsAsync();return View(await flows.ListAsync());
     }
     [RequirePerm(Perm.AdmFlows)]
@@ -118,6 +119,8 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
         ViewBag.Error=error;ViewBag.Kind=kind??"Leave";ViewBag.Code=code;ViewBag.Size=size;ViewBag.Escalate=escalate;return View(sim);
     }
 
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> EscalationPolicy(string kind,int hours)=>Do(()=>flows.SetEscalationHoursAsync(kind,hours),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> EscalationRole(string role)=>Do(()=>flows.SetEscalationRoleAsync(role),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
     [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> ReminderPolicy(string kind,int hours)=>Do(()=>flows.SetReminderHoursAsync(kind,hours),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
     [RequirePerm(Perm.AdmFlows), HttpPost,RequireStepUp]
     public Task<IActionResult> ApprovalComment(string kind,bool required) => Do(()=>flows.SetApprovalCommentAsync(kind,required),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
