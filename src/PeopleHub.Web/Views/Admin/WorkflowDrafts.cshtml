@@ -1,0 +1,27 @@
+@using PeopleHub.Application.Modules.Requests
+@model List<DraftView>
+@{ViewData["Title"]=T.IsAr?"مسودات مسارات الاعتماد":"Approval workflow drafts";Func<string,string,string>X=(e,a)=>T.IsAr?a:e;var roles=(List<Role>)ViewBag.Roles;var live=(List<WorkflowDefinition>)ViewBag.Live;
+Func<WorkflowStep,string>L=s=>$"{s.Approver}{(s.RoleCode!=null?" ["+s.RoleCode+"]":"")}{(s.Threshold!=null?" > "+s.Threshold.Value.ToString("0.##"):"")} · {s.Rule}{(s.RequiredCount!=null?" x"+s.RequiredCount:"")}";}
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><p class="sub">@X("Edit a copy, compare it with the live cycle, then publish or discard","عدّل نسخة، قارنها بالمسار الحالي، ثم انشرها أو ألغها")</p></div><a class="btn" href="/Admin/Workflows">@X("Back to workflows","العودة إلى المسارات")</a></div>
+<p class="muted small">@X("Live routing does not change until you publish. Requests already routed keep the route they captured. Publishing needs a recent step-up check and is audited with the draft author. One person with workflow permission can draft and publish; a second-person publish rule is not built yet. Illustrative demo data.","لا يتغير التوجيه الحالي حتى تنشر. الطلبات الموجهة سابقاً تحتفظ بمسارها. النشر يتطلب تحققاً إضافياً حديثاً ويسجل في التدقيق مع كاتب المسودة. يمكن لشخص واحد لديه صلاحية المسارات الصياغة والنشر؛ قاعدة نشر بشخص ثان غير متوفرة بعد. بيانات توضيحية.")</p>
+@foreach(var kind in WorkflowService.Kinds){var dv=Model.FirstOrDefault(x=>x.Draft.Kind==kind);
+<div class="card" style="margin-bottom:18px"><div class="card-h"><h2>@kind</h2></div><div class="card-b">
+@if(dv==null){<form method="post" action="/Admin/DraftStart" asp-antiforgery="true"><input type="hidden" name="kind" value="@kind"><button class="btn btn-primary">@X("Start a draft from the live cycle","بدء مسودة من المسار الحالي")</button></form>}
+else{
+<p class="muted small">@X("Draft by","كاتب المسودة") @dv.Draft.CreatedBy · @X("last edited","آخر تعديل") @T.Date(dv.Draft.UpdatedAt) @dv.Draft.UpdatedBy</p>
+<ol>@for(var i=0;i<dv.Steps.Count;i++){var st=dv.Steps[i];<li style="margin-bottom:6px">@L(st)
+<form method="post" action="/Admin/DraftMoveStep" asp-antiforgery="true" style="display:inline"><input type="hidden" name="kind" value="@kind"><input type="hidden" name="position" value="@(i+1)"><button class="btn btn-sm" name="dir" value="-1">↑</button> <button class="btn btn-sm" name="dir" value="1">↓</button></form>
+<form method="post" action="/Admin/DraftRemoveStep" asp-antiforgery="true" style="display:inline"><input type="hidden" name="kind" value="@kind"><input type="hidden" name="position" value="@(i+1)"><button class="btn btn-sm">@X("Remove","حذف")</button></form></li>}</ol>
+<h3>@X("Changes against the live cycle","التغييرات مقارنة بالمسار الحالي")</h3>
+@if(dv.Changes.Count==0){<p class="muted">@X("No difference yet. Publishing needs at least one change.","لا فرق بعد. النشر يتطلب تغييراً واحداً على الأقل.")</p>}else{<ul>@foreach(var c in dv.Changes){<li><b>@c.Kind</b> @c.Text</li>}</ul>}
+<form method="post" action="/Admin/DraftAddStep" asp-antiforgery="true" class="form-grid" style="margin-top:12px"><input type="hidden" name="kind" value="@kind">
+<div class="field"><label>@X("Approver","المعتمد")</label><select name="type"><option value="@((int)ApproverType.Role)">@X("By role","حسب الدور")</option><option value="@((int)ApproverType.DirectManager)">@X("Direct manager","المدير المباشر")</option><option value="@((int)ApproverType.SkipLevelManager)">@X("Manager's manager","مدير المدير")</option><option value="@((int)ApproverType.DepartmentManager)">@X("Department manager","مدير القسم")</option></select></div>
+<div class="field"><label>@X("Applies above (optional)","يسري فوق (اختياري)")</label><input name="threshold" type="number" step="any" min="0"></div>
+<div class="field"><label>@X("Role rule","قاعدة الدور")</label><select name="rule"><option value="0">@X("Any role holder","أي حامل لدور")</option><option value="1">@X("Any one captured participant","واحد من المسجلين")</option><option value="2">@X("All captured participants","جميع المسجلين")</option><option value="3">@X("Configured count","عدد محدد")</option></select></div>
+<div class="field"><label>@X("Required count","العدد المطلوب")</label><input name="requiredCount" type="number" min="1" max="1000"></div>
+<div class="field" style="grid-column:1/-1"><label>@X("Roles","الأدوار")</label><div class="inline-form">@foreach(var r in roles.Where(r=>r.Code!=Roles.Employee)){<label class="check"><input type="checkbox" name="roles" value="@r.Code"> @T.RoleName(r.Code)</label>}</div></div>
+<div class="field"><label>&nbsp;</label><button class="btn btn-sm">@X("Add step to draft","إضافة مرحلة إلى المسودة")</button></div></form>
+<div style="display:flex;gap:8px;margin-top:12px">
+<form method="post" action="/Admin/DraftPublish" asp-antiforgery="true"><input type="hidden" name="kind" value="@kind"><button class="btn btn-primary" @(dv.Changes.Count==0?"disabled":"")>@X("Publish draft","نشر المسودة")</button></form>
+<form method="post" action="/Admin/DraftDiscard" asp-antiforgery="true"><input type="hidden" name="kind" value="@kind"><button class="btn">@X("Discard draft","إلغاء المسودة")</button></form></div>}
+</div></div>}

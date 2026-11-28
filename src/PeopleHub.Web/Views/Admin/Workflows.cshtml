@@ -1,6 +1,7 @@
 @model List<WorkflowDefinition>
 @{ ViewData["Title"] = T["nav.workflows"]; var roles = (List<Role>)ViewBag.Roles; }
 <div class="page-head"><div><h1>@T["nav.workflows"]</h1><div class="sub">@T["wf.sub"]</div></div><a class="btn" href="/Admin/WorkflowSimulate">@(T.IsAr?"محاكاة مسار":"Simulate a route")</a></div>
+<p><a class="btn btn-sm" href="/Admin/WorkflowDrafts">@(T.IsAr?"مسودات المسارات (تعديل ثم نشر)":"Workflow drafts (edit, then publish)")</a></p>
 <div class="grid g2">
 @foreach (var w in Model) {
 <div class="card"><div class="card-h"><h2>@T["req.kind." + w.Kind]</h2><span class="faint small">@T["wf.desc." + w.Kind]</span></div><div class="card-b">

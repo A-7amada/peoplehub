@@ -7,7 +7,7 @@ using PeopleHub.Web.Services;
 
 namespace PeopleHub.Web.Controllers;
 
-public class AdminController(Loc loc, AdminService admin, WorkflowService flows, ApprovalReminders reminders, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail, OperationsService ops, PeopleHub.Application.Modules.Leave.LeavePolicyService leavePolicies) : BaseController(loc)
+public class AdminController(Loc loc, AdminService admin, WorkflowService flows, ApprovalReminders reminders, EmployeeService emps, SettingsService settings, DeviceService device, EmailService mail, OperationsService ops, PeopleHub.Application.Modules.Leave.LeavePolicyService leavePolicies, PeopleHub.Application.Modules.Requests.WorkflowDrafts drafts) : BaseController(loc)
 {
     // ---- system settings (attendance source, device, email, policies)
     [RequirePerm(Perm.AdmSettings)]
@@ -98,6 +98,14 @@ public class AdminController(Loc loc, AdminService admin, WorkflowService flows,
         Do(() => admin.CreateUserAsync(email, password, roles, employeeId), "msg.saved", () => RedirectToAction(nameof(Users)));
 
     // ---- approval cycles
+    [RequirePerm(Perm.AdmFlows)]
+    public async Task<IActionResult> WorkflowDrafts(){ViewBag.Roles=await admin.RolesAsync();ViewBag.Live=await flows.ListAsync();return View(await drafts.ListAsync());}
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> DraftStart(string kind)=>Do(()=>drafts.StartAsync(kind),"msg.saved",()=>RedirectToAction(nameof(WorkflowDrafts)));
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> DraftAddStep(string kind,ApproverType type,string[]? roles,decimal? threshold,ApprovalRule rule=ApprovalRule.AnyRole,int? requiredCount=null)=>Do(()=>{if(!ModelState.IsValid)throw new DomainException("err.required");return drafts.AddStepAsync(kind,type,roles,threshold,rule,requiredCount);},"msg.saved",()=>RedirectToAction(nameof(WorkflowDrafts)));
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> DraftRemoveStep(string kind,int position)=>Do(()=>drafts.RemoveStepAsync(kind,position),"msg.saved",()=>RedirectToAction(nameof(WorkflowDrafts)));
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> DraftMoveStep(string kind,int position,int dir)=>Do(()=>drafts.MoveStepAsync(kind,position,dir),"msg.saved",()=>RedirectToAction(nameof(WorkflowDrafts)));
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> DraftPublish(string kind)=>Do(()=>drafts.PublishAsync(kind),"msg.saved",()=>RedirectToAction(nameof(Workflows)));
+    [RequirePerm(Perm.AdmFlows),HttpPost,RequireStepUp]public Task<IActionResult> DraftDiscard(string kind)=>Do(()=>drafts.DiscardAsync(kind),"msg.saved",()=>RedirectToAction(nameof(WorkflowDrafts)));
     [RequirePerm(Perm.AdmFlows)]
     public async Task<IActionResult> Workflows()
     {

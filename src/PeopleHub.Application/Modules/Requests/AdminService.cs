@@ -162,22 +162,29 @@ public class WorkflowService(IRepository repo, ICurrentUser me, AuditService aud
     private async Task<WorkflowDefinition> LoadAsync(string kind) =>
         (await ListAsync()).FirstOrDefault(w => w.Kind == kind) ?? throw new DomainException("err.notFound");
 
-    public async Task AddStepAsync(string kind, ApproverType type, string[]? roles, decimal? threshold, ApprovalRule rule=ApprovalRule.AnyRole,int? requiredCount=null)
+    /// <summary>Validates and builds one step against the steps already in the cycle. Shared by live edits and drafts.</summary>
+    public static WorkflowStep BuildStep(List<WorkflowStep> existing, HashSet<string> knownRoles, ApproverType type, string[]? roles, decimal? threshold, ApprovalRule rule, int? requiredCount)
     {
-        Require();
-        var w = await LoadAsync(kind);
         if(!Enum.IsDefined(type)||threshold is <0 or >100000000)throw new DomainException("err.required");
         if(!Enum.IsDefined(rule)||(rule!=ApprovalRule.AnyRole&&type!=ApproverType.Role)||(rule==ApprovalRule.Quorum&&(requiredCount is null or <1 or >1000))||(rule!=ApprovalRule.Quorum&&requiredCount!=null))throw new DomainException("err.approvalGroup");
         var codes = (roles ?? []).Where(r => !string.IsNullOrWhiteSpace(r)).Distinct().ToArray();
         if (type == ApproverType.Role && codes.Length == 0) throw new DomainException("err.roleRequired");
-        var knownRoles=(await repo.ToListAsync(repo.Query<Role>())).Select(r=>r.Code).ToHashSet();
         if(type==ApproverType.Role&&codes.Any(r=>!knownRoles.Contains(r)))throw new DomainException("err.roleRequired");
-        if(type is ApproverType.DepartmentManager or ApproverType.SkipLevelManager&&w.Steps.Any(s=>s.Approver==type))throw new DomainException(type==ApproverType.SkipLevelManager?"err.dupSkipLevel":"err.dupDepartmentManager");
-        if (w.Steps.Count >= 6) throw new DomainException("err.maxSteps");
-        if (type == ApproverType.DirectManager && w.Steps.Any(s => s.Approver == ApproverType.DirectManager)) throw new DomainException("err.dupManager");
-        if(w.Steps.Any(s=>s.Approver==type&&type==ApproverType.Role&&(rule!=ApprovalRule.AnyRole||s.Rule!=ApprovalRule.AnyRole)&&s.RoleCode==string.Join('|',codes)))throw new DomainException("err.approvalGroup");
-        var step = new WorkflowStep { Rule=rule,RequiredCount=requiredCount, WorkflowId = w.Id, Order = (w.Steps.Count == 0 ? 0 : w.Steps.Max(s => s.Order)) + 1, Approver = type,
+        if(type is ApproverType.DepartmentManager or ApproverType.SkipLevelManager&&existing.Any(s=>s.Approver==type))throw new DomainException(type==ApproverType.SkipLevelManager?"err.dupSkipLevel":"err.dupDepartmentManager");
+        if (existing.Count >= 6) throw new DomainException("err.maxSteps");
+        if (type == ApproverType.DirectManager && existing.Any(s => s.Approver == ApproverType.DirectManager)) throw new DomainException("err.dupManager");
+        if(existing.Any(s=>s.Approver==type&&type==ApproverType.Role&&(rule!=ApprovalRule.AnyRole||s.Rule!=ApprovalRule.AnyRole)&&s.RoleCode==string.Join('|',codes)))throw new DomainException("err.approvalGroup");
+        return new WorkflowStep { Rule=rule,RequiredCount=requiredCount, Order = (existing.Count == 0 ? 0 : existing.Max(s => s.Order)) + 1, Approver = type,
             RoleCode = type == ApproverType.Role ? string.Join('|', codes) : null, Threshold = threshold is > 0 ? threshold : null };
+    }
+
+    public async Task AddStepAsync(string kind, ApproverType type, string[]? roles, decimal? threshold, ApprovalRule rule=ApprovalRule.AnyRole,int? requiredCount=null)
+    {
+        Require();
+        var w = await LoadAsync(kind);
+        var knownRoles=(await repo.ToListAsync(repo.Query<Role>())).Select(r=>r.Code).ToHashSet();
+        var step = BuildStep(w.Steps, knownRoles, type, roles, threshold, rule, requiredCount);
+        step.WorkflowId = w.Id;
         repo.Add(step);
         audit.Log("Update", "Workflow", w.Id, $"{kind}: added step {step.Token}");
         await repo.SaveAsync();
