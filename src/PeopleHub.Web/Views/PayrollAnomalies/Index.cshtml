@@ -1,0 +1,15 @@
+@using PeopleHub.Application.Modules.Payroll
+@model List<AnomalyFinding>
+@{ViewData["Title"]=T.IsAr?"علامات مراجعة المرتبات":"Payroll review flags";Func<string,string,string>X=(e,a)=>T.IsAr?a:e;int target=ViewBag.Target;var th=(AnomalyThresholds)ViewBag.Thresholds;}
+<div class="page-head"><div><h1>@ViewData["Title"] #@target</h1><p class="sub">@X("Rule-based prompts to look again before approval","تنبيهات قائمة على قواعد للمراجعة قبل الاعتماد")</p></div><a class="btn" href="/Payroll/Run/@target">@T["nav.payroll"]</a></div>
+<p class="muted small">@X("A flag is a prompt to check, not a finding of error. This page changes nothing in the run. Thresholds are configurable (0 turns a rule off) and the defaults are illustrative, not legally validated.","العلامة تنبيه للتحقق وليست إثباتا لخطأ. لا تغير هذه الصفحة شيئا في الدورة. الحدود قابلة للضبط (صفر يوقف القاعدة) والقيم الافتراضية توضيحية وغير معتمدة قانونيا.")</p>
+<div class="card"><div class="card-b"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("Rule","القاعدة")</th><th>@X("Code","الرمز")</th><th>@X("Employee","الموظف")</th><th>@X("Detail","التفاصيل")</th></tr></thead><tbody>
+@foreach(var f in Model){<tr><td>@f.Rule</td><td>@f.Code</td><td>@f.Name</td><td>@f.Detail</td></tr>}
+@if(Model.Count==0){<tr><td colspan="4">@X("No flags for this run.","لا توجد علامات لهذه الدورة.")</td></tr>}
+</tbody></table></div></div></div>
+@if(Me.Can(Perm.AdmSettings)){<div class="card" style="margin-top:18px"><div class="card-h"><h2>@X("Thresholds","الحدود")</h2></div><div class="card-b"><form method="post" action="/PayrollAnomalies/Thresholds" asp-antiforgery="true" class="form-grid"><input type="hidden" name="id" value="@target">
+<div class="field"><label>@X("Net change vs previous run (%)","تغير الصافي عن الدورة السابقة (%)")</label><input class="input" type="number" step="0.1" min="0" max="1000" name="netChangePercent" value="@th.NetChangePercent.ToString(System.Globalization.CultureInfo.InvariantCulture)"></div>
+<div class="field"><label>@X("Late minutes in the month","دقائق التأخير في الشهر")</label><input class="input" type="number" min="0" max="44640" name="lateMinutes" value="@th.LateMinutes"></div>
+<div class="field"><label>@X("Absent days in the month","أيام الغياب في الشهر")</label><input class="input" type="number" min="0" max="31" name="absentDays" value="@th.AbsentDays"></div>
+<div class="field"><label>@X("Overtime hours in the month","ساعات العمل الإضافي في الشهر")</label><input class="input" type="number" step="0.5" min="0" max="744" name="overtimeHours" value="@th.OvertimeHours.ToString(System.Globalization.CultureInfo.InvariantCulture)"></div>
+<div class="field"><label>&nbsp;</label><button class="btn btn-primary">@X("Save thresholds","حفظ الحدود")</button></div></form></div></div>}

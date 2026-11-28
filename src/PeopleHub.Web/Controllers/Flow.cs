@@ -196,3 +196,9 @@ public class PayrollAdjustmentsController(Loc loc,PayrollAdjustments svc):BaseCo
  [RequireStepUp,HttpPost]public Task<IActionResult> Cancel(int id,int adjustmentId,string reason)=>Do(()=>svc.CancelAsync(adjustmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
  [RequireStepUp,HttpPost]public Task<IActionResult> Apply(int id,int adjustmentId,string reason)=>Do(()=>svc.ApplyAsync(adjustmentId,reason),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
 }
+
+public class PayrollAnomaliesController(Loc loc,PayrollAnomalies svc):BaseController(loc)
+{
+ public async Task<IActionResult> Index(int id){Response.Headers.CacheControl="no-store";try{ViewBag.Target=id;ViewBag.Thresholds=await svc.ThresholdsAsync();return View(await svc.ScanAsync(id));}catch(DomainException){return Forbidden();}}
+ [RequireStepUp,HttpPost]public Task<IActionResult> Thresholds(int id,decimal netChangePercent,int lateMinutes,int absentDays,decimal overtimeHours)=>Do(()=>svc.SetThresholdsAsync(netChangePercent,lateMinutes,absentDays,overtimeHours),"msg.saved",()=>RedirectToAction(nameof(Index),new{id}));
+}
