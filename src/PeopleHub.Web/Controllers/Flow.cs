@@ -59,7 +59,7 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
 {
     public async Task<IActionResult> Index()
     {
-        try { ViewBag.Now = clock.Today; return View(await svc.RunsAsync()); }
+        try { ViewBag.Now = clock.Today; ViewBag.Distinct = await svc.DistinctApproversAsync(); return View(await svc.RunsAsync()); }
         catch (DomainException) { return RedirectToAction(nameof(MySlips)); }
     }
 
@@ -80,6 +80,7 @@ public class PayrollController(Loc loc, PayrollService svc, AppClock clock) : Ba
     [RequireStepUp,HttpPost] public Task<IActionResult> Recalc(int id) => Do(() => svc.RecalculateAsync(id), "msg.saved", () => Same(id));
     [RequireStepUp,HttpPost] public Task<IActionResult> Adjust(int id, int lineId, decimal bonus, decimal other, string? note) => Do(() => svc.AdjustLineAsync(lineId, bonus, other, note), "msg.saved", () => Same(id));
     [HttpPost] public Task<IActionResult> Review(int id) => Do(() => svc.ReviewAsync(id), "msg.saved", () => Same(id));
+    [RequireStepUp,HttpPost] public Task<IActionResult> DistinctApprovers(bool on) => Do(() => svc.SetDistinctApproversAsync(on), "msg.saved", () => RedirectToAction(nameof(Index)));
     [RequireStepUp,HttpPost] public Task<IActionResult> FinanceApprove(int id) => Do(() => svc.FinanceApproveAsync(id), "msg.saved", () => Same(id));
     [RequireStepUp,HttpPost] public Task<IActionResult> Finalize(int id) => Do(() => svc.FinalizeAsync(id), "msg.saved", () => Same(id));
     [RequireStepUp,HttpPost] public Task<IActionResult> Paid(int id) => Do(() => svc.MarkPaidAsync(id), "msg.saved", () => Same(id));

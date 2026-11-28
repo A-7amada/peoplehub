@@ -161,12 +161,36 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         await repo.SaveAsync();
     }
 
+    public const string DistinctKey = "Payroll.DistinctApprovers";
+    /// <summary>US-PH1-009 optional strict separation: when on, the Finance approver must differ from the HR reviewer, and the finalizer from both. Default off (the preparer rules always apply). Illustrative, not independently reviewed.</summary>
+    public async Task<bool> DistinctApproversAsync() => (await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x => x.Key == DistinctKey)))?.Value == "true";
+    public Task SetDistinctApproversAsync(bool on) => repo.AtomicAsync(async () =>
+    {
+        if (!me.Can(Perm.AdmSettings)) throw new DomainException("err.forbidden");
+        var row = await repo.FirstOrDefaultAsync(repo.Query<AppSetting>().Where(x => x.Key == DistinctKey));
+        if (row == null) { row = new() { Key = DistinctKey }; repo.Add(row); }
+        row.Value = on ? "true" : "false";
+        audit.Log("PayrollDistinctApprovers", "Setting", DistinctKey, on ? "On: HR reviewer, Finance approver and finalizer must be different people; applies to approvals made after this change" : "Off: only the preparer is kept apart from approval; applies to approvals made after this change");
+        await repo.SaveAsync();
+    });
+    private async Task RequireDistinctAsync(PayrollRun r, params string[] earlier)
+    {
+        if (!await DistinctApproversAsync()) return;
+        var trail = await repo.ToListAsync(repo.Query<ApprovalAction>().Where(x => x.Kind == "Payroll" && x.RequestId == r.Id));
+        foreach (var a in earlier)
+        {
+            var last = trail.Where(x => x.Action == a).OrderByDescending(x => x.At).ThenByDescending(x => x.Id).FirstOrDefault();
+            if (last != null && string.Equals(last.Actor, me.Email, StringComparison.OrdinalIgnoreCase)) throw new DomainException("err.payrollDistinct");
+        }
+    }
+
     public async Task FinanceApproveAsync(int id)
     {
         Require(Perm.PayFinance);
         var r = await LoadRunAsync(id);
         // Owner decision 2026-11-26: the preparer cannot approve at Finance either (not only at Finalize).
         if (string.Equals(r.CreatedBy, me.Email, StringComparison.OrdinalIgnoreCase)) throw new DomainException("err.payrollSelfFinance");
+        await RequireDistinctAsync(r, "HRReviewed");
         r.FinanceApprove(); Trail(r, "FinanceApproved");
         await notify.NotifyPermAsync(Perm.PayFinalize, "notif.payrollPending", $"{r.Year}-{r.Month:00}", $"/Payroll/Run/{id}");
         await repo.SaveAsync();
@@ -178,6 +202,7 @@ public class PayrollService(IRepository repo, ICurrentUser me, AuditService audi
         Require(Perm.PayFinalize);
         var r = await LoadRunAsync(id);
         if (string.Equals(r.CreatedBy,me.Email,StringComparison.OrdinalIgnoreCase)) throw new DomainException("err.payrollSelfFinal");
+        await RequireDistinctAsync(r, "HRReviewed", "FinanceApproved");
         r.Finalize(); r.FinalizedBy=me.Email;
         await SnapshotAsync(r,"Finalized");
         var lines = await repo.ToListAsync(repo.Query<PayrollLine>().Where(l => l.RunId == id));
