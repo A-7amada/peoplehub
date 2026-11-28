@@ -57,7 +57,7 @@ public class ExportPrivacyAuditTests
  static readonly string[] Audited=
  [
   "src/PeopleHub.Application/Modules/Employees/EmployeeImportValidation.cs","src/PeopleHub.Application/Modules/Employees/EmployeeImportBatches.cs","src/PeopleHub.Application/Modules/Payroll/SalaryStructures.cs","src/PeopleHub.Application/Modules/Reporting/ReportService.cs","src/PeopleHub.Application/Modules/Payroll/PayrollService.cs","src/PeopleHub.Application/Modules/Employees/EmployeeService.cs","src/PeopleHub.Application/Modules/Reporting/ReportBuilderService.cs","src/PeopleHub.Application/Modules/Employees/EmploymentTimeline.cs","src/PeopleHub.Application/Modules/Employees/LetterService.cs","src/PeopleHub.Application/Modules/Leave/LeavePolicyService.cs","src/PeopleHub.Application/Modules/Leave/LeaveService.cs",
-  "src/PeopleHub.Web/Controllers/Hr.cs","src/PeopleHub.Web/Controllers/Platform.cs"
+  "src/PeopleHub.Application/Modules/Organization/HeadcountPlan.cs","src/PeopleHub.Web/Controllers/Hr.cs","src/PeopleHub.Web/Controllers/Platform.cs"
  ];
  [Fact]public void OnlyAuditedFilesReferencePrivateEmployeeFields()
  {

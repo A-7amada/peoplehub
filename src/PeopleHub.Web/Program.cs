@@ -92,6 +92,7 @@ builder.Services.AddScoped<PayrollAdjustments>();
 builder.Services.AddScoped<PayrollAnomalies>();
 builder.Services.AddScoped<RetentionReview>();
 builder.Services.AddScoped<LeaveEncashments>();
+builder.Services.AddScoped<HeadcountPlan>();
 builder.Services.AddScoped<SalaryStructures>();
 builder.Services.AddScoped<PeopleHub.Application.Modules.Talent.SkillsInventory>();
 builder.Services.AddScoped<PeopleHub.Application.Modules.Operations.IntegrationRegistry>();

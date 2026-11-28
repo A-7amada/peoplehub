@@ -1,0 +1,9 @@
+@model List<PeopleHub.Application.Modules.Organization.PlanRow>
+@{ViewData["Title"]=T.IsAr?"تخطيط العمالة والتكلفة":"Headcount and cost plan";Func<string,string,string>X=(e,a)=>T.IsAr?a:e;}
+<div class="page-head"><div><h1>@ViewData["Title"]</h1><p class="sub">@X("Current headcount against each department target","العدد الحالي مقابل مستهدف كل إدارة")</p></div><a class="btn" href="/Organization">@X("Organization","الهيكل التنظيمي")</a></div>
+<p class="muted small">@X("Read only. The monthly cost to fill a gap is the gap times the department's average basic salary. Basic pay only: no allowances, insurance, tax or hiring cost, and no forecast. Illustrative, fictional demo data.","للقراءة فقط. تكلفة سد الفجوة شهريا هي الفجوة مضروبة في متوسط الأساسي في الإدارة. الأساسي فقط دون بدلات أو تأمينات أو ضرائب أو تكلفة توظيف، ولا توجد توقعات. توضيحي وببيانات تجريبية وهمية.")</p>
+<div class="card"><div class="card-b"><div class="tbl-wrap"><table class="tbl"><thead><tr><th>@X("Department","الإدارة")</th><th>@X("Cost centre","مركز التكلفة")</th><th>@X("Current","الحالي")</th><th>@X("Target","المستهدف")</th><th>@X("Gap","الفجوة")</th><th>@X("Average basic","متوسط الأساسي")</th><th>@X("Monthly cost to fill gap","تكلفة سد الفجوة شهريا")</th></tr></thead><tbody>
+@foreach(var r in Model){<tr><td>@(T.IsAr&&!string.IsNullOrEmpty(r.Dept.NameAr)?r.Dept.NameAr:r.Dept.Name)</td><td>@r.Dept.CostCenter</td><td>@r.Active</td><td>@r.Target</td><td>@r.Gap</td><td>@r.AvgBasic.ToString("N2")</td><td>@r.GapMonthlyCost.ToString("N2")</td></tr>}
+@if(Model.Count==0){<tr><td colspan="7">@X("No departments.","لا توجد إدارات.")</td></tr>}
+@if(Model.Count>0){<tr><th colspan="6">@X("Total","الإجمالي")</th><th>@Model.Sum(r=>r.GapMonthlyCost).ToString("N2")</th></tr>}
+</tbody></table></div></div></div>
