@@ -77,7 +77,7 @@ Most Phase 2 stories have a real built core. Phase 1 splits between security and
 | US-PH3-009 Workflow simulation and analytics | Gap | No simulation. Approval statistics report added 2026-11-26 (per request kind: submitted, approved, rejected, cancelled, pending, average hours to decision, oldest pending). | Engineering |
 | US-PH3-010 Executive HR analytics | Partial | Dashboard and reports now include headcount and turnover (2026-11-26) and a six-month payroll cost trend (finance grant only). No forecasting or cost planning `[ENT-006]` Open. | Engineering |
 | US-PH3-011 Workforce cost and headcount planning | Partial | Target headcount on departments, annual training cost summary `[HR-002]`, cost-centre projection `[PAY-011]`; no planning module `[ENT-006]`. | Engineering |
-| US-PH3-012 Skills and competency intelligence | Gap | Competency frameworks per grade `[PER-001]` exist; no skills inventory or gap analysis. | Engineering |
+| US-PH3-012 Skills and competency intelligence | Partial | Competency frameworks per grade `[PER-001]` exist; skills inventory (taxonomy, confirmed skills, restricted assessment data) and a team gap view are built at /Skills. Open: automatic sourcing from training records. | Engineering |
 | US-PH3-013 Succession and talent planning | Gap | `[ENT-006]` Open. | Engineering and policy |
 | US-PH3-014 AI-assisted HR knowledge and policy search | Gap | No AI component. | Owner decision: AI governance, provider, data handling |
 | US-PH3-015 Payroll and attendance anomaly detection | Gap | No detection logic. Source data exists (payroll snapshots, raw punches). | Owner decision: approved AI/statistical use |

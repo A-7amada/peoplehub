@@ -89,6 +89,7 @@ builder.Services.AddScoped<PayrollService>();
 builder.Services.AddScoped<PayrollJournals>();
 builder.Services.AddScoped<PayrollAdjustments>();
 builder.Services.AddScoped<SalaryStructures>();
+builder.Services.AddScoped<PeopleHub.Application.Modules.Talent.SkillsInventory>();
 builder.Services.AddScoped<BankReconciliation>();
 builder.Services.AddScoped<WorkflowService>();
 builder.Services.AddScoped<AttachmentService>();
